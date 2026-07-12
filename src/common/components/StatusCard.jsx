@@ -389,37 +389,39 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
             style={{ position: 'relative', pointerEvents: 'auto' }}
           >
             <Card elevation={3} className={classes.card}>
-              <div className="draggable-header" style={{ display: 'flex', alignItems: 'stretch', gap: 10, padding: '10px 6px 2px 14px', cursor: 'move' }}>
-                <div style={{ minWidth: 0, flexGrow: 1 }}>
-                  <Typography variant="body1" noWrap style={{ fontWeight: 600, lineHeight: 1.2 }}>
-                    {device.name}
-                  </Typography>
-                  <Typography variant="caption" style={{ display: 'block', fontWeight: 600, color: device.status === 'online' ? '#2e7d32' : '#d32f2f' }}>
-                    {device.status === 'online' ? 'Conectado' : 'Desconectado'}
-                  </Typography>
-                  <Typography variant="caption" color="textSecondary" noWrap style={{ display: 'block' }}>
-                    {position && position.attributes.totalDistance != null ? `${Math.round(position.attributes.totalDistance / 1000).toLocaleString('pt-BR')} km` : ''}
-                  </Typography>
-                  {sections.speedo && position && (
-                    <div style={{ width: 128, marginTop: 2 }}>
-                      <Speedometer speed={position.speed * 1.852} />
-                    </div>
-                  )}
-                </div>
-                <Avatar
-                  variant="rounded"
-                  src={deviceImage ? `/api/media/${device.uniqueId}/${deviceImage}` : undefined}
-                  style={{ width: 152, height: 102, backgroundColor: '#eef2f8', border: '2px solid #c9d3e0', alignSelf: 'center', borderRadius: 10 }}
-                >
-                  <img style={{ width: 56, height: 56 }} src={mapIcons[mapIconKey(device.category)]} alt="" />
-                </Avatar>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className="draggable-header" style={{ padding: '10px 10px 2px 14px', cursor: 'move' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <div style={{ minWidth: 0, flexGrow: 1 }}>
+                    <Typography variant="body1" noWrap style={{ fontWeight: 600, lineHeight: 1.2 }}>
+                      {device.name}
+                    </Typography>
+                    <Typography variant="caption" style={{ display: 'block', fontWeight: 600, color: device.status === 'online' ? '#2e7d32' : '#d32f2f' }}>
+                      {device.status === 'online' ? 'Conectado' : 'Desconectado'}
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary" noWrap style={{ display: 'block' }}>
+                      {position && position.attributes.totalDistance != null ? `${Math.round(position.attributes.totalDistance / 1000).toLocaleString('pt-BR')} km` : ''}
+                    </Typography>
+                  </div>
                   <IconButton size="small" onClick={(e) => setSettingsAnchor(e.currentTarget)}>
                     <SettingsIcon fontSize="small" />
                   </IconButton>
                   <IconButton size="small" onClick={onClose} onTouchStart={onClose}>
                     <CloseIcon fontSize="small" />
                   </IconButton>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                  {sections.speedo && position && (
+                    <div style={{ width: 132, flexShrink: 0 }}>
+                      <Speedometer speed={position.speed * 1.852} />
+                    </div>
+                  )}
+                  <Avatar
+                    variant="rounded"
+                    src={deviceImage ? `/api/media/${device.uniqueId}/${deviceImage}` : undefined}
+                    style={{ width: 170, height: 112, backgroundColor: '#eef2f8', border: '2px solid #c9d3e0', borderRadius: 10, marginLeft: 'auto' }}
+                  >
+                    <img style={{ width: 56, height: 56 }} src={mapIcons[mapIconKey(device.category)]} alt="" />
+                  </Avatar>
                 </div>
               </div>
               {position && (

@@ -407,8 +407,9 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                   )}
                 </div>
                 <Avatar
+                  variant="rounded"
                   src={deviceImage ? `/api/media/${device.uniqueId}/${deviceImage}` : undefined}
-                  style={{ width: 104, height: 104, backgroundColor: '#eef2f8', border: '2px solid #c9d3e0', alignSelf: 'center' }}
+                  style={{ width: 152, height: 102, backgroundColor: '#eef2f8', border: '2px solid #c9d3e0', alignSelf: 'center', borderRadius: 10 }}
                 >
                   <img style={{ width: 56, height: 56 }} src={mapIcons[mapIconKey(device.category)]} alt="" />
                 </Avatar>

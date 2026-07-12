@@ -269,7 +269,7 @@ const Speedometer = ({ speed }) => {
   const value = Math.min(shown, SPEEDO_MAX);
   const angle = -120 + (value / SPEEDO_MAX) * 240;
   return (
-    <svg viewBox="0 0 220 190" style={{ display: 'block', width: '38%', maxWidth: 160, minWidth: 115, margin: '2px auto 0' }}>
+    <svg viewBox="0 0 220 190" style={{ display: 'block', width: '30%', maxWidth: 130, minWidth: 95, margin: '2px auto 0' }}>
       <circle cx="110" cy="110" r="100" fill="#23272e" stroke="#3d4451" strokeWidth="2" />
       <path d="M 33.8 154 A 88 88 0 0 1 166.6 42.6" fill="none" stroke="#2e7d32" strokeWidth="6" />
       <path d="M 166.6 42.6 A 88 88 0 0 1 196.7 125.3" fill="none" stroke="#ed6c02" strokeWidth="6" />
@@ -316,7 +316,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const navigationAppTitle = useAttributePreference('navigationAppTitle');
 
   const savedPos = JSON.parse(localStorage.getItem('lsCardPos') || '{"x":0,"y":0}');
-  const savedSize = JSON.parse(localStorage.getItem('lsCardSize') || '{"w":null}');
+  const savedSize = JSON.parse(localStorage.getItem('lsCardSize2') || '{"w":null}');
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -375,7 +375,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
           <Rnd
             default={{ x: savedPos.x, y: savedPos.y, width: savedSize.w || 360, height: 'auto' }}
             onDragStop={(e, d) => localStorage.setItem('lsCardPos', JSON.stringify({ x: d.x, y: d.y }))}
-            onResizeStop={(e, dir, ref) => localStorage.setItem('lsCardSize', JSON.stringify({ w: ref.offsetWidth }))}
+            onResizeStop={(e, dir, ref) => localStorage.setItem('lsCardSize2', JSON.stringify({ w: ref.offsetWidth }))}
             minHeight={230}
             minWidth={300}
             maxWidth={620}

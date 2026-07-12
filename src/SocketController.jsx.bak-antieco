@@ -26,23 +26,6 @@ const playAlarm = () => {
   alarmAudio.play();
 };
 
-// Anti-eco: ignora resultado de comando repetido (mesmo aparelho + mesma resposta em 15 min)
-const lastCommandResults = new Map();
-const filterRepeatedCommandResults = (events) => events.filter((event) => {
-  if (event.type !== 'commandResult') {
-    return true;
-  }
-  const previous = lastCommandResults.get(event.deviceId);
-  const result = event.attributes ? event.attributes.result : '';
-  const now = Date.now();
-  if (previous && previous.result === result && now - previous.time < 15 * 60 * 1000) {
-    previous.time = now;
-    return false;
-  }
-  lastCommandResults.set(event.deviceId, { result, time: now });
-  return true;
-});
-
 const SocketController = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -69,15 +52,11 @@ const SocketController = () => {
 
   const handleEvents = useCallback(
     (events) => {
-      const filtered = filterRepeatedCommandResults(events);
-      if (filtered.length === 0) {
-        return;
-      }
       if (!features.disableEvents) {
-        dispatch(eventsActions.add(filtered));
+        dispatch(eventsActions.add(events));
       }
       if (
-        filtered.some(
+        events.some(
           (e) =>
             soundEvents.includes(e.type) ||
             (e.type === 'alarm' && soundAlarms.includes(e.attributes.alarm)),
@@ -86,7 +65,7 @@ const SocketController = () => {
         playAlarm();
       }
       setNotifications(
-        filtered.map((event) => ({
+        events.map((event) => ({
           id: event.id,
           message: event.attributes.message,
           show: true,

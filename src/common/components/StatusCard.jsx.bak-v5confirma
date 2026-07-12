@@ -27,10 +27,6 @@ import RouteIcon from '@mui/icons-material/Route';
 import SendIcon from '@mui/icons-material/Send';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import {
-  Dialog as LsConfirmDialog, DialogTitle as LsConfirmTitle, DialogContent as LsConfirmContent,
-  DialogContentText as LsConfirmText, DialogActions as LsConfirmActions, Button as LsConfirmButton,
-} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PendingIcon from '@mui/icons-material/Pending';
@@ -324,7 +320,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const [anchorEl, setAnchorEl] = useState(null);
 
   const [removing, setRemoving] = useState(false);
-  const [confirmCommand, setConfirmCommand] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const [settingsAnchor, setSettingsAnchor] = useState(null);
   const [sections, setSections] = useState(() => ({
@@ -570,12 +565,12 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Bloquear">
-                  <IconButton color="error" onClick={() => setConfirmCommand('engineStop')} disabled={disableActions || !position}>
+                  <IconButton color="error" onClick={() => sendCommand('engineStop')} disabled={disableActions || !position}>
                     <LockIcon />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Desbloquear">
-                  <IconButton color="success" onClick={() => setConfirmCommand('engineResume')} disabled={disableActions || !position}>
+                  <IconButton color="success" onClick={() => sendCommand('engineResume')} disabled={disableActions || !position}>
                     <LockOpenIcon />
                   </IconButton>
                 </Tooltip>
@@ -609,28 +604,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
           </Rnd>
         )}
       </div>
-      <LsConfirmDialog open={Boolean(confirmCommand)} onClose={() => setConfirmCommand(null)}>
-        <LsConfirmTitle>
-          {`${confirmCommand === 'engineStop' ? 'Bloquear' : 'Desbloquear'} ${device ? device.name : ''}?`}
-        </LsConfirmTitle>
-        <LsConfirmContent>
-          <LsConfirmText>
-            {confirmCommand === 'engineStop'
-              ? 'O veículo será imobilizado. Confirme para enviar o comando.'
-              : 'O bloqueio será liberado. Confirme para enviar o comando.'}
-          </LsConfirmText>
-        </LsConfirmContent>
-        <LsConfirmActions>
-          <LsConfirmButton onClick={() => setConfirmCommand(null)}>Cancelar</LsConfirmButton>
-          <LsConfirmButton
-            variant="contained"
-            color={confirmCommand === 'engineStop' ? 'error' : 'success'}
-            onClick={() => { sendCommand(confirmCommand); setConfirmCommand(null); }}
-          >
-            Confirmar
-          </LsConfirmButton>
-        </LsConfirmActions>
-      </LsConfirmDialog>
       <Menu anchorEl={settingsAnchor} open={Boolean(settingsAnchor)} onClose={() => setSettingsAnchor(null)}>
         {[['speedo', 'Velocímetro'], ['sensores', 'Sensores'], ['resposta', 'Última resposta'], ['conect', 'Conectividade'], ['perfil', 'Perfil'], ['params', 'Parâmetros recebidos']].map(([key, label]) => (
           <MenuItem key={key} dense onClick={() => toggleSection(key)}>

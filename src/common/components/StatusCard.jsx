@@ -223,7 +223,7 @@ const SensorRows = ({ position }) => {
   }
   if ('charge' in a) {
     rows.push(['Alimentação externa', <PowerIcon style={{ ...SENSOR_ICON, color: '#8e24aa' }} />, a.charge
-      ? <Colored color={COLORS.ok}>Conectada (carregando)</Colored>
+      ? <Colored color={COLORS.ok}>Conectada</Colored>
       : <Colored color={COLORS.warn}>Desconectada</Colored>]);
   }
   if ('rssi' in a) {

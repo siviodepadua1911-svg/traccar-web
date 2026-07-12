@@ -26,6 +26,14 @@ import trainSvg from '../../resources/images/icon/train.svg';
 import tramSvg from '../../resources/images/icon/tram.svg';
 import truckSvg from '../../resources/images/icon/truck.svg';
 import vanSvg from '../../resources/images/icon/van.svg';
+import ambulanciaSvg from '../../resources/images/icon/ambulancia.svg';
+import betoneiraSvg from '../../resources/images/icon/betoneira.svg';
+import cacambaSvg from '../../resources/images/icon/cacamba.svg';
+import carretaSvg from '../../resources/images/icon/carreta.svg';
+import cegonhaSvg from '../../resources/images/icon/cegonha.svg';
+import colheitadeiraSvg from '../../resources/images/icon/colheitadeira.svg';
+import empilhadeiraSvg from '../../resources/images/icon/empilhadeira.svg';
+import guinchoSvg from '../../resources/images/icon/guincho.svg';
 
 export const mapIcons = {
   animal: animalSvg,
@@ -50,6 +58,14 @@ export const mapIcons = {
   tram: tramSvg,
   truck: truckSvg,
   van: vanSvg,
+  ambulancia: ambulanciaSvg,
+  betoneira: betoneiraSvg,
+  cacamba: cacambaSvg,
+  carreta: carretaSvg,
+  cegonha: cegonhaSvg,
+  colheitadeira: colheitadeiraSvg,
+  empilhadeira: empilhadeiraSvg,
+  guincho: guinchoSvg,
 };
 
 export const mapIconKey = (category) => {

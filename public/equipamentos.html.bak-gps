@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equipamentos Homologados - LS Autotruck Rastreios</title>
+<style>
+  :root { --navy:#030e26; --blue-dark:#0d2a5c; --blue:#1565c0; --neon:#00b0ff; --white:#f5f8ff; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',Roboto,Arial,sans-serif; background:linear-gradient(135deg,var(--navy) 0%,var(--blue-dark) 100%); color:var(--white); min-height:100vh; }
+  header { text-align:center; padding:48px 20px 24px; }
+  header img { width:130px; height:130px; border-radius:50%; box-shadow:0 0 40px rgba(0,176,255,0.4); }
+  h1 { margin-top:20px; font-size:2rem; }
+  h1 span { color:var(--neon); }
+  .subtitle { color:rgba(255,255,255,0.7); margin-top:8px; font-size:1.05rem; }
+  .server-box { max-width:680px; margin:28px auto; background:rgba(0,176,255,0.08); border:1px solid rgba(0,176,255,0.35); border-radius:14px; padding:22px 28px; text-align:center; }
+  .server-box h2 { font-size:1.1rem; color:var(--neon); margin-bottom:10px; }
+  .server-box code { background:rgba(0,0,0,0.35); padding:6px 14px; border-radius:8px; font-size:1.15rem; letter-spacing:0.5px; }
+  .server-box p { margin-top:10px; color:rgba(255,255,255,0.65); font-size:0.9rem; }
+  .search-wrap { max-width:900px; margin:10px auto 20px; padding:0 20px; }
+  #busca { width:100%; padding:14px 18px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); color:var(--white); font-size:1rem; outline:none; }
+  #busca:focus { border-color:var(--neon); }
+  #busca::placeholder { color:rgba(255,255,255,0.45); }
+  .table-wrap { max-width:900px; margin:0 auto 40px; padding:0 20px; overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th { background:rgba(0,176,255,0.15); color:var(--neon); padding:14px 16px; text-align:left; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; }
+  td { padding:13px 16px; border-bottom:1px solid rgba(255,255,255,0.08); font-size:0.95rem; }
+  tr:hover td { background:rgba(0,176,255,0.06); }
+  .porta { background:var(--blue); color:#fff; padding:3px 12px; border-radius:20px; font-weight:600; font-size:0.85rem; white-space:nowrap; }
+  .proto { color:rgba(255,255,255,0.55); font-size:0.85rem; }
+  .voltar { display:inline-block; margin-top:18px; color:var(--neon); text-decoration:none; font-size:0.95rem; }
+  footer { text-align:center; padding:30px 20px 50px; color:rgba(255,255,255,0.5); font-size:0.88rem; line-height:1.7; }
+  footer a { color:var(--neon); text-decoration:none; }
+</style>
+</head>
+<body>
+<header>
+  <img src="https://i.postimg.cc/R03xyFTD/logo-png.jpg" alt="LS Autotruck Rastreios">
+  <h1>Equipamentos <span>Homologados</span></h1>
+  <p class="subtitle">Rastreadores compativeis com a plataforma LS Autotruck Rastreios</p>
+  <a class="voltar" href="/">&larr; Voltar para a plataforma</a>
+</header>
+<div class="server-box">
+  <h2>Dados de configuracao do rastreador</h2>
+  <code>IP / Servidor: gps.lsautotruckrastreios.com.br</code>
+  <p>Configure seu equipamento com este servidor e a porta indicada na tabela, modo TCP.<br>
+  Nossa plataforma suporta <strong>mais de 200 protocolos e 2.000 modelos</strong> - se o seu nao esta na lista, consulte-nos.</p>
+</div>
+<div class="search-wrap">
+  <input type="text" id="busca" placeholder="Busque seu modelo (ex.: GT06, ST310U, FMB920, J16...)">
+</div>
+<div class="table-wrap">
+<table id="tabela">
+  <thead><tr><th>Marca / Modelos</th><th>Protocolo</th><th>Porta</th></tr></thead>
+  <tbody>
+    <tr><td>Concox / Jimi - GT06N, GT06E, GT07, X3, JV200, JM-VL01, JM-VL02, JM-LL301, WanWay S20, SL42, SL44, SL48, J16, E3+, JC100</td><td class="proto">GT06</td><td><span class="porta">5023</span></td></tr>
+    <tr><td>Suntech - ST310U, ST300, ST340, ST215, ST240, ST4305, ST4315</td><td class="proto">Suntech</td><td><span class="porta">5011</span></td></tr>
+    <tr><td>Sinotrack - ST-901, ST-906 / LKGPS LK209 / iCarGPS</td><td class="proto">H02</td><td><span class="porta">5013</span></td></tr>
+    <tr><td>Teltonika - FMB920, FMB130, FMC130, FMB140, GH3000</td><td class="proto">Teltonika</td><td><span class="porta">5027</span></td></tr>
+    <tr><td>Queclink - GL200, GL300, GV50, GV55, GV75, GV300, GV350M, GT300, GT500</td><td class="proto">GL200</td><td><span class="porta">5004</span></td></tr>
+    <tr><td>Coban - TK102, TK103, TK104, TK106, GPS103, GPS303</td><td class="proto">GPS103</td><td><span class="porta">5001</span></td></tr>
+    <tr><td>TK103 compativeis - KX402 e genericos</td><td class="proto">TK103</td><td><span class="porta">5002</span></td></tr>
+    <tr><td>GT02 - GT02A, GT02D, TK110 e compativeis</td><td class="proto">GT02</td><td><span class="porta">5022</span></td></tr>
+    <tr><td>Meitrack - MT90, T366, T622, TC68S, P99</td><td class="proto">Meitrack</td><td><span class="porta">5020</span></td></tr>
+    <tr><td>JT600 / Jointech - GP4000, GP6000, JT701, JT705</td><td class="proto">JT600</td><td><span class="porta">5014</span></td></tr>
+    <tr><td>JT808 (padrao chines 4G) - VL502 e compativeis</td><td class="proto">JT808</td><td><span class="porta">5015</span></td></tr>
+    <tr><td>Xexun - TK102-2, TK103-2, XT009, XT107</td><td class="proto">Xexun</td><td><span class="porta">5006</span></td></tr>
+    <tr><td>Totem - AT03, AVL05, AVL08</td><td class="proto">Totem</td><td><span class="porta">5007</span></td></tr>
+    <tr><td>Galileo / Galileosky - todas as versoes</td><td class="proto">Galileo</td><td><span class="porta">5034</span></td></tr>
+    <tr><td>Ruptela - FM-Eco4, FM-Pro4, Trace5</td><td class="proto">Ruptela</td><td><span class="porta">5046</span></td></tr>
+    <tr><td>Eelink - TK116, TK119, GPT06, GT03</td><td class="proto">Eelink</td><td><span class="porta">5064</span></td></tr>
+    <tr><td>TopFlyTech - T8803, T8806, T880X</td><td class="proto">T800X</td><td><span class="porta">5094</span></td></tr>
+    <tr><td>Fifotrack - A03, A100, A300, A600</td><td class="proto">Fifotrack</td><td><span class="porta">5124</span></td></tr>
+    <tr><td>iStartek - VT100, VT200, PT60</td><td class="proto">Startek</td><td><span class="porta">5222</span></td></tr>
+    <tr><td>Wialon IPS - equipamentos compativeis</td><td class="proto">Wialon</td><td><span class="porta">5039</span></td></tr>
+    <tr><td>Relogios GPS - Q50, Q90, GW100</td><td class="proto">Watch</td><td><span class="porta">5093</span></td></tr>
+    <tr><td>JMAK (nacional) - J-R11, J-R12</td><td class="proto">JMAK</td><td><span class="porta">5259</span></td></tr>
+    <tr><td>Celular como rastreador - app Traccar Client (Android/iPhone)</td><td class="proto">OsmAnd</td><td><span class="porta">5055</span></td></tr>
+  </tbody>
+</table>
+</div>
+<footer>
+  Nao encontrou seu modelo? Nossa plataforma homologa mais de 2.000 equipamentos.<br>
+  <strong>LS Autotruck Rastreios</strong> - Rastreamento veicular 24 horas
+</footer>
+<script>
+  document.getElementById('busca').addEventListener('input', function () {
+    var q = this.value.toLowerCase();
+    document.querySelectorAll('#tabela tbody tr').forEach(function (tr) {
+      tr.style.display = tr.textContent.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+    });
+  });
+</script>
+</body>
+</html>

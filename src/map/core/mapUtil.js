@@ -40,18 +40,31 @@ export const prepareIcon = (background, icon, color) => {
   context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
   if (icon) {
-    const iconRatio = 0.5;
+    const iconRatio = 0.74;
     const imageWidth = canvas.width * iconRatio;
-    const imageHeight = canvas.height * iconRatio;
+    const imageHeight = canvas.width * iconRatio;
     context.drawImage(
-      canvasTintImage(icon, color),
+      icon,
       (canvas.width - imageWidth) / 2,
-      (canvas.height - imageHeight) / 2,
+      canvas.height * 0.385 - imageHeight / 2,
       imageWidth,
       imageHeight,
     );
   }
 
+  if (color) {
+    const dotR = canvas.width * 0.12;
+    const dotX = canvas.width * 0.8;
+    const dotY = canvas.height * 0.15;
+    context.beginPath();
+    context.arc(dotX, dotY, dotR + canvas.width * 0.035, 0, 2 * Math.PI);
+    context.fillStyle = "#ffffff";
+    context.fill();
+    context.beginPath();
+    context.arc(dotX, dotY, dotR, 0, 2 * Math.PI);
+    context.fillStyle = color;
+    context.fill();
+  }
   return context.getImageData(0, 0, canvas.width, canvas.height);
 };
 

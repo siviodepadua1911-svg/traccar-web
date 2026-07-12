@@ -16,6 +16,11 @@ import BatteryCharging60Icon from '@mui/icons-material/BatteryCharging60';
 import Battery20Icon from '@mui/icons-material/Battery20';
 import BatteryCharging20Icon from '@mui/icons-material/BatteryCharging20';
 import ErrorIcon from '@mui/icons-material/Error';
+import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
+import SignalCellularAlt2BarIcon from '@mui/icons-material/SignalCellularAlt2Bar';
+import SignalCellularAlt1BarIcon from '@mui/icons-material/SignalCellularAlt1Bar';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { devicesActions } from '../store';
@@ -39,9 +44,25 @@ dayjs.extend(relativeTime);
 
 const useStyles = makeStyles()((theme) => ({
   icon: {
-    width: '25px',
-    height: '25px',
-    filter: 'brightness(0) invert(1)',
+    width: '30px',
+    height: '30px',
+  },
+  avatar: {
+    backgroundColor: '#eef2f8',
+  },
+  infoLine: {
+    display: 'block',
+    fontSize: '0.72rem',
+    opacity: 0.85,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  statusLine: {
+    display: 'block',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   batteryText: {
     fontSize: '0.75rem',
@@ -97,6 +118,14 @@ const DeviceRow = ({ devices, index, style }) => {
   const primaryValue = resolveFieldValue(devicePrimary);
   const secondaryValue = resolveFieldValue(deviceSecondary);
 
+  const infoLine = position ? [
+    `${Math.round((position.speed || 0) * 1.852)} km/h`,
+    position.attributes.totalDistance != null ? `${Math.round(position.attributes.totalDistance / 1000).toLocaleString('pt-BR')} km` : null,
+    position.attributes.power != null ? `${Number(position.attributes.power).toFixed(1)}V` : null,
+    position.attributes.sat != null ? `${position.attributes.sat} sat` : null,
+    position.attributes.rssi != null ? `GSM ${position.attributes.rssi}` : null,
+  ].filter(Boolean).join(' • ') : null;
+
   const secondaryText = () => {
     let status;
     if (item.status === 'online' || !item.lastUpdate) {
@@ -106,13 +135,16 @@ const DeviceRow = ({ devices, index, style }) => {
     }
     return (
       <>
-        {secondaryValue && (
-          <>
-            {secondaryValue}
-            {' • '}
-          </>
-        )}
-        <span className={classes[getStatusColor(item.status)]}>{status}</span>
+        <span className={classes.statusLine}>
+          {secondaryValue && (
+            <>
+              {secondaryValue}
+              {' • '}
+            </>
+          )}
+          <span className={classes[getStatusColor(item.status)]}>{status}</span>
+        </span>
+        {infoLine && <span className={classes.infoLine}>{infoLine}</span>}
       </>
     );
   };
@@ -127,7 +159,7 @@ const DeviceRow = ({ devices, index, style }) => {
         className={selectedDeviceId === item.id ? classes.selected : null}
       >
         <ListItemAvatar>
-          <Avatar>
+          <Avatar className={classes.avatar}>
             <img className={classes.icon} src={mapIcons[mapIconKey(item.category)]} alt="" />
           </Avatar>
         </ListItemAvatar>
@@ -140,7 +172,7 @@ const DeviceRow = ({ devices, index, style }) => {
           }}
           slotProps={{
             primary: { noWrap: true },
-            secondary: { noWrap: true },
+            secondary: { component: 'div' },
           }}
         />
         {position && (

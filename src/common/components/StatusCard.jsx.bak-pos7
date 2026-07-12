@@ -44,10 +44,6 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   card: {
     pointerEvents: 'auto',
     width: theme.dimensions.popupMaxWidth,
-    height: '100%',
-    maxHeight: 'calc(100vh - 240px)',
-    display: 'flex',
-    flexDirection: 'column',
     [theme.breakpoints.up('sm')]: {
       width: theme.dimensions.drawerWidthDesktop,
       borderRadius: 0,
@@ -70,7 +66,7 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   content: {
     paddingTop: theme.spacing(1),
     paddingBottom: theme.spacing(1),
-    flexGrow: 1,
+    maxHeight: theme.dimensions.cardContentMaxHeight,
     overflow: 'auto',
   },
   icon: {
@@ -103,8 +99,8 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
     position: 'fixed',
     zIndex: 1300,
     [theme.breakpoints.up('sm')]: {
-      left: '12px',
-      top: '149px',
+      left: 0,
+      top: '186px',
     },
     [theme.breakpoints.down('sm')]: {
       left: '50%',
@@ -129,37 +125,6 @@ const StatusRow = ({ name, content }) => {
       </TableCell>
     </TableRow>
   );
-};
-
-const RESULT_DICT = [
-  ['Cut off the fuel supply: Success', 'BLOQUEIO executado com sucesso'],
-  ['Restore fuel supply: Success', 'DESBLOQUEIO executado com sucesso'],
-  ['already in the state of fuel supply cut-off', 'Ja estava bloqueado'],
-  ['The terminal will restart after 30 seconds', 'O rastreador vai reiniciar em 30 segundos'],
-  ['GMT_OK', 'Fuso horario ajustado'],
-  ['TIMER_OK', 'Intervalo de envio ajustado'],
-  ['Charging', 'Carregando'],
-  ['GPRS:Link Up', 'Dados: conectado'],
-  ['NW Signal Level:strong', 'Sinal de rede: forte'],
-  ['NW Signal Level:medium', 'Sinal de rede: medio'],
-  ['NW Signal Level:weak', 'Sinal de rede: fraco'],
-  ['GPS:FIXED', 'GPS: fixado'],
-  ['SVS Used in fix:', 'Satelites em uso: '],
-  ['GPS Signal Level:', 'Sinal dos satelites: '],
-  ['ACC:ON', 'Ignicao: LIGADA'],
-  ['ACC:OFF', 'Ignicao: DESLIGADA'],
-  ['Defense:ON', 'Modo defesa: ativado'],
-  ['Defense:OFF', 'Modo defesa: desativado'],
-  ['Battery:', 'Bateria interna: '],
-  ['Success', 'Sucesso'],
-];
-
-const translateResult = (text) => {
-  let out = String(text);
-  RESULT_DICT.forEach(([en, pt]) => {
-    out = out.split(en).join(pt);
-  });
-  return out;
 };
 
 const rawValue = (v) => {
@@ -258,8 +223,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const navigationAppLink = useAttributePreference('navigationAppLink');
   const navigationAppTitle = useAttributePreference('navigationAppTitle');
 
-  const savedPos = JSON.parse(localStorage.getItem('lsCardPos') || '{"x":0,"y":0}');
-
   const [anchorEl, setAnchorEl] = useState(null);
 
   const [removing, setRemoving] = useState(false);
@@ -305,12 +268,10 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
       <div className={classes.root}>
         {device && (
           <Rnd
-            default={{ x: savedPos.x, y: savedPos.y, width: 'auto', height: 'auto' }}
-              onDragStop={(e, d) => localStorage.setItem('lsCardPos', JSON.stringify({ x: d.x, y: d.y }))}
-            minHeight={230}
-              enableResizing={{ bottom: true }}
+            default={{ x: 0, y: 0, width: 'auto', height: 'auto' }}
+            enableResizing={false}
             dragHandleClassName="draggable-header"
-            style={{ position: 'relative', pointerEvents: 'auto' }}
+            style={{ position: 'relative' }}
           >
             <Card elevation={3} className={classes.card}>
               <CardMedia
@@ -382,7 +343,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                             Última resposta do rastreador
                           </Typography>
                           <Typography variant="body2" color="textSecondary" style={{ wordBreak: 'break-word' }}>
-                            {translateResult(position.attributes.result)}
+                            {String(position.attributes.result)}
                           </Typography>
                         </>
                       )}

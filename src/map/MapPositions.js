@@ -2,12 +2,32 @@ import { useId, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import maplibregl from 'maplibre-gl';
 import { map } from './core/MapView';
 import { formatTime, getStatusColor } from '../common/util/formatter';
 import { mapIconKey } from './core/preloadImages';
 import { useAttributePreference } from '../common/util/preferences';
 import { useCatchCallback } from '../reactHelper';
 import { findFonts } from './core/mapUtil';
+
+const buildHoverHtml = (p) => {
+  const rows = [];
+  const row = (label, value) => `<tr><td style="padding:2px 10px 2px 0;color:#607d8b;font-size:12px;white-space:nowrap;">${label}</td><td style="padding:2px 0;font-size:12px;font-weight:600;color:#263238;">${value}</td></tr>`;
+  if (p.fixTime) rows.push(row('Hora', p.fixTime));
+  if (p.speed !== undefined) rows.push(row('Velocidade', `${p.speed} km/h`));
+  if (p.ignition !== undefined) rows.push(row('Igni&ccedil;&atilde;o', p.ignition ? '<span style="color:#2e7d32;">Ligada</span>' : '<span style="color:#c62828;">Desligada</span>'));
+  if (p.blocked !== undefined) rows.push(row('Bloqueio', p.blocked ? '<span style="color:#c62828;font-weight:700;">BLOQUEADO</span>' : '<span style="color:#2e7d32;">Liberado</span>'));
+  if (p.batteryLevel !== undefined) rows.push(row('Bateria', `${p.batteryLevel}%`));
+  if (p.power !== undefined) rows.push(row('Voltagem', `${Number(p.power).toFixed(1)} V`));
+  if (p.sat !== undefined) rows.push(row('Sat&eacute;lites', p.sat));
+  if (p.rssi !== undefined) rows.push(row('Sinal GSM', p.rssi));
+  if (p.totalDistance !== undefined) rows.push(row('Hod&ocirc;metro', `${Number(p.totalDistance).toLocaleString('pt-BR')} km`));
+  if (p.address && p.address !== 'undefined') rows.push(row('Endere&ccedil;o', p.address));
+  return `<div style="font-family:Roboto,Arial,sans-serif;min-width:190px;">
+    <div style="font-weight:700;font-size:13px;color:#0d2a5c;border-bottom:2px solid #00b0ff;padding-bottom:4px;margin-bottom:6px;">${p.name || ''}</div>
+    <table style="border-collapse:collapse;">${rows.join('')}</table>
+  </div>`;
+};
 
 const MapPositions = ({
   positions,
@@ -35,6 +55,16 @@ const MapPositions = ({
   const disabledRef = useRef(disabled);
   disabledRef.current = disabled;
 
+  const hoverPopupRef = useRef(null);
+  if (!hoverPopupRef.current) {
+    hoverPopupRef.current = new maplibregl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      offset: 60 * iconScale,
+      maxWidth: '320px',
+    });
+  }
+
   const createFeature = useCallback(
     (devices, position, selectedPositionId) => {
       const device = devices[position.deviceId];
@@ -59,13 +89,36 @@ const MapPositions = ({
         color: showStatus ? position.attributes.color || getStatusColor(device.status) : 'neutral',
         rotation: position.course,
         direction: showDirection,
+        speed: Math.round((position.speed || 0) * 1.852),
+        ignition: position.attributes.ignition,
+        blocked: position.attributes.blocked,
+        batteryLevel: position.attributes.batteryLevel,
+        power: position.attributes.power,
+        sat: position.attributes.sat,
+        rssi: position.attributes.rssi,
+        totalDistance: position.attributes.totalDistance !== undefined
+          ? Math.round(position.attributes.totalDistance / 1000) : undefined,
+        address: position.address || undefined,
       };
     },
     [directionType, showStatus],
   );
 
-  const onMouseEnter = () => (map.getCanvas().style.cursor = 'pointer');
-  const onMouseLeave = () => (map.getCanvas().style.cursor = '');
+  const onMouseEnter = (event) => {
+    map.getCanvas().style.cursor = 'pointer';
+    const feature = event.features && event.features[0];
+    if (feature) {
+      hoverPopupRef.current
+        .setLngLat(feature.geometry.coordinates)
+        .setHTML(buildHoverHtml(feature.properties))
+        .addTo(map);
+    }
+  };
+  const onMouseLeave = () => {
+    map.getCanvas().style.cursor = '';
+    hoverPopupRef.current.remove();
+  };
+  const onClusterEnter = () => (map.getCanvas().style.cursor = 'pointer');
 
   const onMapClickCallback = useCallback(
     (event) => {
@@ -131,12 +184,13 @@ const MapPositions = ({
         filter: ['!has', 'point_count'],
         layout: {
           'icon-image': '{category}-{color}',
+          'icon-anchor': 'bottom',
           'icon-size': iconScale,
           'icon-allow-overlap': true,
           'text-field': `{${titleField || 'name'}}`,
           'text-allow-overlap': true,
           'text-anchor': 'bottom',
-          'text-offset': [0, -2 * iconScale],
+          'text-offset': [0, -3.4 * iconScale],
           'text-font': findFonts(map),
           'text-size': 12,
           'symbol-sort-key': ['get', 'id'],
@@ -178,13 +232,14 @@ const MapPositions = ({
       },
     });
 
-    map.on('mouseenter', clusters, onMouseEnter);
+    map.on('mouseenter', clusters, onClusterEnter);
     map.on('mouseleave', clusters, onMouseLeave);
     map.on('click', clusters, onClusterClick);
     map.on('click', onMapClickCallback);
 
     return () => {
-      map.off('mouseenter', clusters, onMouseEnter);
+      hoverPopupRef.current.remove();
+      map.off('mouseenter', clusters, onClusterEnter);
       map.off('mouseleave', clusters, onMouseLeave);
       map.off('click', clusters, onClusterClick);
       map.off('click', onMapClickCallback);

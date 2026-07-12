@@ -225,7 +225,7 @@
     "loginReset": "Redefinir Password",
     "loginRegister": "Registar",
     "loginLogin": "Entrar",
-    "loginOpenId": "Login com OpenID",
+    "loginOpenId": "Entrar com Google",
     "loginFailed": "Dados incorrectos ou inexistentes",
     "loginCreated": "Novo utilizador foi registado",
     "loginResetSuccess": "Verifique o seu e-mail",

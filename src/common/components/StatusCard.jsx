@@ -376,7 +376,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
             onDragStop={(e, d) => localStorage.setItem('lsCardPos', JSON.stringify({ x: d.x, y: d.y }))}
             onResizeStop={(e, dir, ref) => localStorage.setItem('lsCardSize3', JSON.stringify({ w: ref.offsetWidth, h: ref.offsetHeight }))}
             minHeight={230}
-            maxHeight={window.innerHeight - 170}
             minWidth={300}
             maxWidth={620}
             enableResizing={{ bottom: true, right: true, bottomRight: true }}

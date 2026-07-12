@@ -452,10 +452,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                       <TableRow>
                         <TableCell colSpan={2} className={classes.cell}>
                           <Typography variant="body2">
-                            <Link component={RouterLink} to={`/position/${position.id}`}>
-                              {t('sharedShowDetails')}
-                            </Link>
-                            {' · '}
                             <Link component="button" type="button" onClick={() => setShowAll(!showAll)}>
                               {showAll ? 'Ocultar ficha ▲' : 'Ficha completa ▼'}
                             </Link>

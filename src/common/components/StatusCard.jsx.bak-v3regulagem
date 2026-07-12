@@ -19,7 +19,6 @@ import {
   Link,
   Tooltip,
   Avatar,
-  Checkbox,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import CloseIcon from '@mui/icons-material/Close';
@@ -30,7 +29,6 @@ import LockOpenIcon from '@mui/icons-material/LockOpen';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PendingIcon from '@mui/icons-material/Pending';
-import SettingsIcon from '@mui/icons-material/Settings';
 import KeyIcon from '@mui/icons-material/Key';
 import BoltIcon from '@mui/icons-material/Bolt';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
@@ -55,13 +53,13 @@ import { formatTime } from '../util/formatter';
 const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   card: {
     pointerEvents: 'auto',
-    width: '100%',
-    maxWidth: 'calc(100vw - 16px)',
+    width: theme.dimensions.popupMaxWidth,
     height: '100%',
     maxHeight: 'calc(100vh - 240px)',
     display: 'flex',
     flexDirection: 'column',
     [theme.breakpoints.up('sm')]: {
+      width: theme.dimensions.drawerWidthDesktop,
       borderRadius: 0,
     },
   },
@@ -269,7 +267,7 @@ const Speedometer = ({ speed }) => {
   const value = Math.min(shown, SPEEDO_MAX);
   const angle = -120 + (value / SPEEDO_MAX) * 240;
   return (
-    <svg viewBox="0 0 220 190" style={{ display: 'block', width: '60%', maxWidth: 215, minWidth: 150, margin: '4px auto 0' }}>
+    <svg viewBox="0 0 220 190" style={{ display: 'block', width: 185, margin: '4px auto 0' }}>
       <circle cx="110" cy="110" r="100" fill="#23272e" stroke="#3d4451" strokeWidth="2" />
       <path d="M 33.8 154 A 88 88 0 0 1 166.6 42.6" fill="none" stroke="#2e7d32" strokeWidth="6" />
       <path d="M 166.6 42.6 A 88 88 0 0 1 196.7 125.3" fill="none" stroke="#ed6c02" strokeWidth="6" />
@@ -316,22 +314,11 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const navigationAppTitle = useAttributePreference('navigationAppTitle');
 
   const savedPos = JSON.parse(localStorage.getItem('lsCardPos') || '{"x":0,"y":0}');
-  const savedSize = JSON.parse(localStorage.getItem('lsCardSize') || '{"w":null}');
 
   const [anchorEl, setAnchorEl] = useState(null);
 
   const [removing, setRemoving] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  const [settingsAnchor, setSettingsAnchor] = useState(null);
-  const [sections, setSections] = useState(() => ({
-    speedo: true, sensores: true, resposta: true, conect: true, perfil: true, params: true,
-    ...JSON.parse(localStorage.getItem('lsCardSections') || '{}'),
-  }));
-  const toggleSection = (key) => {
-    const next = { ...sections, [key]: !sections[key] };
-    setSections(next);
-    localStorage.setItem('lsCardSections', JSON.stringify(next));
-  };
 
   const handleRemove = useCatch(async (removed) => {
     if (removed) {
@@ -373,13 +360,10 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
       <div className={classes.root}>
         {device && (
           <Rnd
-            default={{ x: savedPos.x, y: savedPos.y, width: savedSize.w || 360, height: 'auto' }}
-            onDragStop={(e, d) => localStorage.setItem('lsCardPos', JSON.stringify({ x: d.x, y: d.y }))}
-            onResizeStop={(e, dir, ref) => localStorage.setItem('lsCardSize', JSON.stringify({ w: ref.offsetWidth }))}
+            default={{ x: savedPos.x, y: savedPos.y, width: 'auto', height: 'auto' }}
+              onDragStop={(e, d) => localStorage.setItem('lsCardPos', JSON.stringify({ x: d.x, y: d.y }))}
             minHeight={230}
-            minWidth={300}
-            maxWidth={620}
-            enableResizing={{ bottom: true, right: true, bottomRight: true }}
+              enableResizing={{ bottom: true }}
             dragHandleClassName="draggable-header"
             style={{ position: 'relative', pointerEvents: 'auto' }}
           >
@@ -402,16 +386,13 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                     {[device.model, position && position.protocol && position.protocol.toUpperCase(), position && position.attributes.totalDistance != null ? `${Math.round(position.attributes.totalDistance / 1000).toLocaleString('pt-BR')} km` : null].filter(Boolean).join(' • ')}
                   </Typography>
                 </div>
-                <IconButton size="small" onClick={(e) => setSettingsAnchor(e.currentTarget)} style={{ alignSelf: 'flex-start' }}>
-                  <SettingsIcon fontSize="small" />
-                </IconButton>
                 <IconButton size="small" onClick={onClose} onTouchStart={onClose} style={{ alignSelf: 'flex-start' }}>
                   <CloseIcon fontSize="small" />
                 </IconButton>
               </div>
               {position && (
                 <CardContent className={classes.content}>
-                  {sections.speedo && <Speedometer speed={position.speed * 1.852} />}
+                  <Speedometer speed={position.speed * 1.852} />
                   <Table size="small" className={classes.table}>
                     <TableBody>
                       {positionItems
@@ -452,8 +433,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                   </Table>
                   {showAll && (
                     <>
-                      {sections.sensores && (
-                      <>
                       <Typography variant="subtitle2" className={classes.sectionTitle}>
                         Sensores
                       </Typography>
@@ -462,9 +441,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                           <SensorRows position={position} />
                         </TableBody>
                       </Table>
-                      </>
-                      )}
-                      {sections.resposta && position.attributes.result && (
+                      {position.attributes.result && (
                         <>
                           <Typography variant="subtitle2" className={classes.sectionTitle}>
                             Última resposta do rastreador
@@ -474,8 +451,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                           </Typography>
                         </>
                       )}
-                      {sections.conect && (
-                      <>
                       <Typography variant="subtitle2" className={classes.sectionTitle}>
                         Conectividade
                       </Typography>
@@ -489,10 +464,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                           <StatusRow name="Status" content={device.status === 'online' ? 'Conectado' : device.status === 'offline' ? 'Desconectado' : 'Desconhecido'} />
                         </TableBody>
                       </Table>
-                      </>
-                      )}
-                      {sections.perfil && (
-                      <>
                       <Typography variant="subtitle2" className={classes.sectionTitle}>
                         Perfil
                       </Typography>
@@ -507,10 +478,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                             ))}
                         </TableBody>
                       </Table>
-                      </>
-                      )}
-                      {sections.params && (
-                      <>
                       <Typography variant="subtitle2" className={classes.sectionTitle}>
                         {`Parâmetros recebidos (${Object.keys(position.attributes).length})`}
                       </Typography>
@@ -530,8 +497,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                           ))}
                         </TableBody>
                       </Table>
-                      </>
-                      )}
                     </>
                   )}
                 </CardContent>
@@ -594,14 +559,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
           </Rnd>
         )}
       </div>
-      <Menu anchorEl={settingsAnchor} open={Boolean(settingsAnchor)} onClose={() => setSettingsAnchor(null)}>
-        {[['speedo', 'Velocímetro'], ['sensores', 'Sensores'], ['resposta', 'Última resposta'], ['conect', 'Conectividade'], ['perfil', 'Perfil'], ['params', 'Parâmetros recebidos']].map(([key, label]) => (
-          <MenuItem key={key} dense onClick={() => toggleSection(key)}>
-            <Checkbox size="small" checked={!!sections[key]} style={{ padding: '0 8px 0 0' }} />
-            {label}
-          </MenuItem>
-        ))}
-      </Menu>
       {position && (
         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
           <MenuItem

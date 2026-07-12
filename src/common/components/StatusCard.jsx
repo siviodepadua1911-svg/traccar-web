@@ -58,7 +58,7 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
     width: '100%',
     maxWidth: 'calc(100vw - 16px)',
     height: '100%',
-    maxHeight: 'calc(100vh - 240px)',
+    maxHeight: 'calc(100vh - 170px)',
     display: 'flex',
     flexDirection: 'column',
     [theme.breakpoints.up('sm')]: {
@@ -269,7 +269,7 @@ const Speedometer = ({ speed }) => {
   const value = Math.min(shown, SPEEDO_MAX);
   const angle = -120 + (value / SPEEDO_MAX) * 240;
   return (
-    <svg viewBox="0 0 220 190" style={{ display: 'block', width: '60%', maxWidth: 215, minWidth: 150, margin: '4px auto 0' }}>
+    <svg viewBox="0 0 220 190" style={{ display: 'block', width: '38%', maxWidth: 160, minWidth: 115, margin: '2px auto 0' }}>
       <circle cx="110" cy="110" r="100" fill="#23272e" stroke="#3d4451" strokeWidth="2" />
       <path d="M 33.8 154 A 88 88 0 0 1 166.6 42.6" fill="none" stroke="#2e7d32" strokeWidth="6" />
       <path d="M 166.6 42.6 A 88 88 0 0 1 196.7 125.3" fill="none" stroke="#ed6c02" strokeWidth="6" />

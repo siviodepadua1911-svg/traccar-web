@@ -316,7 +316,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const navigationAppTitle = useAttributePreference('navigationAppTitle');
 
   const savedPos = JSON.parse(localStorage.getItem('lsCardPos') || '{"x":0,"y":0}');
-  const savedSize = JSON.parse(localStorage.getItem('lsCardSize2') || '{"w":null,"h":null}');
+  const savedSize = JSON.parse(localStorage.getItem('lsCardSize3') || '{"w":null,"h":null}');
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -373,9 +373,9 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
       <div className={classes.root}>
         {device && (
           <Rnd
-            default={{ x: savedPos.x, y: savedPos.y, width: savedSize.w || 360, height: savedSize.h || Math.min(window.innerHeight - 240, 780) }}
+            default={{ x: savedPos.x, y: savedPos.y, width: savedSize.w || 360, height: savedSize.h || Math.min(window.innerHeight - 200, 940) }}
             onDragStop={(e, d) => localStorage.setItem('lsCardPos', JSON.stringify({ x: d.x, y: d.y }))}
-            onResizeStop={(e, dir, ref) => localStorage.setItem('lsCardSize2', JSON.stringify({ w: ref.offsetWidth, h: ref.offsetHeight }))}
+            onResizeStop={(e, dir, ref) => localStorage.setItem('lsCardSize3', JSON.stringify({ w: ref.offsetWidth, h: ref.offsetHeight }))}
             minHeight={230}
             minWidth={300}
             maxWidth={620}
@@ -399,7 +399,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                     {device.status === 'online' ? 'Conectado' : 'Desconectado'}
                   </Typography>
                   <Typography variant="caption" color="textSecondary" noWrap style={{ display: 'block' }}>
-                    {[device.model, position && position.protocol && position.protocol.toUpperCase(), position && position.attributes.totalDistance != null ? `${Math.round(position.attributes.totalDistance / 1000).toLocaleString('pt-BR')} km` : null].filter(Boolean).join(' • ')}
+                    {position && position.attributes.totalDistance != null ? `${Math.round(position.attributes.totalDistance / 1000).toLocaleString('pt-BR')} km` : ''}
                   </Typography>
                 </div>
                 <IconButton size="small" onClick={(e) => setSettingsAnchor(e.currentTarget)} style={{ alignSelf: 'flex-start' }}>

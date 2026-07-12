@@ -192,38 +192,38 @@ const Colored = ({ color, children }) => (
   <span style={{ color, fontWeight: 600 }}>{children}</span>
 );
 
-const SENSOR_ICON = { fontSize: 16, verticalAlign: 'text-bottom', marginRight: 6, color: '#7a8699' };
+const SENSOR_ICON = { fontSize: 18, verticalAlign: 'text-bottom', marginRight: 8 };
 
 const SensorRows = ({ position }) => {
   const a = position.attributes;
   const rows = [];
   if ('ignition' in a) {
-    rows.push(['Ignição', <KeyIcon style={SENSOR_ICON} />, a.ignition
+    rows.push(['Ignição', <KeyIcon style={{ ...SENSOR_ICON, color: '#f9a825' }} />, a.ignition
       ? <Colored color={COLORS.ok}>Ligada</Colored>
       : <Colored color={COLORS.warn}>Desligada</Colored>]);
   }
   if ('blocked' in a) {
-    rows.push(['Bloqueio', a.blocked ? <LockIcon style={SENSOR_ICON} /> : <LockOpenIcon style={SENSOR_ICON} />, a.blocked
+    rows.push(['Bloqueio', a.blocked ? <LockIcon style={{ ...SENSOR_ICON, color: '#e53935' }} /> : <LockOpenIcon style={{ ...SENSOR_ICON, color: '#43a047' }} />, a.blocked
       ? <Colored color={COLORS.bad}>BLOQUEADO</Colored>
       : <Colored color={COLORS.ok}>Liberado</Colored>]);
   }
   if ('motion' in a) {
-    rows.push(['Movimento', <DirectionsRunIcon style={SENSOR_ICON} />, a.motion
+    rows.push(['Movimento', <DirectionsRunIcon style={{ ...SENSOR_ICON, color: a.motion ? '#1e88e5' : '#90a4ae' }} />, a.motion
       ? <Colored color={COLORS.info}>Em movimento</Colored>
       : 'Parado']);
   }
   if ('power' in a) {
     const v = Number(a.power);
     const c = v >= 12.5 ? COLORS.ok : v >= 11.5 ? COLORS.warn : COLORS.bad;
-    rows.push(['Bateria do veículo', <BoltIcon style={SENSOR_ICON} />, <Colored color={c}>{`${v.toFixed(2)} V`}</Colored>]);
+    rows.push(['Bateria do veículo', <BoltIcon style={{ ...SENSOR_ICON, color: '#fb8c00' }} />, <Colored color={c}>{`${v.toFixed(2)} V`}</Colored>]);
   }
   if ('batteryLevel' in a) {
     const v = Number(a.batteryLevel);
     const c = v >= 60 ? COLORS.ok : v >= 20 ? COLORS.warn : COLORS.bad;
-    rows.push(['Bateria interna', <BatteryFullIcon style={SENSOR_ICON} />, <Colored color={c}>{`${Math.round(v)}%`}</Colored>]);
+    rows.push(['Bateria interna', <BatteryFullIcon style={{ ...SENSOR_ICON, color: '#43a047' }} />, <Colored color={c}>{`${Math.round(v)}%`}</Colored>]);
   }
   if ('charge' in a) {
-    rows.push(['Alimentação externa', <PowerIcon style={SENSOR_ICON} />, a.charge
+    rows.push(['Alimentação externa', <PowerIcon style={{ ...SENSOR_ICON, color: '#8e24aa' }} />, a.charge
       ? <Colored color={COLORS.ok}>Conectada (carregando)</Colored>
       : <Colored color={COLORS.warn}>Desconectada</Colored>]);
   }
@@ -233,15 +233,15 @@ const SensorRows = ({ position }) => {
     const pct = Math.round((v / max) * 100);
     const c = pct >= 70 ? COLORS.ok : pct >= 40 ? COLORS.warn : COLORS.bad;
     const label = pct >= 70 ? 'Forte' : pct >= 40 ? 'Médio' : 'Fraco';
-    rows.push(['Sinal GSM', <SignalCellularAltIcon style={SENSOR_ICON} />, <Colored color={c}>{`${label} (${pct}%)`}</Colored>]);
+    rows.push(['Sinal GSM', <SignalCellularAltIcon style={{ ...SENSOR_ICON, color: '#039be5' }} />, <Colored color={c}>{`${label} (${pct}%)`}</Colored>]);
   }
   if ('sat' in a) {
     const v = Number(a.sat);
     const c = v >= 5 ? COLORS.ok : v >= 3 ? COLORS.warn : COLORS.bad;
-    rows.push(['Satélites GPS', <SatelliteAltIcon style={SENSOR_ICON} />, <Colored color={c}>{String(v)}</Colored>]);
+    rows.push(['Satélites GPS', <SatelliteAltIcon style={{ ...SENSOR_ICON, color: '#00897b' }} />, <Colored color={c}>{String(v)}</Colored>]);
   }
   if (a.alarm) {
-    rows.push(['Alarme', <WarningAmberIcon style={{ ...SENSOR_ICON, color: COLORS.bad }} />, <Colored color={COLORS.bad}>{String(a.alarm)}</Colored>]);
+    rows.push(['Alarme', <WarningAmberIcon style={{ ...SENSOR_ICON, color: '#e53935' }} />, <Colored color={COLORS.bad}>{String(a.alarm)}</Colored>]);
   }
   return rows.map(([name, icon, content]) => (
     <StatusRow key={name} name={<span style={{ display: 'inline-flex', alignItems: 'center' }}>{icon}{name}</span>} content={content} />
@@ -316,7 +316,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const navigationAppTitle = useAttributePreference('navigationAppTitle');
 
   const savedPos = JSON.parse(localStorage.getItem('lsCardPos') || '{"x":0,"y":0}');
-  const savedSize = JSON.parse(localStorage.getItem('lsCardSize2') || '{"w":null}');
+  const savedSize = JSON.parse(localStorage.getItem('lsCardSize2') || '{"w":null,"h":null}');
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -373,9 +373,9 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
       <div className={classes.root}>
         {device && (
           <Rnd
-            default={{ x: savedPos.x, y: savedPos.y, width: savedSize.w || 360, height: 'auto' }}
+            default={{ x: savedPos.x, y: savedPos.y, width: savedSize.w || 360, height: savedSize.h || Math.min(window.innerHeight - 240, 780) }}
             onDragStop={(e, d) => localStorage.setItem('lsCardPos', JSON.stringify({ x: d.x, y: d.y }))}
-            onResizeStop={(e, dir, ref) => localStorage.setItem('lsCardSize2', JSON.stringify({ w: ref.offsetWidth }))}
+            onResizeStop={(e, dir, ref) => localStorage.setItem('lsCardSize2', JSON.stringify({ w: ref.offsetWidth, h: ref.offsetHeight }))}
             minHeight={230}
             minWidth={300}
             maxWidth={620}

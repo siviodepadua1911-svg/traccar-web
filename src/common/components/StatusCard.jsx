@@ -380,6 +380,12 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
             minWidth={300}
             maxWidth={620}
             enableResizing={{ bottom: true, right: true, bottomRight: true }}
+            resizeHandleStyles={{ bottom: { height: '18px', bottom: 0 } }}
+            resizeHandleComponent={{ bottom: (
+              <div style={{ width: '100%', height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'ns-resize' }}>
+                <div style={{ width: 48, height: 5, borderRadius: 3, backgroundColor: '#b6c2d2' }} />
+              </div>
+            ) }}
             dragHandleClassName="draggable-header"
             style={{ position: 'relative', pointerEvents: 'auto' }}
           >

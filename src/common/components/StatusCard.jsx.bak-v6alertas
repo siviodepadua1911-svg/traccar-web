@@ -32,7 +32,6 @@ import {
   DialogContentText as LsConfirmText, DialogActions as LsConfirmActions, Button as LsConfirmButton,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PendingIcon from '@mui/icons-material/Pending';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -48,8 +47,6 @@ import { mapIconKey, mapIcons } from '../../map/core/preloadImages';
 
 import { useTranslation } from './LocalizationProvider';
 import RemoveDialog from './RemoveDialog';
-import LsAlertsDialog from './LsAlertsDialog';
-import LsDeviceEvents from './LsDeviceEvents';
 import PositionValue from './PositionValue';
 import { useDeviceReadonly, useRestriction } from '../util/permissions';
 import usePositionAttributes from '../attributes/usePositionAttributes';
@@ -57,7 +54,6 @@ import { devicesActions } from '../../store';
 import { useCatch, useCatchCallback } from '../../reactHelper';
 import { useAttributePreference } from '../util/preferences';
 import fetchOrThrow from '../util/fetchOrThrow';
-import { translateResult } from '../util/lsCommandResult';
 import { formatTime } from '../util/formatter';
 
 const useStyles = makeStyles()((theme, { desktopPadding }) => ({
@@ -150,7 +146,36 @@ const StatusRow = ({ name, content }) => {
   );
 };
 
+const RESULT_DICT = [
+  ['Cut off the fuel supply: Success', 'BLOQUEIO executado com sucesso'],
+  ['Restore fuel supply: Success', 'DESBLOQUEIO executado com sucesso'],
+  ['already in the state of fuel supply cut-off', 'Ja estava bloqueado'],
+  ['The terminal will restart after 30 seconds', 'O rastreador vai reiniciar em 30 segundos'],
+  ['GMT_OK', 'Fuso horario ajustado'],
+  ['TIMER_OK', 'Intervalo de envio ajustado'],
+  ['Charging', 'Carregando'],
+  ['GPRS:Link Up', 'Dados: conectado'],
+  ['NW Signal Level:strong', 'Sinal de rede: forte'],
+  ['NW Signal Level:medium', 'Sinal de rede: medio'],
+  ['NW Signal Level:weak', 'Sinal de rede: fraco'],
+  ['GPS:FIXED', 'GPS: fixado'],
+  ['SVS Used in fix:', 'Satelites em uso: '],
+  ['GPS Signal Level:', 'Sinal dos satelites: '],
+  ['ACC:ON', 'Ignicao: LIGADA'],
+  ['ACC:OFF', 'Ignicao: DESLIGADA'],
+  ['Defense:ON', 'Modo defesa: ativado'],
+  ['Defense:OFF', 'Modo defesa: desativado'],
+  ['Battery:', 'Bateria interna: '],
+  ['Success', 'Sucesso'],
+];
 
+const translateResult = (text) => {
+  let out = String(text);
+  RESULT_DICT.forEach(([en, pt]) => {
+    out = out.split(en).join(pt);
+  });
+  return out;
+};
 
 const rawValue = (v) => {
   if (v === null || v === undefined) return '—';
@@ -300,11 +325,10 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
 
   const [removing, setRemoving] = useState(false);
   const [confirmCommand, setConfirmCommand] = useState(null);
-  const [alertsOpen, setAlertsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [settingsAnchor, setSettingsAnchor] = useState(null);
   const [sections, setSections] = useState(() => ({
-    speedo: true, sensores: true, resposta: true, conect: true, perfil: true, params: true, eventos: true,
+    speedo: true, sensores: true, resposta: true, conect: true, perfil: true, params: true,
     ...JSON.parse(localStorage.getItem('lsCardSections') || '{}'),
   }));
   const toggleSection = (key) => {
@@ -441,7 +465,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                       </TableRow>
                     </TableFooter>
                   </Table>
-                  {sections.eventos && <LsDeviceEvents deviceId={deviceId} />}
                   {showAll && (
                     <>
                       {sections.sensores && (
@@ -556,11 +579,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                     <LockOpenIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Meus alertas">
-                  <IconButton color="primary" onClick={() => setAlertsOpen(true)} disabled={disableActions}>
-                    <NotificationsIcon />
-                  </IconButton>
-                </Tooltip>
                 <Tooltip title={t('commandTitle')}>
                   <IconButton
                     onClick={() => navigate(`/settings/device/${deviceId}/command`)}
@@ -591,14 +609,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
           </Rnd>
         )}
       </div>
-      {alertsOpen && (
-        <LsAlertsDialog
-          deviceId={deviceId}
-          deviceName={device ? device.name : ''}
-          device={device}
-          onClose={() => setAlertsOpen(false)}
-        />
-      )}
       <LsConfirmDialog open={Boolean(confirmCommand)} onClose={() => setConfirmCommand(null)}>
         <LsConfirmTitle>
           {`${confirmCommand === 'engineStop' ? 'Bloquear' : 'Desbloquear'} ${device ? device.name : ''}?`}
@@ -622,7 +632,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
         </LsConfirmActions>
       </LsConfirmDialog>
       <Menu anchorEl={settingsAnchor} open={Boolean(settingsAnchor)} onClose={() => setSettingsAnchor(null)}>
-        {[['speedo', 'Velocímetro'], ['sensores', 'Sensores'], ['resposta', 'Última resposta'], ['conect', 'Conectividade'], ['perfil', 'Perfil'], ['params', 'Parâmetros recebidos'], ['eventos', 'Alertas e eventos']].map(([key, label]) => (
+        {[['speedo', 'Velocímetro'], ['sensores', 'Sensores'], ['resposta', 'Última resposta'], ['conect', 'Conectividade'], ['perfil', 'Perfil'], ['params', 'Parâmetros recebidos']].map(([key, label]) => (
           <MenuItem key={key} dense onClick={() => toggleSection(key)}>
             <Checkbox size="small" checked={!!sections[key]} style={{ padding: '0 8px 0 0' }} />
             {label}

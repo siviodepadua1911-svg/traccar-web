@@ -12,7 +12,6 @@ import {
 import { makeStyles } from 'tss-react/mui';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { formatNotificationTitle, formatTime } from '../common/util/formatter';
-import { friendlyCommandResult } from '../common/util/lsCommandResult';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { eventsActions } from '../store';
 
@@ -39,17 +38,13 @@ const EventsDrawer = ({ open, onClose }) => {
 
   const events = useSelector((state) => state.events.items);
 
-  const formatType = (event) => {
-    if (event.type === 'commandResult') {
-      return friendlyCommandResult(event.attributes && event.attributes.result);
-    }
-    return formatNotificationTitle(t, {
+  const formatType = (event) =>
+    formatNotificationTitle(t, {
       type: event.type,
       attributes: {
         alarms: event.attributes.alarm,
       },
     });
-  };
 
   return (
     <Drawer anchor="right" open={open} onClose={onClose}>

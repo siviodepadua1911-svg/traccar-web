@@ -93,13 +93,17 @@ const SocketController = () => {
 
   const features = useFeatures();
 
-  const deliver = useCallback(
+  const handleEvents = useCallback(
     (events) => {
+      const filtered = filterRepeatedCommandResults(events);
+      if (filtered.length === 0) {
+        return;
+      }
       if (!features.disableEvents) {
-        dispatch(eventsActions.add(events));
+        dispatch(eventsActions.add(filtered));
       }
       if (
-        events.some(
+        filtered.some(
           (e) =>
             soundEvents.includes(e.type) ||
             (e.type === 'alarm' && soundAlarms.includes(e.attributes.alarm)),
@@ -107,47 +111,17 @@ const SocketController = () => {
       ) {
         playAlarm();
       }
-      setNotifications((prev) => [
-        ...prev.slice(-2),
-        ...events.map((event) => ({
+      setNotifications(
+        filtered.map((event) => ({
           id: event.id,
           message: event.type === 'commandResult'
             ? `${devices[event.deviceId]?.name || 'Veículo'} — ${friendlyCommandResult(event.attributes.result)}`
             : event.attributes.message,
           show: true,
         })),
-      ]);
+      );
     },
     [features, dispatch, soundEvents, soundAlarms, devices],
-  );
-
-  const deliverRef = useRef(deliver);
-  deliverRef.current = deliver;
-
-  const pendingResultsRef = useRef(new Map());
-
-  const handleEvents = useCallback(
-    (events) => {
-      const instant = events.filter((event) => event.type !== 'commandResult');
-      if (instant.length) {
-        deliverRef.current(instant);
-      }
-      events.filter((event) => event.type === 'commandResult').forEach((event) => {
-        const pending = pendingResultsRef.current.get(event.deviceId);
-        if (pending) {
-          clearTimeout(pending.timer);
-        }
-        const timer = setTimeout(() => {
-          pendingResultsRef.current.delete(event.deviceId);
-          const shown = filterRepeatedCommandResults([event]);
-          if (shown.length) {
-            deliverRef.current(shown);
-          }
-        }, 2500);
-        pendingResultsRef.current.set(event.deviceId, { event, timer });
-      });
-    },
-    [],
   );
 
   const handleEventsRef = useRef(handleEvents);

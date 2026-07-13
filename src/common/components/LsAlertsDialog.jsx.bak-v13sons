@@ -1,24 +1,21 @@
 import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Switch,
-  Slider, TextField, Typography, Divider, CircularProgress, IconButton,
+  Slider, TextField, Typography, Divider, CircularProgress,
 } from '@mui/material';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import VolumeOffIcon from '@mui/icons-material/VolumeOff';
-import { sessionActions } from '../../store';
 import { useCatchCallback } from '../../reactHelper';
 import fetchOrThrow from '../util/fetchOrThrow';
 
 const LS_TOGGLES = [
-  { key: 'powerCut', label: 'Corte de energia', types: ['alarm'], alarms: 'powerCut,powerOff', soundKind: 'alarms', soundValues: ['powerCut', 'powerOff'] },
-  { key: 'lowBattery', label: 'Bateria fraca', types: ['alarm'], alarms: 'lowBattery,lowPower', soundKind: 'alarms', soundValues: ['lowBattery', 'lowPower'] },
-  { key: 'inactive', label: 'Sem sinal (mais de 1h)', types: ['deviceInactive'], soundKind: 'events', soundValues: ['deviceInactive'] },
-  { key: 'ignitionOn', label: 'Ignição ligada', types: ['ignitionOn'], soundKind: 'events', soundValues: ['ignitionOn'] },
-  { key: 'ignitionOff', label: 'Ignição desligada', types: ['ignitionOff'], soundKind: 'events', soundValues: ['ignitionOff'] },
-  { key: 'moving', label: 'Início de movimento', types: ['deviceMoving'], soundKind: 'events', soundValues: ['deviceMoving'] },
-  { key: 'overspeed', label: 'Excesso de velocidade', types: ['deviceOverspeed'], soundKind: 'events', soundValues: ['deviceOverspeed'] },
-  { key: 'geofence', label: 'Cerca virtual (entrar/sair)', types: ['geofenceEnter', 'geofenceExit'], soundKind: 'events', soundValues: ['geofenceEnter', 'geofenceExit'] },
+  { key: 'powerCut', label: 'Corte de energia', types: ['alarm'], alarms: 'powerCut,powerOff' },
+  { key: 'lowBattery', label: 'Bateria fraca', types: ['alarm'], alarms: 'lowBattery,lowPower' },
+  { key: 'inactive', label: 'Sem sinal (mais de 1h)', types: ['deviceInactive'] },
+  { key: 'ignitionOn', label: 'Ignição ligada', types: ['ignitionOn'] },
+  { key: 'ignitionOff', label: 'Ignição desligada', types: ['ignitionOff'] },
+  { key: 'moving', label: 'Início de movimento', types: ['deviceMoving'] },
+  { key: 'overspeed', label: 'Excesso de velocidade', types: ['deviceOverspeed'] },
+  { key: 'geofence', label: 'Cerca virtual (entrar/sair)', types: ['geofenceEnter', 'geofenceExit'] },
 ];
 
 const DEFAULT_ON = ['powerCut', 'lowBattery', 'inactive'];
@@ -32,16 +29,7 @@ const matchesToggle = (notification, toggle) => {
   return true;
 };
 
-const soundSource = (user, kind) => {
-  const attrs = user.attributes || {};
-  if (kind === 'alarms') {
-    return attrs.soundAlarms !== undefined ? attrs.soundAlarms : 'sos';
-  }
-  return attrs.soundEvents !== undefined ? attrs.soundEvents : '';
-};
-
 const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
-  const dispatch = useDispatch();
   const user = useSelector((state) => state.session.user);
 
   const [loaded, setLoaded] = useState(false);
@@ -53,14 +41,6 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
       ? Math.round(device.attributes.speedLimit * 1.852) : 100,
   );
   const [telegram, setTelegram] = useState(String((user.attributes && user.attributes.telegramChatId) || ''));
-  const [sounds, setSounds] = useState(() => {
-    const initial = {};
-    LS_TOGGLES.forEach((toggle) => {
-      const list = String(soundSource(user, toggle.soundKind)).split(',').map((x) => x.trim());
-      initial[toggle.key] = toggle.soundValues.some((v) => list.includes(v));
-    });
-    return initial;
-  });
 
   const load = useCatchCallback(async () => {
     const response = await fetchOrThrow(`/api/notifications?deviceId=${deviceId}`);
@@ -77,41 +57,23 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
 
   useEffect(() => { load(); }, [load]);
 
-  const buildSound = (kind) => {
-    const set = new Set(String(soundSource(user, kind)).split(',').map((x) => x.trim()).filter(Boolean));
-    LS_TOGGLES.forEach((toggle) => {
-      if (toggle.soundKind === kind) {
-        toggle.soundValues.forEach((v) => set.delete(v));
-      }
-    });
-    LS_TOGGLES.forEach((toggle) => {
-      if (toggle.soundKind === kind && states[toggle.key] && sounds[toggle.key]) {
-        toggle.soundValues.forEach((v) => set.add(v));
-      }
-    });
-    return Array.from(set).join(',');
-  };
-
   const handleSave = useCatchCallback(async () => {
     setSaving(true);
     try {
       const chatId = telegram.trim();
-      const attributes = { ...user.attributes };
-      if (chatId) {
-        attributes.telegramChatId = chatId;
-      } else {
-        delete attributes.telegramChatId;
+      if (chatId !== String((user.attributes && user.attributes.telegramChatId) || '')) {
+        const updatedUser = { ...user, attributes: { ...user.attributes } };
+        if (chatId) {
+          updatedUser.attributes.telegramChatId = chatId;
+        } else {
+          delete updatedUser.attributes.telegramChatId;
+        }
+        await fetchOrThrow(`/api/users/${user.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedUser),
+        });
       }
-      attributes.soundAlarms = buildSound('alarms');
-      attributes.soundEvents = buildSound('events');
-      const updatedUser = { ...user, attributes };
-      await fetchOrThrow(`/api/users/${user.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedUser),
-      });
-      dispatch(sessionActions.updateUser(updatedUser));
-
       const notificators = chatId ? 'web,telegram' : 'web';
       const allResponse = await fetchOrThrow('/api/notifications');
       const all = await allResponse.json();
@@ -175,7 +137,7 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
     } finally {
       setSaving(false);
     }
-  }, [states, sounds, speed, telegram, linked, user, device, deviceId, onClose]);
+  }, [states, speed, telegram, linked, user, device, deviceId, onClose]);
 
   return (
     <Dialog open onClose={() => !saving && onClose()} fullWidth maxWidth="xs">
@@ -194,18 +156,8 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
           <>
             {LS_TOGGLES.map((toggle) => (
               <div key={toggle.key}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="body2" style={{ flexGrow: 1 }}>{toggle.label}</Typography>
-                  <IconButton
-                    size="small"
-                    disabled={!states[toggle.key]}
-                    onClick={() => setSounds({ ...sounds, [toggle.key]: !sounds[toggle.key] })}
-                    title="Tocar som no painel"
-                  >
-                    {sounds[toggle.key] && states[toggle.key]
-                      ? <VolumeUpIcon fontSize="small" color="primary" />
-                      : <VolumeOffIcon fontSize="small" />}
-                  </IconButton>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Typography variant="body2">{toggle.label}</Typography>
                   <Switch
                     checked={!!states[toggle.key]}
                     onChange={(e) => setStates({ ...states, [toggle.key]: e.target.checked })}
@@ -220,9 +172,6 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
                 )}
               </div>
             ))}
-            <Typography variant="caption" color="textSecondary" component="div" style={{ marginTop: 6 }}>
-              Alto-falante azul = toca um bipe no painel aberto. Vale para todos os seus veículos.
-            </Typography>
             <Divider style={{ margin: '10px 0' }} />
             <Typography variant="body2" style={{ fontWeight: 600, marginBottom: 6 }}>
               Conectar meu Telegram

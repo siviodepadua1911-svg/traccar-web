@@ -27,40 +27,30 @@ const playAlarm = () => {
   alarmAudio.play();
 };
 
-// Anti-eco v4: 1 aviso por comando. Mostra quando o texto da resposta muda;
-// resposta repetida so aparece 1 vez logo apos um comando enviado (consome a janela).
+// Anti-eco v2: resultado de comando so aparece quando o texto muda
+// (memoria no navegador) ou nos 3 min apos o usuario enviar um comando.
 const loadResultMemory = () => {
   try {
-    const raw = JSON.parse(localStorage.getItem('lsLastCommandResults') || '{}');
-    Object.keys(raw).forEach((k) => {
-      if (typeof raw[k] === 'string') {
-        raw[k] = { result: raw[k], shownAt: 0 };
-      }
-    });
-    return raw;
+    return JSON.parse(localStorage.getItem('lsLastCommandResults') || '{}');
   } catch {
     return {};
   }
 };
 const filterRepeatedCommandResults = (events) => {
   const memory = loadResultMemory();
-  let expecting = Date.now() < Number(localStorage.getItem('lsExpectResultUntil') || 0);
+  const expecting = Date.now() < Number(localStorage.getItem('lsExpectResultUntil') || 0);
   let changed = false;
   const out = events.filter((event) => {
     if (event.type !== 'commandResult') {
       return true;
     }
     const result = event.attributes ? event.attributes.result : '';
-    const prev = memory[event.deviceId] || { result: null, shownAt: 0 };
-    const newText = prev.result !== result;
-    const show = newText || expecting;
-    if (show) {
-      memory[event.deviceId] = { result, shownAt: Date.now() };
+    const repeated = memory[event.deviceId] === result;
+    if (!repeated) {
+      memory[event.deviceId] = result;
       changed = true;
-      expecting = false;
-      localStorage.setItem('lsExpectResultUntil', '0');
     }
-    return show;
+    return !repeated || expecting;
   });
   if (changed) {
     localStorage.setItem('lsLastCommandResults', JSON.stringify(memory));
@@ -93,13 +83,17 @@ const SocketController = () => {
 
   const features = useFeatures();
 
-  const deliver = useCallback(
+  const handleEvents = useCallback(
     (events) => {
+      const filtered = filterRepeatedCommandResults(events);
+      if (filtered.length === 0) {
+        return;
+      }
       if (!features.disableEvents) {
-        dispatch(eventsActions.add(events));
+        dispatch(eventsActions.add(filtered));
       }
       if (
-        events.some(
+        filtered.some(
           (e) =>
             soundEvents.includes(e.type) ||
             (e.type === 'alarm' && soundAlarms.includes(e.attributes.alarm)),
@@ -107,47 +101,17 @@ const SocketController = () => {
       ) {
         playAlarm();
       }
-      setNotifications((prev) => [
-        ...prev.slice(-2),
-        ...events.map((event) => ({
+      setNotifications(
+        filtered.map((event) => ({
           id: event.id,
           message: event.type === 'commandResult'
             ? `${devices[event.deviceId]?.name || 'Veículo'} — ${friendlyCommandResult(event.attributes.result)}`
             : event.attributes.message,
           show: true,
         })),
-      ]);
+      );
     },
     [features, dispatch, soundEvents, soundAlarms, devices],
-  );
-
-  const deliverRef = useRef(deliver);
-  deliverRef.current = deliver;
-
-  const pendingResultsRef = useRef(new Map());
-
-  const handleEvents = useCallback(
-    (events) => {
-      const instant = events.filter((event) => event.type !== 'commandResult');
-      if (instant.length) {
-        deliverRef.current(instant);
-      }
-      events.filter((event) => event.type === 'commandResult').forEach((event) => {
-        const pending = pendingResultsRef.current.get(event.deviceId);
-        if (pending) {
-          clearTimeout(pending.timer);
-        }
-        const timer = setTimeout(() => {
-          pendingResultsRef.current.delete(event.deviceId);
-          const shown = filterRepeatedCommandResults([event]);
-          if (shown.length) {
-            deliverRef.current(shown);
-          }
-        }, 2500);
-        pendingResultsRef.current.set(event.deviceId, { event, timer });
-      });
-    },
-    [],
   );
 
   const handleEventsRef = useRef(handleEvents);

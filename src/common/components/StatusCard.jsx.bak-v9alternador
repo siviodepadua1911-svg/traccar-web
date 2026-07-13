@@ -39,7 +39,6 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import KeyIcon from '@mui/icons-material/Key';
 import BoltIcon from '@mui/icons-material/Bolt';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
-import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
 import PowerIcon from '@mui/icons-material/Power';
 import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
 import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt';
@@ -196,25 +195,6 @@ const SensorRows = ({ position }) => {
     const c = v >= 12.5 ? COLORS.ok : v >= 11.5 ? COLORS.warn : COLORS.bad;
     rows.push(['Bateria do veículo', <BoltIcon style={{ ...SENSOR_ICON, color: '#fb8c00' }} />, <Colored color={c}>{`${v.toFixed(2)} V`}</Colored>]);
   }
-  if ('power' in a) {
-    const va = Number(a.power);
-    const sys24 = va > 18;
-    const vMin = sys24 ? 25 : 13;
-    const vMax = sys24 ? 28 : 15;
-    const vOff = sys24 ? 24 : 12.8;
-    let altTexto = 'Motor desligado';
-    let altCor = '#5f6368';
-    if (va > vMax) {
-      altTexto = 'Voltagem alta - verificar';
-      altCor = COLORS.bad;
-    } else if (va >= vMin) {
-      altTexto = 'Carregando (motor ligado)';
-      altCor = COLORS.ok;
-    } else if (va > vOff) {
-      altTexto = 'Motor ligado';
-    }
-    rows.push(['Alternador', <BatteryChargingFullIcon style={{ ...SENSOR_ICON, color: altCor }} />, <Colored color={altCor}>{altTexto}</Colored>]);
-  }
   if ('batteryLevel' in a) {
     const v = Number(a.batteryLevel);
     const c = v >= 60 ? COLORS.ok : v >= 20 ? COLORS.warn : COLORS.bad;
@@ -361,7 +341,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   }, [navigate, position, t]);
 
   const sendCommand = useCatch(async (type) => {
-    localStorage.setItem('lsExpectResultUntil', String(Date.now() + 3 * 60 * 1000));
     await fetchOrThrow('/api/commands/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

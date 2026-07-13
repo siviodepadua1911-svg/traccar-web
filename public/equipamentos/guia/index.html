@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guia do Equipamento — LS Autotruck Rastreios</title>
+<style>
+:root{--azul:#0F1E45;--claro:#1C7ED6;--ok:#2e7d32;--alerta:#d32f2f;--cinza:#5f6368}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;color:#1c1c1c;background:#f4f6fa;line-height:1.55}
+.topo{background:var(--azul);color:#fff;padding:22px 16px;text-align:center}
+.topo img{height:74px;border-radius:50%;margin-bottom:8px}
+.topo h1{font-size:22px;font-weight:700}
+.topo p{color:#bcd2f7;font-size:14px}
+main{max-width:860px;margin:0 auto;padding:18px 14px 40px}
+.fluxo{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:14px 0 20px}
+.fluxo span{background:#fff;border:2px solid var(--claro);color:var(--azul);border-radius:20px;padding:6px 12px;font-size:13px;font-weight:700}
+.fluxo b{align-self:center;color:var(--claro)}
+section{background:#fff;border:1px solid #dde3ee;border-radius:10px;padding:16px 18px;margin-bottom:14px}
+h2{font-size:17px;color:var(--azul);margin-bottom:10px}
+h2 .n{display:inline-block;background:var(--claro);color:#fff;border-radius:50%;width:26px;height:26px;text-align:center;line-height:26px;font-size:14px;margin-right:8px}
+ol,ul{margin:6px 0 6px 22px}
+li{margin-bottom:5px;font-size:14px}
+table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+th,td{border:1px solid #dde3ee;padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#eef3fb;color:var(--azul)}
+code{background:#eef3fb;border:1px solid #d4deef;border-radius:5px;padding:2px 7px;font-size:13px;color:var(--azul);font-weight:700;white-space:nowrap}
+.aviso{background:#fdecea;border-left:4px solid var(--alerta);padding:9px 12px;border-radius:0 6px 6px 0;font-size:13.5px;margin:8px 0}
+.dica{background:#e8f4ea;border-left:4px solid var(--ok);padding:9px 12px;border-radius:0 6px 6px 0;font-size:13.5px;margin:8px 0}
+.ok{color:var(--ok);font-weight:700}.op{color:var(--cinza);font-weight:700}
+footer{text-align:center;font-size:12.5px;color:var(--cinza);padding:14px}
+@media print{body{background:#fff}section{break-inside:avoid;border:1px solid #bbb}.topo{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<div class="topo">
+<img src="https://i.postimg.cc/R03xyFTD/logo-png.jpg" alt="LS Autotruck Rastreios">
+<h1>Guia do Equipamento — do zero ao rastreio</h1>
+<p>Rastreador J16 · Plataforma LS Autotruck Rastreios</p>
+</div>
+<main>
+<div class="fluxo">
+<span>1 Cadastrar</span><b>➜</b><span>2 Configurar o chip</span><b>➜</b><span>3 Instalar no veículo</span><b>➜</b><span>4 Ajustar no painel</span><b>➜</b><span>5 Alertas + teste</span>
+</div>
+
+<section>
+<h2><span class="n">1</span>Cadastrar o equipamento na plataforma</h2>
+<ol>
+<li>Entre na plataforma → <b>Configurações → Dispositivos → botão +</b></li>
+<li><b>Nome:</b> apelido do veículo (ex.: Onix branco - João)</li>
+<li><b>Identificador:</b> o <b>IMEI de 15 dígitos</b> da etiqueta do aparelho (confira dígito por dígito)</li>
+<li><b>Modelo:</b> J16 → <b>Salvar</b></li>
+</ol>
+<div class="aviso"><b>Importante:</b> a plataforma só aceita aparelho cadastrado. IMEI errado = nunca conecta.</div>
+</section>
+
+<section>
+<h2><span class="n">2</span>Configurar o chip do rastreador (por SMS)</h2>
+<p style="font-size:14px">Coloque o chip no aparelho, ligue-o e mande estes SMS <b>para o número do chip</b>, um de cada vez, nesta ordem:</p>
+<table>
+<tr><th>Ordem</th><th>SMS (copie exato)</th><th>O que faz</th></tr>
+<tr><td>1</td><td><code>APN,hinova.br,hinova,hinova#</code></td><td>Internet do chip Hinova (outro chip = outro APN, consulte o fornecedor)</td></tr>
+<tr><td>2</td><td><code>SERVER,1,gps.lsautotruckrastreios.com.br,5023#</code></td><td>Endereço do servidor <b>(sem ,0 no final!)</b></td></tr>
+<tr><td>3</td><td><code>GPRS,1#</code></td><td>Liga a transmissão de dados</td></tr>
+<tr><td>4</td><td><code>GMT,W,0,0#</code></td><td>Fuso horário do aparelho</td></tr>
+<tr><td>5</td><td><code>TIMER,60,3600#</code></td><td>Envia posição a cada 60s ligado / 1h desligado</td></tr>
+<tr><td>6</td><td><code>PARAM#</code></td><td>Confere a configuração gravada</td></tr>
+<tr><td>7</td><td><code>RESET#</code></td><td>Reinicia o aparelho para aplicar tudo</td></tr>
+</table>
+<div class="dica"><b>Se o comando 2 não for aceito</b>, use a versão por IP: <code>SERVER,0,109.123.248.68,5023,0#</code></div>
+</section>
+
+<section>
+<h2><span class="n">3</span>Instalar no veículo</h2>
+<ul>
+<li><b>Alimentação:</b> vermelho no positivo pós-fusível (12V ou 24V), preto no negativo/chassi</li>
+<li><b>Chavinha da bateria interna: deixe em ON</b> — sem ela o alarme de corte de energia NÃO funciona</li>
+<li><b>Fio de ignição</b> (se houver): no pós-chave, para detectar ligado/desligado</li>
+<li><b>Relé de bloqueio</b> (opcional): no corte da bomba/ignição, conforme esquema do relé</li>
+<li>Ligue tudo, aguarde 1–2 minutos → o veículo deve aparecer <span class="ok">Conectado</span> na plataforma</li>
+</ul>
+</section>
+
+<section>
+<h2><span class="n">4</span>Ajustar no painel</h2>
+<ul>
+<li><b>Foto do veículo:</b> Configurações → Dispositivos → lápis (editar) → seção Imagem</li>
+<li><b>Quilometragem real:</b> Configurações → Dispositivos → ação <b>Acumuladores</b> → campo Distância Total (em km, igual ao painel do carro)</li>
+<li><b>Conferir a ficha:</b> clique no veículo no mapa e veja os sensores (ignição, bloqueio, baterias, sinal)</li>
+</ul>
+</section>
+
+<section>
+<h2><span class="n">5</span>Alertas — o que ativar</h2>
+<p style="font-size:14px">Em <b>Configurações → Notificações → +</b>, crie um alerta por linha (canal <b>Web</b>; Telegram se configurado):</p>
+<table>
+<tr><th>Alerta</th><th>Recomendação</th><th>Para quê</th></tr>
+<tr><td>Alarme → Alimentação cortada</td><td class="ok">SEMPRE</td><td>Fio cortado ou bateria desligada (furto)</td></tr>
+<tr><td>Alarme → Bateria baixa</td><td class="ok">SEMPRE</td><td>Bateria interna do rastreador fraca</td></tr>
+<tr><td>Dispositivo inativo</td><td class="ok">SEMPRE</td><td>Veículo mais de 1h sem comunicar</td></tr>
+<tr><td>Ignição ligada / desligada</td><td class="op">Opcional</td><td>Saber cada partida e desligamento</td></tr>
+<tr><td>Excesso de velocidade</td><td class="op">Opcional</td><td>Acima do limite definido (ex.: 100 km/h)</td></tr>
+<tr><td>Cerca virtual (entrada/saída)</td><td class="op">Opcional</td><td>Avisar ao entrar/sair de área marcada</td></tr>
+</table>
+<div class="dica"><b>Alertas no celular (Telegram):</b> procure <b>@Alert_Ls_auto_truck_bot</b> no Telegram → mande /start → pegue seu Id no @userinfobot → informe o número à LS Autotruck para cadastrar no seu usuário.</div>
+<div class="aviso"><b>Teste de fogo (faça sempre ao instalar):</b> com tudo pronto, desligue a alimentação do rastreador por 1 minuto → deve chegar o alerta <b>"Alimentação cortada"</b> no sininho/Telegram → religue.</div>
+</section>
+
+<section>
+<h2>Problemas comuns</h2>
+<table>
+<tr><th>Sintoma</th><th>Causa provável / solução</th></tr>
+<tr><td>Não aparece Conectado</td><td>APN errado, chip sem dados/crédito, IMEI cadastrado diferente da etiqueta, ou falta o <code>GPRS,1#</code></td></tr>
+<tr><td>Morre ao desligar a bateria do carro</td><td>Chavinha da bateria interna em OFF — ligue-a (sem ela não há alarme de corte)</td></tr>
+<tr><td>Comando SMS ignorado</td><td>Tente a variação sem <b>,0</b> no final; confira maiúsculas e o # no fim</td></tr>
+<tr><td>Mensagens repetidas de comando</td><td>Eco do aparelho (normal nesses modelos) — a plataforma filtra as repetições</td></tr>
+</table>
+</section>
+<footer>LS Autotruck Rastreios · Rastreamento veicular 24h · plataforma.lsautotruckrastreios.com.br</footer>
+</main>
+</body>
+</html>

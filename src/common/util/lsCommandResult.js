@@ -4,6 +4,7 @@ const RESULT_DICT = [
   ['Cut off the fuel supply: Success', 'BLOQUEIO executado com sucesso'],
   ['Restore fuel supply: Success', 'DESBLOQUEIO executado com sucesso'],
   ['already in the state of fuel supply cut-off', 'Ja estava bloqueado'],
+  ['Already in the state of fuel supply to resume', 'Ja estava desbloqueado'],
   ['DYD=Success', 'BLOQUEIO executado com sucesso'],
   ['HFYD=Success', 'DESBLOQUEIO executado com sucesso'],
   ['The terminal will restart after 30 seconds', 'O rastreador vai reiniciar em 30 segundos'],
@@ -42,6 +43,7 @@ export const friendlyCommandResult = (result) => {
   if (u.includes('CUT OFF THE FUEL SUPPLY') && ok) return 'Veículo BLOQUEADO';
   if (u.includes('RESTORE FUEL SUPPLY') && ok) return 'Veículo DESBLOQUEADO';
   if (u.includes('ALREADY IN THE STATE OF FUEL SUPPLY CUT-OFF')) return 'Veículo já estava bloqueado';
+  if (u.includes('ALREADY IN THE STATE OF FUEL SUPPLY TO RESUME')) return 'Veículo já estava desbloqueado';
   if (u.includes('DYD') && u.includes('FAIL')) return 'Falha ao BLOQUEAR (veículo em movimento?)';
   if (u.includes('HFYD') && u.includes('FAIL')) return 'Falha ao DESBLOQUEAR';
   if (u.includes('DYD') && ok) return 'Veículo BLOQUEADO';

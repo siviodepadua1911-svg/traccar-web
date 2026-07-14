@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { IconButton, Paper, Slider, Toolbar, Typography, Tooltip, CircularProgress } from '@mui/material';
+import { IconButton, Paper, Slider, Toolbar, Typography } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import TuneIcon from '@mui/icons-material/Tune';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -7,7 +7,6 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import FastForwardIcon from '@mui/icons-material/FastForward';
 import FastRewindIcon from '@mui/icons-material/FastRewind';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import MapView from '../map/core/MapView';
@@ -24,7 +23,6 @@ import StatusCard from '../common/components/StatusCard';
 import MapScale from '../map/MapScale';
 import BackIcon from '../common/components/BackIcon';
 import fetchOrThrow from '../common/util/fetchOrThrow';
-import snapPositions from '../common/util/lsSnapToRoads';
 import MapOverlay from '../map/overlay/MapOverlay';
 
 const useStyles = makeStyles()((theme) => ({
@@ -95,9 +93,6 @@ const ReplayPage = () => {
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [smooth, setSmooth] = useState(false);
-  const [smoothed, setSmoothed] = useState(null);
-  const [smoothLoading, setSmoothLoading] = useState(false);
 
   const loaded = Boolean(from && to && !loading && positions.length);
 
@@ -161,8 +156,6 @@ const ReplayPage = () => {
         setIndex(0);
         const positions = await response.json();
         setPositions(positions);
-        setSmooth(false);
-        setSmoothed(null);
         if (!positions.length) {
           throw Error(t('sharedNoData'));
         }
@@ -174,22 +167,6 @@ const ReplayPage = () => {
     [t],
   );
 
-  const applySnap = useCatchCallback(async () => {
-    if (smoothed) {
-      setSmooth(true);
-      return;
-    }
-    setSmoothLoading(true);
-    try {
-      const coords = await snapPositions(positions);
-      const deviceId = positions[0].deviceId;
-      setSmoothed(coords.map(([longitude, latitude]) => ({ latitude, longitude, speed: 0, deviceId })));
-      setSmooth(true);
-    } finally {
-      setSmoothLoading(false);
-    }
-  }, [positions, smoothed]);
-
   const handleDownload = () => {
     const query = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
     window.location.assign(`/api/positions/kml?${query.toString()}`);
@@ -200,7 +177,7 @@ const ReplayPage = () => {
       <MapView>
         <MapOverlay />
         <MapGeofence />
-        <MapRoutePath positions={smooth && smoothed ? smoothed : positions} />
+        <MapRoutePath positions={positions} />
         <MapRoutePoints positions={positions} onClick={onPointClick} showSpeedControl />
         {index < positions.length && (
           <MapPositions
@@ -223,13 +200,6 @@ const ReplayPage = () => {
             </Typography>
             {loaded && (
               <>
-                <Tooltip title="Suavizar trajeto (colar nas ruas)">
-                  <span>
-                    <IconButton onClick={() => (smooth ? setSmooth(false) : applySnap())} disabled={smoothLoading}>
-                      {smoothLoading ? <CircularProgress size={20} /> : <AutoFixHighIcon color={smooth ? 'primary' : 'inherit'} />}
-                    </IconButton>
-                  </span>
-                </Tooltip>
                 <IconButton onClick={handleDownload}>
                   <DownloadIcon />
                 </IconButton>

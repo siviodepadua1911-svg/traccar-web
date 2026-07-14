@@ -9,7 +9,6 @@ import { mapIconKey } from './core/preloadImages';
 import { useAttributePreference } from '../common/util/preferences';
 import { useCatchCallback } from '../reactHelper';
 import { findFonts } from './core/mapUtil';
-import useLsGlidePositions from './lsUseGlidePositions';
 
 const buildHoverHtml = (p) => {
   const rows = [];
@@ -38,10 +37,8 @@ const MapPositions = ({
   selectedPosition,
   titleField,
   disabled,
-  glide,
 }) => {
   const id = useId();
-  const shownPositions = useLsGlidePositions(positions, Boolean(glide));
   const clusters = `${id}-clusters`;
   const selected = `${id}-selected`;
 
@@ -283,7 +280,7 @@ const MapPositions = ({
     [id, selected].forEach((source) => {
       map.getSource(source)?.setData({
         type: 'FeatureCollection',
-        features: shownPositions
+        features: positions
           .filter((it) => devices.hasOwnProperty(it.deviceId))
           .filter((it) =>
             source === id ? it.deviceId !== selectedDeviceId : it.deviceId === selectedDeviceId,
@@ -304,7 +301,7 @@ const MapPositions = ({
     onMarkerClick,
     onClusterClick,
     devices,
-    shownPositions,
+    positions,
     selectedPosition,
     createFeature,
     id,

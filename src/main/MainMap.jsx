@@ -47,6 +47,7 @@ const MainMap = ({ filteredPositions, selectedPosition, onEventsClick }) => {
         <MapAccuracy positions={filteredPositions} />
         <MapLiveRoutes deviceIds={filteredPositions.map((p) => p.deviceId)} />
         <MapPositions
+          glide
           positions={filteredPositions}
           onMarkerClick={onMarkerClick}
           selectedPosition={selectedPosition}

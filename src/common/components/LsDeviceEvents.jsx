@@ -162,7 +162,7 @@ const LsDeviceEvents = ({ deviceId }) => {
         </Table>
       )}
       <Typography variant="body2">
-        <Link component="button" type="button" onClick={() => navigate('/reports/event')}>
+        <Link component="button" type="button" onClick={() => navigate('/reports/events')}>
           Ver todos em Relatórios → Eventos
         </Link>
       </Typography>

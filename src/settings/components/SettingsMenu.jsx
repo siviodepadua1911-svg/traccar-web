@@ -7,6 +7,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import SettingsIcon from '@mui/icons-material/Settings';
 import BuildIcon from '@mui/icons-material/Build';
 import PeopleIcon from '@mui/icons-material/People';
+import BadgeIcon from '@mui/icons-material/Badge';
 import TodayIcon from '@mui/icons-material/Today';
 import SendIcon from '@mui/icons-material/Send';
 import DnsIcon from '@mui/icons-material/Dns';
@@ -135,6 +136,12 @@ const SettingsMenu = () => {
               link="/settings/announcement"
               icon={<CampaignIcon />}
               selected={location.pathname === '/settings/announcement'}
+            />
+            <MenuItem
+              title="Clientes"
+              link="/settings/clients"
+              icon={<BadgeIcon />}
+              selected={location.pathname.startsWith('/settings/client')}
             />
             {admin && (
               <MenuItem

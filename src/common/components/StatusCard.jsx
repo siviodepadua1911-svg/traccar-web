@@ -362,6 +362,20 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
 
   const sendCommand = useCatch(async (type) => {
     localStorage.setItem('lsExpectResultUntil', String(Date.now() + 3 * 60 * 1000));
+    if (user && user.limitCommands) {
+      const listResponse = await fetchOrThrow(`/api/commands/send?deviceId=${deviceId}`);
+      const available = await listResponse.json();
+      const saved = available.find((c) => c.type === type);
+      if (!saved) {
+        throw Error('Comando não liberado para este veículo - fale com a LS Autotruck');
+      }
+      await fetchOrThrow('/api/commands/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...saved, deviceId }),
+      });
+      return;
+    }
     await fetchOrThrow('/api/commands/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

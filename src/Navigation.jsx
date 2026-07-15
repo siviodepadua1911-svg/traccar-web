@@ -62,6 +62,8 @@ const AnnouncementPage = lazy(() => import('./settings/AnnouncementPage'));
 const EmulatorPage = lazy(() => import('./other/EmulatorPage'));
 const StreamPage = lazy(() => import('./other/StreamPage'));
 const AuditPage = lazy(() => import('./reports/AuditPage'));
+const LsClientsPage = lazy(() => import('./settings/LsClientsPage'));
+const LsClientPage = lazy(() => import('./settings/LsClientPage'));
 
 const Navigation = () => {
   const dispatch = useDispatch();
@@ -174,6 +176,9 @@ const Navigation = () => {
             <Route path="preferences" element={<PreferencesPage />} />
             <Route path="server" element={<ServerPage />} />
             <Route path="users" element={<UsersPage />} />
+            <Route path="clients" element={<LsClientsPage />} />
+            <Route path="client/:id" element={<LsClientPage />} />
+            <Route path="client" element={<LsClientPage />} />
             <Route path="user/:id/connections" element={<UserConnectionsPage />} />
             <Route path="user/:id" element={<UserPage />} />
             <Route path="user" element={<UserPage />} />

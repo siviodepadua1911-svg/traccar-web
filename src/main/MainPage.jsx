@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useCallback, useEffect } from 'react';
+import { lazy, Suspense, useState, useCallback, useEffect, useRef } from 'react';
 import { Paper } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import { useTheme } from '@mui/material/styles';
@@ -90,6 +90,29 @@ const MainPage = () => {
   const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
 
   const [devicesOpen, setDevicesOpen] = useState(desktop);
+  const [panelWidth, setPanelWidth] = usePersistedState(
+    'lsPanelWidth',
+    theme.dimensions.drawerWidthDesktop,
+  );
+  const resizingRef = useRef(false);
+  const startResize = (e) => {
+    resizingRef.current = true;
+    e.preventDefault();
+  };
+  useEffect(() => {
+    const move = (e) => {
+      if (resizingRef.current) setPanelWidth(Math.min(680, Math.max(280, e.clientX)));
+    };
+    const up = () => {
+      resizingRef.current = false;
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+    return () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+  }, [setPanelWidth]);
   const [eventsOpen, setEventsOpen] = useState(false);
 
   const onEventsClick = useCallback(() => setEventsOpen(true), [setEventsOpen]);
@@ -121,7 +144,22 @@ const MainPage = () => {
           />
         </Suspense>
       )}
-      <div className={classes.sidebar}>
+      <div className={classes.sidebar} style={desktop ? { width: panelWidth } : undefined}>
+        {desktop && (
+          <div
+            onMouseDown={startResize}
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: 6,
+              height: '100%',
+              cursor: 'col-resize',
+              pointerEvents: 'auto',
+              zIndex: 5,
+            }}
+          />
+        )}
         <Paper square elevation={3} className={classes.header}>
           <MainToolbar
             filteredDevices={filteredDevices}

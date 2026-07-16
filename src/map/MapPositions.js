@@ -24,7 +24,7 @@ const buildHoverHtml = (p) => {
   if (p.rssi !== undefined) rows.push(row('Sinal GSM', p.rssi));
   if (p.totalDistance !== undefined) rows.push(row('Hod&ocirc;metro', `${Number(p.totalDistance).toLocaleString('pt-BR')} km`));
   if (p.address && p.address !== 'undefined') rows.push(row('Endere&ccedil;o', p.address));
-  return `<div style="font-family:Roboto,Arial,sans-serif;min-width:190px;">
+  return `<div style="font-family:Inter,Roboto,Arial,sans-serif;min-width:190px;">
     <div style="font-weight:700;font-size:13px;color:#0d2a5c;border-bottom:2px solid #00b0ff;padding-bottom:4px;margin-bottom:6px;">${p.name || ''}</div>
     <table style="border-collapse:collapse;">${rows.join('')}</table>
   </div>`;

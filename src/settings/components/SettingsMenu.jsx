@@ -41,7 +41,7 @@ const SettingsMenu = () => {
         <MenuItem
           title={t('sharedPreferences')}
           link="/settings/preferences"
-          icon={<TuneIcon />}
+          icon={<TuneIcon sx={{ color: '#1976d2' }} />}
           selected={location.pathname === '/settings/preferences'}
         />
         {!readonly && (
@@ -49,32 +49,32 @@ const SettingsMenu = () => {
             <MenuItem
               title={t('sharedNotifications')}
               link="/settings/notifications"
-              icon={<NotificationsIcon />}
+              icon={<NotificationsIcon sx={{ color: '#f9a825' }} />}
               selected={location.pathname.startsWith('/settings/notification')}
             />
             <MenuItem
               title={t('settingsUser')}
               link={`/settings/user/${userId}`}
-              icon={<PersonIcon />}
+              icon={<PersonIcon sx={{ color: '#00897b' }} />}
               selected={location.pathname === `/settings/user/${userId}`}
             />
             <MenuItem
               title={t('deviceTitle')}
               link="/settings/devices"
-              icon={<DnsIcon />}
+              icon={<DnsIcon sx={{ color: '#3949ab' }} />}
               selected={location.pathname.startsWith('/settings/device')}
             />
             <MenuItem
               title={t('sharedGeofences')}
               link="/geofences"
-              icon={<DrawIcon />}
+              icon={<DrawIcon sx={{ color: '#43a047' }} />}
               selected={location.pathname.startsWith('/settings/geofence')}
             />
             {!features.disableGroups && (
               <MenuItem
                 title={t('settingsGroups')}
                 link="/settings/groups"
-                icon={<FolderIcon />}
+                icon={<FolderIcon sx={{ color: '#fb8c00' }} />}
                 selected={location.pathname.startsWith('/settings/group')}
               />
             )}
@@ -82,7 +82,7 @@ const SettingsMenu = () => {
               <MenuItem
                 title={t('sharedDrivers')}
                 link="/settings/drivers"
-                icon={<PersonIcon />}
+                icon={<PersonIcon sx={{ color: '#8e24aa' }} />}
                 selected={location.pathname.startsWith('/settings/driver')}
               />
             )}
@@ -90,7 +90,7 @@ const SettingsMenu = () => {
               <MenuItem
                 title={t('sharedCalendars')}
                 link="/settings/calendars"
-                icon={<TodayIcon />}
+                icon={<TodayIcon sx={{ color: '#e53935' }} />}
                 selected={location.pathname.startsWith('/settings/calendar')}
               />
             )}
@@ -98,7 +98,7 @@ const SettingsMenu = () => {
               <MenuItem
                 title={t('sharedComputedAttributes')}
                 link="/settings/attributes"
-                icon={<CalculateIcon />}
+                icon={<CalculateIcon sx={{ color: '#00acc1' }} />}
                 selected={location.pathname.startsWith('/settings/attribute')}
               />
             )}
@@ -106,7 +106,7 @@ const SettingsMenu = () => {
               <MenuItem
                 title={t('sharedMaintenance')}
                 link="/settings/maintenances"
-                icon={<BuildIcon />}
+                icon={<BuildIcon sx={{ color: '#6d4c41' }} />}
                 selected={location.pathname.startsWith('/settings/maintenance')}
               />
             )}
@@ -114,17 +114,25 @@ const SettingsMenu = () => {
               <MenuItem
                 title={t('sharedSavedCommands')}
                 link="/settings/commands"
-                icon={<SendIcon />}
+                icon={<SendIcon sx={{ color: '#00838f' }} />}
                 selected={location.pathname.startsWith('/settings/command')}
               />
             )}
           </>
         )}
         {billingLink && (
-          <MenuItem title={t('userBilling')} link={billingLink} icon={<PaymentIcon />} />
+          <MenuItem
+            title={t('userBilling')}
+            link={billingLink}
+            icon={<PaymentIcon sx={{ color: '#2e7d32' }} />}
+          />
         )}
         {supportLink && (
-          <MenuItem title={t('settingsSupport')} link={supportLink} icon={<HelpIcon />} />
+          <MenuItem
+            title={t('settingsSupport')}
+            link={supportLink}
+            icon={<HelpIcon sx={{ color: '#5e35b1' }} />}
+          />
         )}
       </List>
       {manager && (
@@ -134,27 +142,27 @@ const SettingsMenu = () => {
             <MenuItem
               title={t('serverAnnouncement')}
               link="/settings/announcement"
-              icon={<CampaignIcon />}
+              icon={<CampaignIcon sx={{ color: '#d81b60' }} />}
               selected={location.pathname === '/settings/announcement'}
             />
             <MenuItem
               title="Clientes"
               link="/settings/clients"
-              icon={<BadgeIcon />}
+              icon={<BadgeIcon sx={{ color: '#f4511e' }} />}
               selected={location.pathname.startsWith('/settings/client')}
             />
             {admin && (
               <MenuItem
                 title={t('settingsServer')}
                 link="/settings/server"
-                icon={<SettingsIcon />}
+                icon={<SettingsIcon sx={{ color: '#455a64' }} />}
                 selected={location.pathname === '/settings/server'}
               />
             )}
             <MenuItem
               title={t('settingsUsers')}
               link="/settings/users"
-              icon={<PeopleIcon />}
+              icon={<PeopleIcon sx={{ color: '#039be5' }} />}
               selected={
                 location.pathname.startsWith('/settings/user') &&
                 location.pathname !== `/settings/user/${userId}`

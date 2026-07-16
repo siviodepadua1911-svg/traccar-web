@@ -60,12 +60,20 @@ const useStyles = makeStyles()((theme) => ({
     color: theme.palette.neutral.main,
   },
   selected: {
-    backgroundColor: theme.palette.action.selected,
+    backgroundColor: '#eaf2fd !important',
+    boxShadow: 'inset 3px 0 0 #1C7ED6',
   },
 }));
 
 const I = { fontSize: 18 };
-const C = { ok: '#2e7d32', warn: '#ed6c02', bad: '#d32f2f', off: '#90a4ae', amber: '#f9a825', blue: '#1e88e5' };
+const C = {
+  ok: '#2e7d32',
+  warn: '#ed6c02',
+  bad: '#d32f2f',
+  off: '#90a4ae',
+  amber: '#f9a825',
+  blue: '#1e88e5',
+};
 
 const DeviceRow = ({ devices, index, style }) => {
   const { classes } = useStyles();
@@ -151,9 +159,11 @@ const DeviceRow = ({ devices, index, style }) => {
         {position && (
           <span style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
             <Tooltip title={`Conexão: ${formatStatus(item.status, t)}`}>
-              {item.status === 'online'
-                ? <WifiIcon style={{ ...I, color: C.ok }} />
-                : <WifiOffIcon style={{ ...I, color: C.bad }} />}
+              {item.status === 'online' ? (
+                <WifiIcon style={{ ...I, color: C.ok }} />
+              ) : (
+                <WifiOffIcon style={{ ...I, color: C.bad }} />
+              )}
             </Tooltip>
             {a.hasOwnProperty('ignition') && (
               <Tooltip title={`Ignição: ${a.ignition ? 'Ligada' : 'Desligada'}`}>
@@ -167,35 +177,59 @@ const DeviceRow = ({ devices, index, style }) => {
             )}
             {a.hasOwnProperty('blocked') && (
               <Tooltip title={a.blocked ? 'Bloqueio: BLOQUEADO' : 'Bloqueio: Liberado'}>
-                {a.blocked
-                  ? <LockIcon style={{ ...I, color: C.bad }} />
-                  : <LockOpenIcon style={{ ...I, color: C.ok }} />}
+                {a.blocked ? (
+                  <LockIcon style={{ ...I, color: C.bad }} />
+                ) : (
+                  <LockOpenIcon style={{ ...I, color: C.ok }} />
+                )}
               </Tooltip>
             )}
             {a.power != null && (
               <Tooltip title={`Bateria do veículo: ${Number(a.power).toFixed(1)}V`}>
-                <BoltIcon style={{ ...I, color: Number(a.power) >= 12.5 ? C.ok : Number(a.power) >= 11.5 ? C.warn : C.bad }} />
+                <BoltIcon
+                  style={{
+                    ...I,
+                    color:
+                      Number(a.power) >= 12.5 ? C.ok : Number(a.power) >= 11.5 ? C.warn : C.bad,
+                  }}
+                />
               </Tooltip>
             )}
             {a.batteryLevel != null && (
               <Tooltip title={`Bateria interna: ${Math.round(Number(a.batteryLevel))}%`}>
-                <BatteryFullIcon style={{ ...I, color: Number(a.batteryLevel) >= 60 ? C.ok : Number(a.batteryLevel) >= 20 ? C.warn : C.bad }} />
+                <BatteryFullIcon
+                  style={{
+                    ...I,
+                    color:
+                      Number(a.batteryLevel) >= 60
+                        ? C.ok
+                        : Number(a.batteryLevel) >= 20
+                          ? C.warn
+                          : C.bad,
+                  }}
+                />
               </Tooltip>
             )}
-            {a.rssi != null && (() => {
-              const v = Number(a.rssi);
-              const pct = Math.round((v / (v > 5 ? 31 : 5)) * 100);
-              const cor = pct >= 70 ? C.ok : pct >= 40 ? C.warn : C.bad;
-              const rotulo = pct >= 70 ? 'Forte' : pct >= 40 ? 'Médio' : 'Fraco';
-              return (
-                <Tooltip title={`Sinal GSM: ${rotulo} (${pct}%)`}>
-                  <SignalCellularAltIcon style={{ ...I, color: cor }} />
-                </Tooltip>
-              );
-            })()}
+            {a.rssi != null &&
+              (() => {
+                const v = Number(a.rssi);
+                const pct = Math.round((v / (v > 5 ? 31 : 5)) * 100);
+                const cor = pct >= 70 ? C.ok : pct >= 40 ? C.warn : C.bad;
+                const rotulo = pct >= 70 ? 'Forte' : pct >= 40 ? 'Médio' : 'Fraco';
+                return (
+                  <Tooltip title={`Sinal GSM: ${rotulo} (${pct}%)`}>
+                    <SignalCellularAltIcon style={{ ...I, color: cor }} />
+                  </Tooltip>
+                );
+              })()}
             {a.sat != null && (
               <Tooltip title={`Satélites GPS: ${a.sat}`}>
-                <SatelliteAltIcon style={{ ...I, color: Number(a.sat) >= 5 ? C.ok : Number(a.sat) >= 3 ? C.warn : C.bad }} />
+                <SatelliteAltIcon
+                  style={{
+                    ...I,
+                    color: Number(a.sat) >= 5 ? C.ok : Number(a.sat) >= 3 ? C.warn : C.bad,
+                  }}
+                />
               </Tooltip>
             )}
             {a.hasOwnProperty('alarm') && (

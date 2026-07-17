@@ -20,6 +20,12 @@ import {
   Tooltip,
   Avatar,
   Checkbox,
+  Dialog as LsConfirmDialog,
+  DialogTitle as LsConfirmTitle,
+  DialogContent as LsConfirmContent,
+  DialogContentText as LsConfirmText,
+  DialogActions as LsConfirmActions,
+  Button as LsConfirmButton,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import CloseIcon from '@mui/icons-material/Close';
@@ -27,10 +33,6 @@ import RouteIcon from '@mui/icons-material/Route';
 import SendIcon from '@mui/icons-material/Send';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import {
-  Dialog as LsConfirmDialog, DialogTitle as LsConfirmTitle, DialogContent as LsConfirmContent,
-  DialogContentText as LsConfirmText, DialogActions as LsConfirmActions, Button as LsConfirmButton,
-} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -151,8 +153,6 @@ const StatusRow = ({ name, content }) => {
   );
 };
 
-
-
 const rawValue = (v) => {
   if (v === null || v === undefined) return '—';
   if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
@@ -167,9 +167,7 @@ const COLORS = {
   info: '#0288d1',
 };
 
-const Colored = ({ color, children }) => (
-  <span style={{ color, fontWeight: 600 }}>{children}</span>
-);
+const Colored = ({ color, children }) => <span style={{ color, fontWeight: 600 }}>{children}</span>;
 
 const SENSOR_ICON = { fontSize: 18, verticalAlign: 'text-bottom', marginRight: 8 };
 
@@ -177,24 +175,46 @@ const SensorRows = ({ position }) => {
   const a = position.attributes;
   const rows = [];
   if ('ignition' in a) {
-    rows.push(['Ignição', <KeyIcon style={{ ...SENSOR_ICON, color: '#f9a825' }} />, a.ignition
-      ? <Colored color={COLORS.ok}>Ligada</Colored>
-      : <Colored color={COLORS.warn}>Desligada</Colored>]);
+    rows.push([
+      'Ignição',
+      <KeyIcon style={{ ...SENSOR_ICON, color: '#f9a825' }} />,
+      a.ignition ? (
+        <Colored color={COLORS.ok}>Ligada</Colored>
+      ) : (
+        <Colored color={COLORS.warn}>Desligada</Colored>
+      ),
+    ]);
   }
   if ('blocked' in a) {
-    rows.push(['Bloqueio', a.blocked ? <LockIcon style={{ ...SENSOR_ICON, color: '#e53935' }} /> : <LockOpenIcon style={{ ...SENSOR_ICON, color: '#43a047' }} />, a.blocked
-      ? <Colored color={COLORS.bad}>BLOQUEADO</Colored>
-      : <Colored color={COLORS.ok}>Liberado</Colored>]);
+    rows.push([
+      'Bloqueio',
+      a.blocked ? (
+        <LockIcon style={{ ...SENSOR_ICON, color: '#e53935' }} />
+      ) : (
+        <LockOpenIcon style={{ ...SENSOR_ICON, color: '#43a047' }} />
+      ),
+      a.blocked ? (
+        <Colored color={COLORS.bad}>BLOQUEADO</Colored>
+      ) : (
+        <Colored color={COLORS.ok}>Liberado</Colored>
+      ),
+    ]);
   }
   if ('motion' in a) {
-    rows.push(['Movimento', <DirectionsRunIcon style={{ ...SENSOR_ICON, color: a.motion ? '#1e88e5' : '#90a4ae' }} />, a.motion
-      ? <Colored color={COLORS.info}>Em movimento</Colored>
-      : 'Parado']);
+    rows.push([
+      'Movimento',
+      <DirectionsRunIcon style={{ ...SENSOR_ICON, color: a.motion ? '#1e88e5' : '#90a4ae' }} />,
+      a.motion ? <Colored color={COLORS.info}>Em movimento</Colored> : 'Parado',
+    ]);
   }
   if ('power' in a) {
     const v = Number(a.power);
     const c = v >= 12.5 ? COLORS.ok : v >= 11.5 ? COLORS.warn : COLORS.bad;
-    rows.push(['Bateria do veículo', <BoltIcon style={{ ...SENSOR_ICON, color: '#fb8c00' }} />, <Colored color={c}>{`${v.toFixed(2)} V`}</Colored>]);
+    rows.push([
+      'Bateria do veículo',
+      <BoltIcon style={{ ...SENSOR_ICON, color: '#fb8c00' }} />,
+      <Colored color={c}>{`${v.toFixed(2)} V`}</Colored>,
+    ]);
   }
   if ('power' in a) {
     const va = Number(a.power);
@@ -213,17 +233,31 @@ const SensorRows = ({ position }) => {
     } else if (va > vOff) {
       altTexto = 'Motor ligado';
     }
-    rows.push(['Alternador', <BatteryChargingFullIcon style={{ ...SENSOR_ICON, color: altCor }} />, <Colored color={altCor}>{altTexto}</Colored>]);
+    rows.push([
+      'Alternador',
+      <BatteryChargingFullIcon style={{ ...SENSOR_ICON, color: altCor }} />,
+      <Colored color={altCor}>{altTexto}</Colored>,
+    ]);
   }
   if ('batteryLevel' in a) {
     const v = Number(a.batteryLevel);
     const c = v >= 60 ? COLORS.ok : v >= 20 ? COLORS.warn : COLORS.bad;
-    rows.push(['Bateria interna', <BatteryFullIcon style={{ ...SENSOR_ICON, color: '#43a047' }} />, <Colored color={c}>{`${Math.round(v)}%`}</Colored>]);
+    rows.push([
+      'Bateria interna',
+      <BatteryFullIcon style={{ ...SENSOR_ICON, color: '#43a047' }} />,
+      <Colored color={c}>{`${Math.round(v)}%`}</Colored>,
+    ]);
   }
   if ('charge' in a) {
-    rows.push(['Alimentação externa', <PowerIcon style={{ ...SENSOR_ICON, color: '#8e24aa' }} />, a.charge
-      ? <Colored color={COLORS.ok}>Conectada</Colored>
-      : <Colored color={COLORS.warn}>Desconectada</Colored>]);
+    rows.push([
+      'Alimentação externa',
+      <PowerIcon style={{ ...SENSOR_ICON, color: '#8e24aa' }} />,
+      a.charge ? (
+        <Colored color={COLORS.ok}>Conectada</Colored>
+      ) : (
+        <Colored color={COLORS.warn}>Desconectada</Colored>
+      ),
+    ]);
   }
   if ('rssi' in a) {
     const v = Number(a.rssi);
@@ -231,18 +265,39 @@ const SensorRows = ({ position }) => {
     const pct = Math.round((v / max) * 100);
     const c = pct >= 70 ? COLORS.ok : pct >= 40 ? COLORS.warn : COLORS.bad;
     const label = pct >= 70 ? 'Forte' : pct >= 40 ? 'Médio' : 'Fraco';
-    rows.push(['Sinal GSM', <SignalCellularAltIcon style={{ ...SENSOR_ICON, color: '#039be5' }} />, <Colored color={c}>{`${label} (${pct}%)`}</Colored>]);
+    rows.push([
+      'Sinal GSM',
+      <SignalCellularAltIcon style={{ ...SENSOR_ICON, color: '#039be5' }} />,
+      <Colored color={c}>{`${label} (${pct}%)`}</Colored>,
+    ]);
   }
   if ('sat' in a) {
     const v = Number(a.sat);
     const c = v >= 5 ? COLORS.ok : v >= 3 ? COLORS.warn : COLORS.bad;
-    rows.push(['Satélites GPS', <SatelliteAltIcon style={{ ...SENSOR_ICON, color: '#00897b' }} />, <Colored color={c}>{String(v)}</Colored>]);
+    rows.push([
+      'Satélites GPS',
+      <SatelliteAltIcon style={{ ...SENSOR_ICON, color: '#00897b' }} />,
+      <Colored color={c}>{String(v)}</Colored>,
+    ]);
   }
   if (a.alarm) {
-    rows.push(['Alarme', <WarningAmberIcon style={{ ...SENSOR_ICON, color: '#e53935' }} />, <Colored color={COLORS.bad}>{String(a.alarm)}</Colored>]);
+    rows.push([
+      'Alarme',
+      <WarningAmberIcon style={{ ...SENSOR_ICON, color: '#e53935' }} />,
+      <Colored color={COLORS.bad}>{String(a.alarm)}</Colored>,
+    ]);
   }
   return rows.map(([name, icon, content]) => (
-    <StatusRow key={name} name={<span style={{ display: 'inline-flex', alignItems: 'center' }}>{icon}{name}</span>} content={content} />
+    <StatusRow
+      key={name}
+      name={
+        <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+          {icon}
+          {name}
+        </span>
+      }
+      content={content}
+    />
   ));
 };
 
@@ -270,18 +325,48 @@ const Speedometer = ({ speed }) => {
     <svg viewBox="0 0 220 190" style={{ display: 'block', width: '100%' }}>
       <circle cx="110" cy="110" r="100" fill="#23272e" stroke="#3d4451" strokeWidth="2" />
       <path d="M 33.8 154 A 88 88 0 0 1 166.6 42.6" fill="none" stroke="#2e7d32" strokeWidth="6" />
-      <path d="M 166.6 42.6 A 88 88 0 0 1 196.7 125.3" fill="none" stroke="#ed6c02" strokeWidth="6" />
-      <path d="M 196.7 125.3 A 88 88 0 0 1 186.2 154" fill="none" stroke="#d32f2f" strokeWidth="6" />
+      <path
+        d="M 166.6 42.6 A 88 88 0 0 1 196.7 125.3"
+        fill="none"
+        stroke="#ed6c02"
+        strokeWidth="6"
+      />
+      <path
+        d="M 196.7 125.3 A 88 88 0 0 1 186.2 154"
+        fill="none"
+        stroke="#d32f2f"
+        strokeWidth="6"
+      />
       {speedoTicks.map((tk) => (
         <g key={tk.v}>
           <line x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2} stroke="#e8eaed" strokeWidth="3" />
-          <text x={tk.lx} y={tk.ly + 4} textAnchor="middle" fontSize="12" fill="#e8eaed">{tk.v}</text>
+          <text x={tk.lx} y={tk.ly + 4} textAnchor="middle" fontSize="12" fill="#e8eaed">
+            {tk.v}
+          </text>
         </g>
       ))}
-      <text x="110" y="152" textAnchor="middle" fontSize="30" fontWeight="500" fill="#ffffff">{shown}</text>
-      <text x="110" y="170" textAnchor="middle" fontSize="11" fill="#9aa0a6">km/h</text>
-      <g style={{ transform: `rotate(${angle}deg)`, transformOrigin: '110px 110px', transition: 'transform 0.8s ease' }}>
-        <line x1="110" y1="124" x2="110" y2="42" stroke="#e53935" strokeWidth="4" strokeLinecap="round" />
+      <text x="110" y="152" textAnchor="middle" fontSize="30" fontWeight="500" fill="#ffffff">
+        {shown}
+      </text>
+      <text x="110" y="170" textAnchor="middle" fontSize="11" fill="#9aa0a6">
+        km/h
+      </text>
+      <g
+        style={{
+          transform: `rotate(${angle}deg)`,
+          transformOrigin: '110px 110px',
+          transition: 'transform 0.8s ease',
+        }}
+      >
+        <line
+          x1="110"
+          y1="124"
+          x2="110"
+          y2="42"
+          stroke="#e53935"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
       </g>
       <circle cx="110" cy="110" r="9" fill="#3d4451" />
       <circle cx="110" cy="110" r="3.5" fill="#e53935" />
@@ -324,7 +409,13 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const [showAll, setShowAll] = useState(false);
   const [settingsAnchor, setSettingsAnchor] = useState(null);
   const [sections, setSections] = useState(() => ({
-    speedo: true, sensores: true, resposta: true, conect: true, perfil: true, params: true, eventos: true,
+    speedo: true,
+    sensores: true,
+    resposta: true,
+    conect: true,
+    perfil: true,
+    params: true,
+    eventos: true,
     ...JSON.parse(localStorage.getItem('lsCardSections') || '{}'),
   }));
   const toggleSection = (key) => {
@@ -388,34 +479,76 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
       <div className={classes.root}>
         {device && (
           <Rnd
-            default={{ x: savedPos.x, y: savedPos.y, width: savedSize.w || 360, height: savedSize.h || Math.min(window.innerHeight - 200, 940) }}
-            onDragStop={(e, d) => localStorage.setItem('lsCardPos', JSON.stringify({ x: d.x, y: d.y }))}
-            onResizeStop={(e, dir, ref) => localStorage.setItem('lsCardSize3', JSON.stringify({ w: ref.offsetWidth, h: ref.offsetHeight }))}
+            default={{
+              x: savedPos.x,
+              y: savedPos.y,
+              width: savedSize.w || 360,
+              height: savedSize.h || Math.min(window.innerHeight - 200, 940),
+            }}
+            onDragStop={(e, d) =>
+              localStorage.setItem('lsCardPos', JSON.stringify({ x: d.x, y: d.y }))
+            }
+            onResizeStop={(e, dir, ref) =>
+              localStorage.setItem(
+                'lsCardSize3',
+                JSON.stringify({ w: ref.offsetWidth, h: ref.offsetHeight }),
+              )
+            }
             minHeight={230}
             minWidth={300}
             maxWidth={620}
             enableResizing={{ bottom: true, right: true, bottomRight: true }}
             resizeHandleStyles={{ bottom: { height: '18px', bottom: 0 } }}
-            resizeHandleComponent={{ bottom: (
-              <div style={{ width: '100%', height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'ns-resize' }}>
-                <div style={{ width: 48, height: 5, borderRadius: 3, backgroundColor: '#b6c2d2' }} />
-              </div>
-            ) }}
+            resizeHandleComponent={{
+              bottom: (
+                <div
+                  style={{
+                    width: '100%',
+                    height: 18,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'ns-resize',
+                  }}
+                >
+                  <div
+                    style={{ width: 48, height: 5, borderRadius: 3, backgroundColor: '#b6c2d2' }}
+                  />
+                </div>
+              ),
+            }}
             dragHandleClassName="draggable-header"
             style={{ position: 'relative', pointerEvents: 'auto' }}
           >
             <Card elevation={3} className={classes.card}>
-              <div className="draggable-header" style={{ padding: '10px 10px 2px 14px', cursor: 'move' }}>
+              <div
+                className="draggable-header"
+                style={{ padding: '10px 10px 2px 14px', cursor: 'move' }}
+              >
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                   <div style={{ minWidth: 0, flexGrow: 1 }}>
                     <Typography variant="body1" noWrap style={{ fontWeight: 600, lineHeight: 1.2 }}>
                       {device.name}
                     </Typography>
-                    <Typography variant="caption" style={{ display: 'block', fontWeight: 600, color: device.status === 'online' ? '#2e7d32' : '#d32f2f' }}>
+                    <Typography
+                      variant="caption"
+                      style={{
+                        display: 'block',
+                        fontWeight: 600,
+                        color: device.status === 'online' ? '#2e7d32' : '#d32f2f',
+                      }}
+                    >
                       {device.status === 'online' ? 'Conectado' : 'Desconectado'}
                     </Typography>
-                    <Typography variant="caption" color="textSecondary" noWrap style={{ display: 'block' }}>
-                      {position && position.attributes.totalDistance != null ? `${Math.round(position.attributes.totalDistance / 1000).toLocaleString('pt-BR')} km` : ''}
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      noWrap
+                      style={{ display: 'block' }}
+                    >
+                      {position && position.attributes.totalDistance != null
+                        ? `${Math.round(position.attributes.totalDistance / 1000).toLocaleString('pt-BR')} km`
+                        : ''}
                     </Typography>
                   </div>
                   <IconButton size="small" onClick={(e) => setSettingsAnchor(e.currentTarget)}>
@@ -434,9 +567,20 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                   <Avatar
                     variant="rounded"
                     src={deviceImage ? `/api/media/${device.uniqueId}/${deviceImage}` : undefined}
-                    style={{ width: 170, height: 112, backgroundColor: '#eef2f8', border: '2px solid #c9d3e0', borderRadius: 10, marginLeft: 'auto' }}
+                    style={{
+                      width: 170,
+                      height: 112,
+                      backgroundColor: '#eef2f8',
+                      border: '2px solid #c9d3e0',
+                      borderRadius: 10,
+                      marginLeft: 'auto',
+                    }}
                   >
-                    <img style={{ width: 56, height: 56 }} src={mapIcons[mapIconKey(device.category)]} alt="" />
+                    <img
+                      style={{ width: 56, height: 56 }}
+                      src={mapIcons[mapIconKey(device.category)]}
+                      alt=""
+                    />
                   </Avatar>
                 </div>
               </div>
@@ -468,7 +612,11 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                       <TableRow>
                         <TableCell colSpan={2} className={classes.cell}>
                           <Typography variant="body2">
-                            <Link component="button" type="button" onClick={() => setShowAll(!showAll)}>
+                            <Link
+                              component="button"
+                              type="button"
+                              onClick={() => setShowAll(!showAll)}
+                            >
                               {showAll ? 'Ocultar ficha ▲' : 'Ficha completa ▼'}
                             </Link>
                           </Typography>
@@ -480,84 +628,120 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                   {showAll && (
                     <>
                       {sections.sensores && (
-                      <>
-                      <Typography variant="subtitle2" className={classes.sectionTitle}>
-                        Sensores
-                      </Typography>
-                      <Table size="small" className={classes.table}>
-                        <TableBody>
-                          <SensorRows position={position} />
-                        </TableBody>
-                      </Table>
-                      </>
+                        <>
+                          <Typography variant="subtitle2" className={classes.sectionTitle}>
+                            Sensores
+                          </Typography>
+                          <Table size="small" className={classes.table}>
+                            <TableBody>
+                              <SensorRows position={position} />
+                            </TableBody>
+                          </Table>
+                        </>
                       )}
                       {sections.resposta && position.attributes.result && (
                         <>
                           <Typography variant="subtitle2" className={classes.sectionTitle}>
                             Última resposta do rastreador
                           </Typography>
-                          <Typography variant="body2" color="textSecondary" style={{ wordBreak: 'break-word' }}>
+                          <Typography
+                            variant="body2"
+                            color="textSecondary"
+                            style={{ wordBreak: 'break-word' }}
+                          >
                             {translateResult(position.attributes.result)}
                           </Typography>
                         </>
                       )}
                       {sections.conect && (
-                      <>
-                      <Typography variant="subtitle2" className={classes.sectionTitle}>
-                        Conectividade
-                      </Typography>
-                      <Table size="small" className={classes.table}>
-                        <TableBody>
-                          <StatusRow name="Modelo" content={device.model || '—'} />
-                          <StatusRow name="ID / IMEI" content={device.uniqueId} />
-                          <StatusRow name="Telefone (chip)" content={device.phone || '—'} />
-                          <StatusRow name="Protocolo" content={position.protocol || '—'} />
-                          <StatusRow name="Última comunicação" content={formatTime(device.lastUpdate, 'seconds')} />
-                          <StatusRow name="Status" content={device.status === 'online' ? 'Conectado' : device.status === 'offline' ? 'Desconectado' : 'Desconhecido'} />
-                        </TableBody>
-                      </Table>
-                      </>
+                        <>
+                          <Typography variant="subtitle2" className={classes.sectionTitle}>
+                            Conectividade
+                          </Typography>
+                          <Table size="small" className={classes.table}>
+                            <TableBody>
+                              <StatusRow name="Modelo" content={device.model || '—'} />
+                              <StatusRow name="ID / IMEI" content={device.uniqueId} />
+                              <StatusRow name="Telefone (chip)" content={device.phone || '—'} />
+                              <StatusRow name="Protocolo" content={position.protocol || '—'} />
+                              <StatusRow
+                                name="Última comunicação"
+                                content={formatTime(device.lastUpdate, 'seconds')}
+                              />
+                              <StatusRow
+                                name="Status"
+                                content={
+                                  device.status === 'online'
+                                    ? 'Conectado'
+                                    : device.status === 'offline'
+                                      ? 'Desconectado'
+                                      : 'Desconhecido'
+                                }
+                              />
+                            </TableBody>
+                          </Table>
+                        </>
                       )}
                       {sections.perfil && (
-                      <>
-                      <Typography variant="subtitle2" className={classes.sectionTitle}>
-                        Perfil
-                      </Typography>
-                      <Table size="small" className={classes.table}>
-                        <TableBody>
-                          <StatusRow name="Categoria" content={device.category || 'padrão'} />
-                          {device.contact && <StatusRow name="Contato" content={device.contact} />}
-                          {Object.entries(device.attributes || {})
-                            .filter(([k]) => k !== 'deviceImage')
-                            .map(([k, v]) => (
-                              <StatusRow key={k} name={k} content={rawValue(v)} />
-                            ))}
-                        </TableBody>
-                      </Table>
-                      </>
+                        <>
+                          <Typography variant="subtitle2" className={classes.sectionTitle}>
+                            Perfil
+                          </Typography>
+                          <Table size="small" className={classes.table}>
+                            <TableBody>
+                              <StatusRow name="Categoria" content={device.category || 'padrão'} />
+                              {device.contact && (
+                                <StatusRow name="Contato" content={device.contact} />
+                              )}
+                              {Object.entries(device.attributes || {})
+                                .filter(([k]) => k !== 'deviceImage')
+                                .map(([k, v]) => (
+                                  <StatusRow key={k} name={k} content={rawValue(v)} />
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </>
                       )}
                       {sections.params && (
-                      <>
-                      <Typography variant="subtitle2" className={classes.sectionTitle}>
-                        {`Parâmetros recebidos (${Object.keys(position.attributes).length})`}
-                      </Typography>
-                      <Table size="small" className={classes.table}>
-                        <TableBody>
-                          <StatusRow name="Válido (GPS)" content={rawValue(position.valid)} />
-                          <StatusRow name="Latitude" content={position.latitude.toFixed(6)} />
-                          <StatusRow name="Longitude" content={position.longitude.toFixed(6)} />
-                          <StatusRow name="Altitude" content={`${Math.round(position.altitude)} m`} />
-                          <StatusRow name="Velocidade" content={`${Math.round(position.speed * 1.852)} km/h`} />
-                          <StatusRow name="Direção" content={`${Math.round(position.course)}°`} />
-                          {position.accuracy > 0 && (
-                            <StatusRow name="Precisão" content={`${Math.round(position.accuracy)} m`} />
-                          )}
-                          {Object.keys(position.attributes).sort().map((k) => (
-                            <StatusRow key={k} name={k} content={rawValue(position.attributes[k])} />
-                          ))}
-                        </TableBody>
-                      </Table>
-                      </>
+                        <>
+                          <Typography variant="subtitle2" className={classes.sectionTitle}>
+                            {`Parâmetros recebidos (${Object.keys(position.attributes).length})`}
+                          </Typography>
+                          <Table size="small" className={classes.table}>
+                            <TableBody>
+                              <StatusRow name="Válido (GPS)" content={rawValue(position.valid)} />
+                              <StatusRow name="Latitude" content={position.latitude.toFixed(6)} />
+                              <StatusRow name="Longitude" content={position.longitude.toFixed(6)} />
+                              <StatusRow
+                                name="Altitude"
+                                content={`${Math.round(position.altitude)} m`}
+                              />
+                              <StatusRow
+                                name="Velocidade"
+                                content={`${Math.round(position.speed * 1.852)} km/h`}
+                              />
+                              <StatusRow
+                                name="Direção"
+                                content={`${Math.round(position.course)}°`}
+                              />
+                              {position.accuracy > 0 && (
+                                <StatusRow
+                                  name="Precisão"
+                                  content={`${Math.round(position.accuracy)} m`}
+                                />
+                              )}
+                              {Object.keys(position.attributes)
+                                .sort()
+                                .map((k) => (
+                                  <StatusRow
+                                    key={k}
+                                    name={k}
+                                    content={rawValue(position.attributes[k])}
+                                  />
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </>
                       )}
                     </>
                   )}
@@ -582,20 +766,34 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Bloquear">
-                  <IconButton color="error" onClick={() => setConfirmCommand('engineStop')} disabled={disableActions || !position}>
+                  <IconButton
+                    color="error"
+                    onClick={() => setConfirmCommand('engineStop')}
+                    disabled={disableActions || !position}
+                  >
                     <LockIcon />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Desbloquear">
-                  <IconButton color="success" onClick={() => setConfirmCommand('engineResume')} disabled={disableActions || !position}>
+                  <IconButton
+                    color="success"
+                    onClick={() => setConfirmCommand('engineResume')}
+                    disabled={disableActions || !position}
+                  >
                     <LockOpenIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Meus alertas">
-                  <IconButton color="primary" onClick={() => setAlertsOpen(true)} disabled={disableActions}>
-                    <NotificationsIcon />
-                  </IconButton>
-                </Tooltip>
+                {!deviceReadonly && (
+                  <Tooltip title="Meus alertas">
+                    <IconButton
+                      color="primary"
+                      onClick={() => setAlertsOpen(true)}
+                      disabled={disableActions}
+                    >
+                      <NotificationsIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 <Tooltip title={t('commandTitle')}>
                   <IconButton
                     onClick={() => navigate(`/settings/device/${deviceId}/command`)}
@@ -650,14 +848,29 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
           <LsConfirmButton
             variant="contained"
             color={confirmCommand === 'engineStop' ? 'error' : 'success'}
-            onClick={() => { sendCommand(confirmCommand); setConfirmCommand(null); }}
+            onClick={() => {
+              sendCommand(confirmCommand);
+              setConfirmCommand(null);
+            }}
           >
             Confirmar
           </LsConfirmButton>
         </LsConfirmActions>
       </LsConfirmDialog>
-      <Menu anchorEl={settingsAnchor} open={Boolean(settingsAnchor)} onClose={() => setSettingsAnchor(null)}>
-        {[['speedo', 'Velocímetro'], ['sensores', 'Sensores'], ['resposta', 'Última resposta'], ['conect', 'Conectividade'], ['perfil', 'Perfil'], ['params', 'Parâmetros recebidos'], ['eventos', 'Alertas e eventos']].map(([key, label]) => (
+      <Menu
+        anchorEl={settingsAnchor}
+        open={Boolean(settingsAnchor)}
+        onClose={() => setSettingsAnchor(null)}
+      >
+        {[
+          ['speedo', 'Velocímetro'],
+          ['sensores', 'Sensores'],
+          ['resposta', 'Última resposta'],
+          ['conect', 'Conectividade'],
+          ['perfil', 'Perfil'],
+          ['params', 'Parâmetros recebidos'],
+          ['eventos', 'Alertas e eventos'],
+        ].map(([key, label]) => (
           <MenuItem key={key} dense onClick={() => toggleSection(key)}>
             <Checkbox size="small" checked={!!sections[key]} style={{ padding: '0 8px 0 0' }} />
             {label}

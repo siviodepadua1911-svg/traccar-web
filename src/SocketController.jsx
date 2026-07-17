@@ -15,6 +15,8 @@ import {
 } from './common/components/NativeInterface';
 import fetchOrThrow from './common/util/fetchOrThrow';
 import { friendlyCommandResult } from './common/util/lsCommandResult';
+import { playPreset } from './common/util/lsSounds';
+import { presetForEvent } from './common/util/lsAlerts';
 
 const logoutCode = 4000;
 
@@ -90,6 +92,7 @@ const SocketController = () => {
 
   const soundEvents = useAttributePreference('soundEvents', '');
   const soundAlarms = useAttributePreference('soundAlarms', 'sos');
+  const lsAlertSounds = useAttributePreference('lsAlertSounds', '');
 
   const features = useFeatures();
 
@@ -98,27 +101,38 @@ const SocketController = () => {
       if (!features.disableEvents) {
         dispatch(eventsActions.add(events));
       }
-      if (
-        events.some(
-          (e) =>
-            soundEvents.includes(e.type) ||
-            (e.type === 'alarm' && soundAlarms.includes(e.attributes.alarm)),
-        )
-      ) {
-        playAlarm();
+      let soundsMap = {};
+      try {
+        soundsMap = JSON.parse(lsAlertSounds || '{}');
+      } catch {
+        soundsMap = {};
       }
+      events.forEach((e) => {
+        const shouldSound =
+          soundEvents.includes(e.type) ||
+          (e.type === 'alarm' && soundAlarms.includes(e.attributes.alarm));
+        if (shouldSound) {
+          const preset = presetForEvent(e, soundsMap);
+          if (preset && preset !== 'none') {
+            playPreset(preset);
+          } else if (!preset) {
+            playAlarm();
+          }
+        }
+      });
       setNotifications((prev) => [
         ...prev.slice(-2),
         ...events.map((event) => ({
           id: event.id,
-          message: event.type === 'commandResult'
-            ? `${devices[event.deviceId]?.name || 'Veículo'} — ${friendlyCommandResult(event.attributes.result)}`
-            : event.attributes.message,
+          message:
+            event.type === 'commandResult'
+              ? `${devices[event.deviceId]?.name || 'Veículo'} — ${friendlyCommandResult(event.attributes.result)}`
+              : event.attributes.message,
           show: true,
         })),
       ]);
     },
-    [features, dispatch, soundEvents, soundAlarms, devices],
+    [features, dispatch, soundEvents, soundAlarms, lsAlertSounds, devices],
   );
 
   const deliverRef = useRef(deliver);
@@ -126,13 +140,14 @@ const SocketController = () => {
 
   const pendingResultsRef = useRef(new Map());
 
-  const handleEvents = useCallback(
-    (events) => {
-      const instant = events.filter((event) => event.type !== 'commandResult');
-      if (instant.length) {
-        deliverRef.current(instant);
-      }
-      events.filter((event) => event.type === 'commandResult').forEach((event) => {
+  const handleEvents = useCallback((events) => {
+    const instant = events.filter((event) => event.type !== 'commandResult');
+    if (instant.length) {
+      deliverRef.current(instant);
+    }
+    events
+      .filter((event) => event.type === 'commandResult')
+      .forEach((event) => {
         const pending = pendingResultsRef.current.get(event.deviceId);
         if (pending) {
           clearTimeout(pending.timer);
@@ -146,9 +161,7 @@ const SocketController = () => {
         }, 2500);
         pendingResultsRef.current.set(event.deviceId, { event, timer });
       });
-    },
-    [],
-  );
+  }, []);
 
   const handleEventsRef = useRef(handleEvents);
   handleEventsRef.current = handleEvents;

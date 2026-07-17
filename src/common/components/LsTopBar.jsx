@@ -52,12 +52,12 @@ const LsTopBar = () => {
   };
 
   const items = [
-    manager && {
+    {
       k: 'dash',
       label: 'Dashboard',
       icon: <DashboardIcon />,
-      onClick: () => go('/'),
-      active: false,
+      onClick: () => go('/dashboard'),
+      active: location.pathname === '/dashboard',
     },
     {
       k: 'map',
@@ -122,7 +122,12 @@ const LsTopBar = () => {
   ]
     .filter(Boolean)
     .filter(
-      (it) => manager || !lsMenu || it.k === 'map' || String(lsMenu).split(',').includes(it.k),
+      (it) =>
+        manager ||
+        !lsMenu ||
+        it.k === 'map' ||
+        it.k === 'dash' ||
+        String(lsMenu).split(',').includes(it.k),
     );
 
   return (

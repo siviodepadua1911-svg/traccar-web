@@ -60,7 +60,7 @@ const LsClientsPage = () => {
   const load = useCatchCallback(async () => {
     const response = await fetchOrThrow('/api/users');
     const users = await response.json();
-    setItems(users.filter((u) => u.attributes && u.attributes.lsPerfil));
+    setItems(users.filter((u) => u.attributes && u.attributes.lsPerfil && !u.administrator));
   }, []);
 
   useEffect(() => {
@@ -259,7 +259,12 @@ const LsClientsPage = () => {
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Excluir">
-                    <IconButton size="small" color="error" onClick={() => setRemoving(user.id)}>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => setRemoving(user.id)}
+                      disabled={user.administrator}
+                    >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>

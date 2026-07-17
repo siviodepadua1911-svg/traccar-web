@@ -1,24 +1,88 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions, Button, Switch,
-  Slider, TextField, Typography, Divider, CircularProgress, IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Switch,
+  Select,
+  MenuItem,
+  Slider,
+  TextField,
+  Typography,
+  Divider,
+  CircularProgress,
+  IconButton,
 } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import { sessionActions } from '../../store';
 import { useCatchCallback } from '../../reactHelper';
 import fetchOrThrow from '../util/fetchOrThrow';
+import { useDeviceReadonly } from '../util/permissions';
+import { LS_SOUND_PRESETS, playPreset } from '../util/lsSounds';
 
 const LS_TOGGLES = [
-  { key: 'powerCut', label: 'Corte de energia', types: ['alarm'], alarms: 'powerCut,powerOff', soundKind: 'alarms', soundValues: ['powerCut', 'powerOff'] },
-  { key: 'lowBattery', label: 'Bateria fraca', types: ['alarm'], alarms: 'lowBattery,lowPower', soundKind: 'alarms', soundValues: ['lowBattery', 'lowPower'] },
-  { key: 'inactive', label: 'Sem sinal (mais de 1h)', types: ['deviceInactive'], soundKind: 'events', soundValues: ['deviceInactive'] },
-  { key: 'ignitionOn', label: 'Ignição ligada', types: ['ignitionOn'], soundKind: 'events', soundValues: ['ignitionOn'] },
-  { key: 'ignitionOff', label: 'Ignição desligada', types: ['ignitionOff'], soundKind: 'events', soundValues: ['ignitionOff'] },
-  { key: 'moving', label: 'Início de movimento', types: ['deviceMoving'], soundKind: 'events', soundValues: ['deviceMoving'] },
-  { key: 'overspeed', label: 'Excesso de velocidade', types: ['deviceOverspeed'], soundKind: 'events', soundValues: ['deviceOverspeed'] },
-  { key: 'geofence', label: 'Cerca virtual (entrar/sair)', types: ['geofenceEnter', 'geofenceExit'], soundKind: 'events', soundValues: ['geofenceEnter', 'geofenceExit'] },
+  {
+    key: 'powerCut',
+    label: 'Corte de energia',
+    types: ['alarm'],
+    alarms: 'powerCut,powerOff',
+    soundKind: 'alarms',
+    soundValues: ['powerCut', 'powerOff'],
+  },
+  {
+    key: 'lowBattery',
+    label: 'Bateria fraca',
+    types: ['alarm'],
+    alarms: 'lowBattery,lowPower',
+    soundKind: 'alarms',
+    soundValues: ['lowBattery', 'lowPower'],
+  },
+  {
+    key: 'inactive',
+    label: 'Sem sinal (mais de 1h)',
+    types: ['deviceInactive'],
+    soundKind: 'events',
+    soundValues: ['deviceInactive'],
+  },
+  {
+    key: 'ignitionOn',
+    label: 'Ignição ligada',
+    types: ['ignitionOn'],
+    soundKind: 'events',
+    soundValues: ['ignitionOn'],
+  },
+  {
+    key: 'ignitionOff',
+    label: 'Ignição desligada',
+    types: ['ignitionOff'],
+    soundKind: 'events',
+    soundValues: ['ignitionOff'],
+  },
+  {
+    key: 'moving',
+    label: 'Início de movimento',
+    types: ['deviceMoving'],
+    soundKind: 'events',
+    soundValues: ['deviceMoving'],
+  },
+  {
+    key: 'overspeed',
+    label: 'Excesso de velocidade',
+    types: ['deviceOverspeed'],
+    soundKind: 'events',
+    soundValues: ['deviceOverspeed'],
+  },
+  {
+    key: 'geofence',
+    label: 'Cerca virtual (entrar/sair)',
+    types: ['geofenceEnter', 'geofenceExit'],
+    soundKind: 'events',
+    soundValues: ['geofenceEnter', 'geofenceExit'],
+  },
 ];
 
 const DEFAULT_ON = ['powerCut', 'lowBattery', 'inactive'];
@@ -43,6 +107,7 @@ const soundSource = (user, kind) => {
 const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.session.user);
+  const deviceReadonly = useDeviceReadonly();
 
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -50,20 +115,40 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
   const [linked, setLinked] = useState([]);
   const [speed, setSpeed] = useState(
     device && device.attributes && device.attributes.speedLimit
-      ? Math.round(device.attributes.speedLimit * 1.852) : 100,
+      ? Math.round(device.attributes.speedLimit * 1.852)
+      : 100,
   );
-  const [telegram, setTelegram] = useState(String((user.attributes && user.attributes.telegramChatId) || ''));
+  const [telegram, setTelegram] = useState(
+    String((user.attributes && user.attributes.telegramChatId) || ''),
+  );
   const [sounds, setSounds] = useState(() => {
     const initial = {};
     LS_TOGGLES.forEach((toggle) => {
-      const list = String(soundSource(user, toggle.soundKind)).split(',').map((x) => x.trim());
+      const list = String(soundSource(user, toggle.soundKind))
+        .split(',')
+        .map((x) => x.trim());
       initial[toggle.key] = toggle.soundValues.some((v) => list.includes(v));
+    });
+    return initial;
+  });
+  const [alertSounds, setAlertSounds] = useState(() => {
+    let saved = {};
+    try {
+      saved = JSON.parse((user.attributes && user.attributes.lsAlertSounds) || '{}');
+    } catch {
+      saved = {};
+    }
+    const initial = {};
+    LS_TOGGLES.forEach((toggle) => {
+      initial[toggle.key] = saved[toggle.key] || 'beep';
     });
     return initial;
   });
 
   const load = useCatchCallback(async () => {
-    const response = await fetchOrThrow(`/api/notifications?deviceId=${deviceId}`);
+    const response = await fetchOrThrow(
+      deviceReadonly ? '/api/notifications' : `/api/notifications?deviceId=${deviceId}`,
+    );
     const list = await response.json();
     setLinked(list);
     const next = {};
@@ -75,10 +160,17 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
     setLoaded(true);
   }, [deviceId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const buildSound = (kind) => {
-    const set = new Set(String(soundSource(user, kind)).split(',').map((x) => x.trim()).filter(Boolean));
+    const set = new Set(
+      String(soundSource(user, kind))
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean),
+    );
     LS_TOGGLES.forEach((toggle) => {
       if (toggle.soundKind === kind) {
         toggle.soundValues.forEach((v) => set.delete(v));
@@ -104,6 +196,13 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
       }
       attributes.soundAlarms = buildSound('alarms');
       attributes.soundEvents = buildSound('events');
+      const soundMap = {};
+      LS_TOGGLES.forEach((toggle) => {
+        if (states[toggle.key] && sounds[toggle.key]) {
+          soundMap[toggle.key] = alertSounds[toggle.key];
+        }
+      });
+      attributes.lsAlertSounds = JSON.stringify(soundMap);
       const updatedUser = { ...user, attributes };
       await fetchOrThrow(`/api/users/${user.id}`, {
         method: 'PUT',
@@ -121,11 +220,21 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
         for (const type of toggle.types) {
           const current = linked.find((n) => n.type === type && matchesToggle(n, toggle));
           if (want && !current) {
-            let notification = all.find((n) => n.type === type && !n.always
-              && n.attributes && n.attributes.ls && matchesToggle(n, toggle));
+            let notification = all.find(
+              (n) =>
+                n.type === type &&
+                !n.always &&
+                n.attributes &&
+                n.attributes.ls &&
+                matchesToggle(n, toggle),
+            );
             if (!notification) {
               const body = {
-                type, always: false, notificators, calendarId: 0, attributes: { ls: true },
+                type,
+                always: false,
+                notificators,
+                calendarId: 0,
+                attributes: { ls: true },
               };
               if (toggle.alarms) {
                 body.attributes.alarms = toggle.alarms;
@@ -147,23 +256,34 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
             await fetchOrThrow('/api/permissions', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ deviceId, notificationId: notification.id }),
+              body: JSON.stringify(
+                deviceReadonly
+                  ? { userId: user.id, notificationId: notification.id }
+                  : { deviceId, notificationId: notification.id },
+              ),
             });
           } else if (!want && current) {
             await fetchOrThrow('/api/permissions', {
               method: 'DELETE',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ deviceId, notificationId: current.id }),
+              body: JSON.stringify(
+                deviceReadonly
+                  ? { userId: user.id, notificationId: current.id }
+                  : { deviceId, notificationId: current.id },
+              ),
             });
           }
         }
       }
 
-      if (states.overspeed && device) {
+      if (!deviceReadonly && states.overspeed && device) {
         const knots = Number(speed) / 1.852;
         const currentLimit = Number((device.attributes && device.attributes.speedLimit) || 0);
         if (Math.abs(currentLimit - knots) > 0.01) {
-          const updatedDevice = { ...device, attributes: { ...device.attributes, speedLimit: knots } };
+          const updatedDevice = {
+            ...device,
+            attributes: { ...device.attributes, speedLimit: knots },
+          };
           await fetchOrThrow(`/api/devices/${device.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -175,7 +295,7 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
     } finally {
       setSaving(false);
     }
-  }, [states, sounds, speed, telegram, linked, user, device, deviceId, onClose]);
+  }, [states, sounds, alertSounds, speed, telegram, linked, user, device, deviceId, onClose]);
 
   return (
     <Dialog open onClose={() => !saving && onClose()} fullWidth maxWidth="xs">
@@ -195,17 +315,48 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
             {LS_TOGGLES.map((toggle) => (
               <div key={toggle.key}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="body2" style={{ flexGrow: 1 }}>{toggle.label}</Typography>
+                  <Typography variant="body2" style={{ flexGrow: 1 }}>
+                    {toggle.label}
+                  </Typography>
                   <IconButton
                     size="small"
                     disabled={!states[toggle.key]}
                     onClick={() => setSounds({ ...sounds, [toggle.key]: !sounds[toggle.key] })}
                     title="Tocar som no painel"
                   >
-                    {sounds[toggle.key] && states[toggle.key]
-                      ? <VolumeUpIcon fontSize="small" color="primary" />
-                      : <VolumeOffIcon fontSize="small" />}
+                    {sounds[toggle.key] && states[toggle.key] ? (
+                      <VolumeUpIcon fontSize="small" color="primary" />
+                    ) : (
+                      <VolumeOffIcon fontSize="small" />
+                    )}
                   </IconButton>
+                  {states[toggle.key] && sounds[toggle.key] && (
+                    <>
+                      <Select
+                        size="small"
+                        value={alertSounds[toggle.key] || 'beep'}
+                        onChange={(e) =>
+                          setAlertSounds({ ...alertSounds, [toggle.key]: e.target.value })
+                        }
+                        sx={{ fontSize: 12, mx: 0.5, minWidth: 112 }}
+                      >
+                        {Object.keys(LS_SOUND_PRESETS)
+                          .filter((k) => k !== 'none')
+                          .map((k) => (
+                            <MenuItem key={k} value={k} sx={{ fontSize: 12 }}>
+                              {LS_SOUND_PRESETS[k].label}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                      <IconButton
+                        size="small"
+                        onClick={() => playPreset(alertSounds[toggle.key] || 'beep')}
+                        title="Ouvir"
+                      >
+                        <VolumeUpIcon fontSize="small" />
+                      </IconButton>
+                    </>
+                  )}
                   <Switch
                     checked={!!states[toggle.key]}
                     onChange={(e) => setStates({ ...states, [toggle.key]: e.target.checked })}
@@ -213,14 +364,31 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
                   />
                 </div>
                 {toggle.key === 'overspeed' && states.overspeed && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 4px 4px' }}>
-                    <Slider value={speed} onChange={(e, v) => setSpeed(v)} min={60} max={160} step={5} size="small" />
-                    <Typography variant="body2" style={{ minWidth: 64, fontWeight: 600 }}>{`${speed} km/h`}</Typography>
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 4px 4px' }}
+                  >
+                    <Slider
+                      value={speed}
+                      onChange={(e, v) => setSpeed(v)}
+                      min={60}
+                      max={160}
+                      step={5}
+                      size="small"
+                    />
+                    <Typography
+                      variant="body2"
+                      style={{ minWidth: 64, fontWeight: 600 }}
+                    >{`${speed} km/h`}</Typography>
                   </div>
                 )}
               </div>
             ))}
-            <Typography variant="caption" color="textSecondary" component="div" style={{ marginTop: 6 }}>
+            <Typography
+              variant="caption"
+              color="textSecondary"
+              component="div"
+              style={{ marginTop: 6 }}
+            >
               Alto-falante azul = toca um bipe no painel aberto. Vale para todos os seus veículos.
             </Typography>
             <Divider style={{ margin: '10px 0' }} />
@@ -239,7 +407,9 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => onClose()} disabled={saving}>Cancelar</Button>
+        <Button onClick={() => onClose()} disabled={saving}>
+          Cancelar
+        </Button>
         <Button variant="contained" onClick={handleSave} disabled={saving || !loaded}>
           {saving ? <CircularProgress size={18} /> : 'Salvar'}
         </Button>

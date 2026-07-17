@@ -783,17 +783,15 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                     <LockOpenIcon />
                   </IconButton>
                 </Tooltip>
-                {!deviceReadonly && (
-                  <Tooltip title="Meus alertas">
-                    <IconButton
-                      color="primary"
-                      onClick={() => setAlertsOpen(true)}
-                      disabled={disableActions}
-                    >
-                      <NotificationsIcon />
-                    </IconButton>
-                  </Tooltip>
-                )}
+                <Tooltip title="Meus alertas">
+                  <IconButton
+                    color="primary"
+                    onClick={() => setAlertsOpen(true)}
+                    disabled={disableActions}
+                  >
+                    <NotificationsIcon />
+                  </IconButton>
+                </Tooltip>
                 <Tooltip title={t('commandTitle')}>
                   <IconButton
                     onClick={() => navigate(`/settings/device/${deviceId}/command`)}

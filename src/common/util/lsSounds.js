@@ -35,6 +35,37 @@ const playSeq = (steps) => {
 
 export const LS_SOUND_PRESETS = {
   none: { label: 'Sem som', steps: [] },
+  sireneForte: {
+    label: 'Sirene forte',
+    steps: [
+      { f: 660, d: 0.26, type: 'sawtooth', v: 0.5 },
+      { f: 1100, d: 0.26, type: 'sawtooth', v: 0.5 },
+      { f: 660, d: 0.26, type: 'sawtooth', v: 0.5 },
+      { f: 1100, d: 0.26, type: 'sawtooth', v: 0.5 },
+    ],
+  },
+  urgente: {
+    label: 'Alarme urgente',
+    steps: [
+      { f: 1000, d: 0.1, type: 'square', v: 0.5, gap: 0.05 },
+      { f: 1000, d: 0.1, type: 'square', v: 0.5, gap: 0.05 },
+      { f: 1000, d: 0.1, type: 'square', v: 0.5, gap: 0.05 },
+      { f: 1000, d: 0.1, type: 'square', v: 0.5, gap: 0.05 },
+      { f: 1000, d: 0.1, type: 'square', v: 0.5 },
+    ],
+  },
+  emergencia: {
+    label: 'Emergência',
+    steps: [
+      { f: 800, d: 0.15, type: 'square', v: 0.5 },
+      { f: 1250, d: 0.15, type: 'square', v: 0.5 },
+      { f: 800, d: 0.15, type: 'square', v: 0.5 },
+      { f: 1250, d: 0.15, type: 'square', v: 0.5 },
+      { f: 800, d: 0.15, type: 'square', v: 0.5 },
+      { f: 1250, d: 0.15, type: 'square', v: 0.5 },
+    ],
+  },
+  buzina: { label: 'Buzina', steps: [{ f: 240, d: 0.5, type: 'sawtooth', v: 0.5 }] },
   beep: { label: 'Bipe simples', steps: [{ f: 880, d: 0.18 }] },
   double: {
     label: 'Bipe duplo',

@@ -32,7 +32,6 @@ import {
   nativeEnvironment,
   nativePostMessage,
 } from '../common/components/NativeInterface';
-import LogoImage from './LogoImage';
 import { useCatch } from '../reactHelper';
 import QrCodeDialog from '../common/components/QrCodeDialog';
 import fetchOrThrow from '../common/util/fetchOrThrow';
@@ -67,14 +66,43 @@ const useStyles = makeStyles()((theme) => ({
   flag: {
     marginRight: theme.spacing(1),
   },
+  input: {
+    [theme.breakpoints.up('md')]: {
+      '& .MuiOutlinedInput-root': {
+        borderRadius: theme.spacing(2),
+        '& fieldset': {
+          borderColor: theme.palette.primary.light,
+        },
+        '&:hover fieldset': {
+          borderColor: theme.palette.primary.main,
+        },
+        '&.Mui-focused fieldset': {
+          borderColor: theme.palette.primary.main,
+        },
+      },
+    },
+  },
+  loginButton: {
+    [theme.breakpoints.up('md')]: {
+      borderRadius: theme.spacing(3),
+    },
+  },
+  googleButton: {
+    [theme.breakpoints.up('md')]: {
+      borderRadius: theme.spacing(3),
+      backgroundColor: '#ffffff',
+      borderWidth: 2,
+    },
+  },
 }));
 
 const LoginPage = () => {
   const { classes } = useStyles();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const theme = useTheme();
   const t = useTranslation();
+  const theme = useTheme();
+  const desktop = useMediaQuery(theme.breakpoints.up('md'));
 
   const { languages, language, setLocalLanguage } = useLocalization();
   const languageList = Object.entries(languages).map((values) => ({
@@ -199,9 +227,6 @@ const LoginPage = () => {
         )}
       </div>
       <div className={classes.container}>
-        {useMediaQuery(theme.breakpoints.down('lg')) && (
-          <LogoImage color={theme.palette.primary.main} />
-        )}
         {!openIdForced && (
           <>
             <TextField
@@ -214,6 +239,7 @@ const LoginPage = () => {
               autoFocus={!email}
               onChange={(e) => setEmail(e.target.value)}
               helperText={failed && 'Invalid username or password'}
+              className={classes.input}
             />
             <TextField
               required
@@ -225,6 +251,7 @@ const LoginPage = () => {
               autoComplete="current-password"
               autoFocus={!!email}
               onChange={(e) => setPassword(e.target.value)}
+              className={classes.input}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -250,21 +277,28 @@ const LoginPage = () => {
                 value={code}
                 type="number"
                 onChange={(e) => setCode(e.target.value)}
+                className={classes.input}
               />
             )}
             <Button
               onClick={handlePasswordLogin}
               type="submit"
               variant="contained"
-              color="secondary"
+              color={desktop ? 'primary' : 'secondary'}
               disabled={!email || !password || (codeEnabled && !code)}
+              className={classes.loginButton}
             >
               {t('loginLogin')}
             </Button>
           </>
         )}
         {openIdEnabled && (
-          <Button onClick={() => handleOpenIdLogin()} variant="contained" color="secondary">
+          <Button
+            onClick={() => handleOpenIdLogin()}
+            variant={desktop ? 'outlined' : 'contained'}
+            color={desktop ? 'primary' : 'secondary'}
+            className={classes.googleButton}
+          >
             {t('loginOpenId')}
           </Button>
         )}

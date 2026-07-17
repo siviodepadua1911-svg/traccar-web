@@ -11,53 +11,22 @@ import { useCatchCallback } from '../reactHelper';
 import { findFonts } from './core/mapUtil';
 import useLsGlidePositions from './lsUseGlidePositions';
 
-const buildHoverHtml = (p, lat, lon) => {
+const buildHoverHtml = (p) => {
   const rows = [];
-  const row = (label, value) =>
-    `<tr><td style="padding:2px 10px 2px 0;color:#607d8b;font-size:12px;white-space:nowrap;">${label}</td><td style="padding:2px 0;font-size:12px;font-weight:600;color:#263238;">${value}</td></tr>`;
+  const row = (label, value) => `<tr><td style="padding:2px 10px 2px 0;color:#607d8b;font-size:12px;white-space:nowrap;">${label}</td><td style="padding:2px 0;font-size:12px;font-weight:600;color:#263238;">${value}</td></tr>`;
   if (p.fixTime) rows.push(row('Hora', p.fixTime));
   if (p.speed !== undefined) rows.push(row('Velocidade', `${p.speed} km/h`));
-  if (p.ignition !== undefined)
-    rows.push(
-      row(
-        'Igni&ccedil;&atilde;o',
-        p.ignition
-          ? '<span style="color:#2e7d32;">Ligada</span>'
-          : '<span style="color:#c62828;">Desligada</span>',
-      ),
-    );
-  if (p.blocked !== undefined)
-    rows.push(
-      row(
-        'Bloqueio',
-        p.blocked
-          ? '<span style="color:#c62828;font-weight:700;">BLOQUEADO</span>'
-          : '<span style="color:#2e7d32;">Liberado</span>',
-      ),
-    );
+  if (p.ignition !== undefined) rows.push(row('Igni&ccedil;&atilde;o', p.ignition ? '<span style="color:#2e7d32;">Ligada</span>' : '<span style="color:#c62828;">Desligada</span>'));
+  if (p.blocked !== undefined) rows.push(row('Bloqueio', p.blocked ? '<span style="color:#c62828;font-weight:700;">BLOQUEADO</span>' : '<span style="color:#2e7d32;">Liberado</span>'));
   if (p.batteryLevel !== undefined) rows.push(row('Bateria', `${p.batteryLevel}%`));
   if (p.power !== undefined) rows.push(row('Voltagem', `${Number(p.power).toFixed(1)} V`));
   if (p.sat !== undefined) rows.push(row('Sat&eacute;lites', p.sat));
   if (p.rssi !== undefined) rows.push(row('Sinal GSM', p.rssi));
-  if (p.totalDistance !== undefined)
-    rows.push(row('Hod&ocirc;metro', `${Number(p.totalDistance).toLocaleString('pt-BR')} km`));
+  if (p.totalDistance !== undefined) rows.push(row('Hod&ocirc;metro', `${Number(p.totalDistance).toLocaleString('pt-BR')} km`));
   if (p.address && p.address !== 'undefined') rows.push(row('Endere&ccedil;o', p.address));
-  return `<div style="font-family:Inter,Roboto,Arial,sans-serif;min-width:210px;">
+  return `<div style="font-family:Roboto,Arial,sans-serif;min-width:190px;">
     <div style="font-weight:700;font-size:13px;color:#0d2a5c;border-bottom:2px solid #00b0ff;padding-bottom:4px;margin-bottom:6px;">${p.name || ''}</div>
     <table style="border-collapse:collapse;">${rows.join('')}</table>
-    <div style="display:flex;gap:4px;margin-top:8px;">
-      <button onclick="window.lsMaps(${lat},${lon})" style="flex:1;cursor:pointer;border:1px solid #cfd8dc;background:#f5f8fc;border-radius:6px;padding:6px 2px;font-size:10.5px;color:#0d47a1;font-family:inherit;">Google Maps</button>
-      <button onclick="window.lsStreet(${lat},${lon})" style="flex:1;cursor:pointer;border:1px solid #cfd8dc;background:#f5f8fc;border-radius:6px;padding:6px 2px;font-size:10.5px;color:#0d47a1;font-family:inherit;">Street View</button>
-      <button onclick="window.lsShare(${lat},${lon},'${(p.name || '').replace(/'/g, '')}')" style="flex:1;cursor:pointer;border:1px solid #cfd8dc;background:#f5f8fc;border-radius:6px;padding:6px 2px;font-size:10.5px;color:#0d47a1;font-family:inherit;">Compartilhar</button>
-    </div>
-    ${
-      p.blocked !== undefined
-        ? `<div style="display:flex;gap:4px;margin-top:4px;">
-      <button onclick="window.lsCmd(${p.deviceId},'engineStop')" style="flex:1;cursor:pointer;border:none;background:#c62828;border-radius:6px;padding:7px 2px;font-size:11px;color:#fff;font-weight:700;font-family:inherit;">Bloquear</button>
-      <button onclick="window.lsCmd(${p.deviceId},'engineResume')" style="flex:1;cursor:pointer;border:none;background:#2e7d32;border-radius:6px;padding:7px 2px;font-size:11px;color:#fff;font-weight:700;font-family:inherit;">Desbloquear</button>
-    </div>`
-        : ''
-    }
   </div>`;
 };
 
@@ -99,59 +68,6 @@ const MapPositions = ({
     });
   }
 
-  const closeTimerRef = useRef(null);
-  const clearCloseTimer = () => {
-    if (closeTimerRef.current) {
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-  };
-  const scheduleClose = () => {
-    clearCloseTimer();
-    closeTimerRef.current = setTimeout(() => hoverPopupRef.current.remove(), 260);
-  };
-
-  useEffect(() => {
-    window.lsMaps = (la, lo) => window.open(`https://www.google.com/maps?q=${la},${lo}`, '_blank');
-    window.lsStreet = (la, lo) =>
-      window.open(`https://www.google.com/maps?q=&layer=c&cbll=${la},${lo}`, '_blank');
-    window.lsShare = (la, lo, name) => {
-      const url = `https://www.google.com/maps?q=${la},${lo}`;
-      if (navigator.share) {
-        navigator.share({ title: name, text: `${name} - localizacao`, url }).catch(() => {});
-      } else {
-        window.open(`https://wa.me/?text=${encodeURIComponent(`${name}: ${url}`)}`, '_blank');
-      }
-    };
-    window.lsCmd = async (deviceId, type) => {
-      const acao = type === 'engineStop' ? 'BLOQUEAR' : 'DESBLOQUEAR';
-      if (!window.confirm(`Confirma ${acao} este veiculo?`)) return;
-      try {
-        window.localStorage.setItem('lsExpectResultUntil', String(Date.now() + 180000));
-        const r = await fetch(`/api/commands/send?deviceId=${deviceId}`, {
-          headers: { Accept: 'application/json' },
-        });
-        let body = { deviceId, type };
-        if (r.ok) {
-          const avail = await r.json();
-          const saved = (avail || []).find((c) => c.type === type);
-          if (saved) body = { id: saved.id, deviceId };
-        }
-        const send = await fetch('/api/commands/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        if (!send.ok) throw new Error('falha');
-        window.alert('Comando enviado! Aguarde a confirmacao no veiculo.');
-      } catch {
-        window.alert(
-          'Nao foi possivel enviar. O comando pode nao estar liberado para este veiculo.',
-        );
-      }
-    };
-  }, []);
-
   const createFeature = useCallback(
     (devices, position, selectedPositionId) => {
       const device = devices[position.deviceId];
@@ -183,10 +99,8 @@ const MapPositions = ({
         power: position.attributes.power,
         sat: position.attributes.sat,
         rssi: position.attributes.rssi,
-        totalDistance:
-          position.attributes.totalDistance !== undefined
-            ? Math.round(position.attributes.totalDistance / 1000)
-            : undefined,
+        totalDistance: position.attributes.totalDistance !== undefined
+          ? Math.round(position.attributes.totalDistance / 1000) : undefined,
         address: position.address || undefined,
       };
     },
@@ -194,25 +108,18 @@ const MapPositions = ({
   );
 
   const onMouseEnter = (event) => {
-    clearCloseTimer();
     map.getCanvas().style.cursor = 'pointer';
     const feature = event.features && event.features[0];
     if (feature) {
-      const [lo, la] = feature.geometry.coordinates;
       hoverPopupRef.current
         .setLngLat(feature.geometry.coordinates)
-        .setHTML(buildHoverHtml(feature.properties, la, lo))
+        .setHTML(buildHoverHtml(feature.properties))
         .addTo(map);
-      const el = hoverPopupRef.current.getElement();
-      if (el) {
-        el.onmouseenter = clearCloseTimer;
-        el.onmouseleave = scheduleClose;
-      }
     }
   };
   const onMouseLeave = () => {
     map.getCanvas().style.cursor = '';
-    scheduleClose();
+    hoverPopupRef.current.remove();
   };
   const onClusterEnter = () => (map.getCanvas().style.cursor = 'pointer');
 

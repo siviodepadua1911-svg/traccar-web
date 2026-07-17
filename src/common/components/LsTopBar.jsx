@@ -25,6 +25,7 @@ const LsTopBar = () => {
   const dispatch = useDispatch();
 
   const user = useSelector((state) => state.session.user);
+  const lsMenu = user.attributes ? user.attributes.lsMenu : '';
   const supportLink = useSelector((state) => state.session.server.attributes.support);
   const readonly = useRestriction('readonly');
   const disableReports = useRestriction('disableReports');
@@ -118,7 +119,11 @@ const LsTopBar = () => {
       active: at('/settings/preferences') || at('/settings/server'),
       menu: true,
     },
-  ].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .filter(
+      (it) => manager || !lsMenu || it.k === 'map' || String(lsMenu).split(',').includes(it.k),
+    );
 
   return (
     <Box

@@ -57,6 +57,14 @@ const PERFIS = [
 ];
 
 const STEPS = ['Dados', 'Equipamento', 'Acesso', 'Alertas', 'Pronto'];
+const MENU_OPTS = [
+  { k: 'rel', label: 'Relatórios' },
+  { k: 'geo', label: 'Cercas eletrônicas' },
+  { k: 'not', label: 'Alertas' },
+  { k: 'drv', label: 'Motoristas' },
+  { k: 'dev', label: 'Dispositivos' },
+  { k: 'cfg', label: 'Configurações' },
+];
 const AZUL = '#1C7ED6';
 
 const acessoTexto = (email, senha) =>
@@ -88,6 +96,14 @@ const LsClientPage = () => {
   const [addingDevice, setAddingDevice] = useState(false);
   const [driverName, setDriverName] = useState('');
   const [driverCode, setDriverCode] = useState('');
+  const [menuItems, setMenuItems] = useState({
+    rel: true,
+    geo: true,
+    not: true,
+    drv: false,
+    dev: false,
+    cfg: false,
+  });
   const [alerts, setAlerts] = useState(() => {
     const o = {};
     LS_TOGGLES.forEach((tg) => {
@@ -117,6 +133,15 @@ const LsClientPage = () => {
         setWhatsapp((user.attributes && user.attributes.lsWhatsapp) || '');
         setCpf((user.attributes && user.attributes.lsCpfCnpj) || '');
         setPerfil((user.attributes && user.attributes.lsPerfil) || 'alertas');
+        const menu = (user.attributes && user.attributes.lsMenu) || '';
+        if (menu) {
+          const setk = menu.split(',');
+          const mi = {};
+          MENU_OPTS.forEach((o) => {
+            mi[o.k] = setk.includes(o.k);
+          });
+          setMenuItems(mi);
+        }
       }
       const linkedResponse = await fetchOrThrow(`/api/devices?userId=${id}`);
       const linked = await linkedResponse.json();
@@ -387,6 +412,9 @@ const LsClientPage = () => {
       attributes.soundEvents = buildSoundList('events');
       attributes.soundAlarms = buildSoundList('alarms');
       attributes.lsAlertSounds = JSON.stringify(buildAlertSoundsMap());
+      attributes.lsMenu = ['map', ...MENU_OPTS.filter((o) => menuItems[o.k]).map((o) => o.k)].join(
+        ',',
+      );
       const payload = {
         ...base,
         name: name.trim(),
@@ -457,6 +485,7 @@ const LsClientPage = () => {
     alertSounds,
     driverName,
     driverCode,
+    menuItems,
     id,
     navigate,
   ]);
@@ -727,6 +756,30 @@ const LsClientPage = () => {
                         </div>
                       </Box>
                     ))}
+                    <Typography sx={{ fontWeight: 700, fontSize: 13, mt: 2, mb: 0.3 }}>
+                      O que o cliente vê no menu de cima
+                    </Typography>
+                    <Typography sx={{ fontSize: 12.5, color: 'text.secondary', mb: 0.3 }}>
+                      Monitoramento (mapa) sempre aparece. Marque o resto que ele pode ver.
+                    </Typography>
+                    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                      {MENU_OPTS.map((o) => (
+                        <FormControlLabel
+                          key={o.k}
+                          style={{ width: '48%', marginLeft: 0 }}
+                          control={
+                            <Checkbox
+                              size="small"
+                              checked={!!menuItems[o.k]}
+                              onChange={(e) =>
+                                setMenuItems({ ...menuItems, [o.k]: e.target.checked })
+                              }
+                            />
+                          }
+                          label={o.label}
+                        />
+                      ))}
+                    </div>
                   </>
                 )}
 

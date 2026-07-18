@@ -26,36 +26,37 @@ const MapDefaultCamera = ({ filteredPositions }) => {
         setInitialized(true);
       }
     } else {
-      if (defaultLatitude && defaultLongitude) {
+      // Enquadra os veículos primeiro; o centro padrão do servidor só entra
+      // quando não há nenhuma posição pra mostrar (evita abrir no continente
+      // inteiro quando o servidor tem lat/lon/zoom fixos configurados).
+      const coordinates = (filteredPositions || Object.values(positions)).map((item) => [
+        item.longitude,
+        item.latitude,
+      ]);
+      if (coordinates.length > 1) {
+        const bounds = coordinates.reduce(
+          (bounds, item) => bounds.extend(item),
+          new maplibregl.LngLatBounds(coordinates[0], coordinates[1]),
+        );
+        const canvas = map.getCanvas();
+        map.fitBounds(bounds, {
+          duration: 0,
+          padding: Math.min(canvas.width, canvas.height) * 0.1,
+        });
+        setInitialized(true);
+      } else if (coordinates.length) {
+        const [individual] = coordinates;
+        map.jumpTo({
+          center: individual,
+          zoom: Math.max(defaultZoom > 0 ? defaultZoom : map.getZoom(), 10),
+        });
+        setInitialized(true);
+      } else if (defaultLatitude && defaultLongitude) {
         map.jumpTo({
           center: [defaultLongitude, defaultLatitude],
           zoom: defaultZoom,
         });
         setInitialized(true);
-      } else {
-        const coordinates = (filteredPositions || Object.values(positions)).map((item) => [
-          item.longitude,
-          item.latitude,
-        ]);
-        if (coordinates.length > 1) {
-          const bounds = coordinates.reduce(
-            (bounds, item) => bounds.extend(item),
-            new maplibregl.LngLatBounds(coordinates[0], coordinates[1]),
-          );
-          const canvas = map.getCanvas();
-          map.fitBounds(bounds, {
-            duration: 0,
-            padding: Math.min(canvas.width, canvas.height) * 0.1,
-          });
-          setInitialized(true);
-        } else if (coordinates.length) {
-          const [individual] = coordinates;
-          map.jumpTo({
-            center: individual,
-            zoom: Math.max(defaultZoom > 0 ? defaultZoom : map.getZoom(), 10),
-          });
-          setInitialized(true);
-        }
       }
     }
   }, [

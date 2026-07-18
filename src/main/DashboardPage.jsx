@@ -119,6 +119,27 @@ const useStyles = makeStyles()((theme) => ({
   empty: { color: '#90a4ae', fontSize: 13, padding: theme.spacing(2, 0), textAlign: 'center' },
 }));
 
+// Mesmo colapso/anti-eco dos toasts: respostas de comando iguais em sequência
+// do mesmo aparelho viram 1 só (a mais recente) com um contador "×N".
+const collapseRepeatedCommandResults = (list) => {
+  const out = [];
+  list.forEach((e) => {
+    const last = out[out.length - 1];
+    const sameAsLast =
+      last &&
+      e.type === 'commandResult' &&
+      last.type === 'commandResult' &&
+      last.deviceId === e.deviceId &&
+      (last.attributes?.result || '') === (e.attributes?.result || '');
+    if (sameAsLast) {
+      last.repeatCount = (last.repeatCount || 1) + 1;
+    } else {
+      out.push({ ...e, repeatCount: 1 });
+    }
+  });
+  return out;
+};
+
 const kmh = (p) => Math.round(((p && p.speed) || 0) * 1.852);
 const isMoving = (p) => !!(p && (p.attributes.motion === true || kmh(p) > 3));
 const hhmm = (v) => new Date(v).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -166,7 +187,10 @@ const DashboardPage = () => {
     params.append('type', 'allEvents');
     fetch(`/api/reports/events?${params.toString()}`, { headers: { Accept: 'application/json' } })
       .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setEvents(Array.isArray(data) ? data.slice().reverse().slice(0, 15) : []))
+      .then((data) => {
+        const reversed = Array.isArray(data) ? data.slice().reverse() : [];
+        setEvents(collapseRepeatedCommandResults(reversed).slice(0, 15));
+      })
       .catch(() => {});
   }, [deviceCount]);
 
@@ -309,7 +333,16 @@ const DashboardPage = () => {
               <div className={classes.row} key={e.id} onClick={() => openDevice(e.deviceId)}>
                 <NotificationsNoneIcon sx={{ color, fontSize: 18 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12.5, color: '#263238' }}>{label}</div>
+                  <div style={{ fontSize: 12.5, color: '#263238' }}>
+                    {label}
+                    {e.repeatCount > 1 && (
+                      <span
+                        style={{ marginLeft: 6, fontSize: 11, color: '#90a4ae', fontWeight: 600 }}
+                      >
+                        {`×${e.repeatCount}`}
+                      </span>
+                    )}
+                  </div>
                   <div className={classes.muted}>{dev ? dev.name : ''}</div>
                 </div>
                 <div className={classes.muted}>{hhmm(e.eventTime)}</div>

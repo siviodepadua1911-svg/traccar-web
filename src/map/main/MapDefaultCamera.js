@@ -42,6 +42,7 @@ const MapDefaultCamera = ({ filteredPositions }) => {
         map.fitBounds(bounds, {
           duration: 0,
           padding: Math.min(canvas.width, canvas.height) * 0.1,
+          maxZoom: 16,
         });
         setInitialized(true);
       } else if (coordinates.length) {
@@ -51,7 +52,10 @@ const MapDefaultCamera = ({ filteredPositions }) => {
           zoom: Math.max(defaultZoom > 0 ? defaultZoom : map.getZoom(), 10),
         });
         setInitialized(true);
-      } else if (defaultLatitude && defaultLongitude) {
+      } else if (Object.keys(positions).length === 0 && defaultLatitude && defaultLongitude) {
+        // Só usa o centro fixo do servidor se realmente não existe NENHUMA
+        // posição carregada ainda em lugar nenhum (senão fica esperando o
+        // proximo tick, quando os veiculos filtrados chegam de verdade).
         map.jumpTo({
           center: [defaultLongitude, defaultLatitude],
           zoom: defaultZoom,

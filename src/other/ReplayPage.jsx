@@ -19,6 +19,7 @@ import ReportFilter from '../reports/components/ReportFilter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { useCatchCallback } from '../reactHelper';
 import MapCamera from '../map/MapCamera';
+import MapDefaultCamera from '../map/main/MapDefaultCamera';
 import MapGeofence from '../map/MapGeofence';
 import StatusCard from '../common/components/StatusCard';
 import MapScale from '../map/MapScale';
@@ -212,6 +213,7 @@ const ReplayPage = () => {
         )}
       </MapView>
       <MapScale />
+      <MapDefaultCamera />
       <MapCamera positions={positions} />
       <div className={classes.sidebar}>
         <Paper elevation={3} square>

@@ -7,6 +7,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useNavigate } from 'react-router-dom';
 import MapView from '../map/core/MapView';
 import MapCurrentLocation from '../map/MapCurrentLocation';
+import MapDefaultCamera from '../map/main/MapDefaultCamera';
 import MapGeofenceEdit from '../map/draw/MapGeofenceEdit';
 import GeofencesList from './GeofencesList';
 import { useTranslation } from '../common/components/LocalizationProvider';
@@ -122,6 +123,7 @@ const GeofencesPage = () => {
         <div className={classes.mapContainer}>
           <MapView>
             <MapGeofenceEdit selectedGeofenceId={selectedGeofenceId} />
+            <MapDefaultCamera />
           </MapView>
           <MapScale />
           <MapCurrentLocation />

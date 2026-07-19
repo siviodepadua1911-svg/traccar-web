@@ -33,7 +33,9 @@ const MapSelectedDevice = () => {
     ) {
       map.easeTo({
         center: [position.longitude, position.latitude],
-        zoom: Math.max(map.getZoom(), selectZoom),
+        // Limita a nivel de rua: nunca fica mais perto que selectZoom nem
+        // mais longe que zoom 17 (evita herdar um zoom extremo da tela anterior).
+        zoom: Math.min(Math.max(map.getZoom(), selectZoom), 17),
         offset: [0, -dimensions.popupMapOffset / 2],
       });
     }

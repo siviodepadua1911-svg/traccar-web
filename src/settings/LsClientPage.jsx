@@ -296,7 +296,7 @@ const LsClientPage = () => {
             const body = {
               type,
               always: false,
-              notificators: 'web',
+              notificators: 'web,firebase',
               calendarId: 0,
               attributes: { ls: true },
             };

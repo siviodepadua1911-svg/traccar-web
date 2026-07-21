@@ -173,7 +173,7 @@ const GeofencesPage = () => {
           body: JSON.stringify({
             type,
             always: false,
-            notificators: 'web',
+            notificators: 'web,firebase',
             calendarId: 0,
             attributes: { ls: true },
           }),

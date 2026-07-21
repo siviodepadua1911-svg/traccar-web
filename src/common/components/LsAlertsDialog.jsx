@@ -211,7 +211,7 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
       });
       dispatch(sessionActions.updateUser(updatedUser));
 
-      const notificators = chatId ? 'web,telegram' : 'web';
+      const notificators = chatId ? 'web,firebase,telegram' : 'web,firebase';
       const allResponse = await fetchOrThrow('/api/notifications');
       const all = await allResponse.json();
 

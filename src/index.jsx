@@ -8,6 +8,7 @@ import ErrorHandler from './common/components/ErrorHandler';
 import Navigation from './Navigation';
 import preloadImages from './map/core/preloadImages';
 import NativeInterface from './common/components/NativeInterface';
+import FirebaseNotifications from './common/components/FirebaseNotifications';
 import ServerProvider from './ServerProvider';
 import ErrorBoundary from './ErrorBoundary';
 import AppThemeProvider from './AppThemeProvider';
@@ -28,6 +29,7 @@ root.render(
               </BrowserRouter>
               <ErrorHandler />
               <NativeInterface />
+              <FirebaseNotifications />
             </ServerProvider>
           </AppThemeProvider>
         </StyledEngineProvider>

@@ -5,6 +5,9 @@ import ReportFilter from './components/ReportFilter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import PageLayout from '../common/components/PageLayout';
 import ReportsMenu from './components/ReportsMenu';
+import ReportInfoCard from './components/ReportInfoCard';
+import { ReportEmptyState } from './components/ReportEmptyState';
+import REPORT_INFO from './common/reportInfo';
 import ResizeHandle from './components/ResizeHandle';
 import { useCatchCallback } from '../reactHelper';
 import MapView from '../map/core/MapView';
@@ -28,6 +31,7 @@ const CombinedReportPage = () => {
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
 
   const itemsCoordinates = useMemo(() => items.flatMap((item) => item.route), [items]);
 
@@ -47,6 +51,7 @@ const CombinedReportPage = () => {
     deviceIds.forEach((deviceId) => query.append('deviceId', deviceId));
     groupIds.forEach((groupId) => query.append('groupId', groupId));
     setLoading(true);
+    setSearched(true);
     try {
       const response = await fetchOrThrow(`/api/reports/combined?${query.toString()}`);
       setItems(await response.json());
@@ -57,6 +62,7 @@ const CombinedReportPage = () => {
 
   return (
     <PageLayout menu={<ReportsMenu />} breadcrumbs={['reportTitle', 'reportCombined']}>
+      <ReportInfoCard reportKey="combined" info={REPORT_INFO.combined} />
       <div className={classes.container}>
         {Boolean(items.length) && (
           <>
@@ -93,14 +99,18 @@ const CombinedReportPage = () => {
             </TableHead>
             <TableBody>
               {!loading ? (
-                items.flatMap((item) =>
-                  item.events.map((event, index) => (
-                    <TableRow key={event.id}>
-                      <TableCell>{index ? '' : devices[item.deviceId].name}</TableCell>
-                      <TableCell>{formatTime(event.eventTime, 'seconds')}</TableCell>
-                      <TableCell>{t(prefixString('event', event.type))}</TableCell>
-                    </TableRow>
-                  )),
+                items.some((item) => item.events.length) ? (
+                  items.flatMap((item) =>
+                    item.events.map((event, index) => (
+                      <TableRow key={event.id}>
+                        <TableCell>{index ? '' : devices[item.deviceId].name}</TableCell>
+                        <TableCell>{formatTime(event.eventTime, 'seconds')}</TableCell>
+                        <TableCell>{t(prefixString('event', event.type))}</TableCell>
+                      </TableRow>
+                    )),
+                  )
+                ) : (
+                  <ReportEmptyState columns={3} searched={searched} />
                 )
               ) : (
                 <TableShimmer columns={3} />

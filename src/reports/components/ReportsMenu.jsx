@@ -16,6 +16,7 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from '../../common/components/LocalizationProvider';
 import { useAdministrator, useRestriction } from '../../common/util/permissions';
 import MenuItem from '../../common/components/MenuItem';
+import REPORT_INFO from '../common/reportInfo';
 
 const ReportsMenu = () => {
   const t = useTranslation();
@@ -50,49 +51,62 @@ const ReportsMenu = () => {
       <List>
         <MenuItem
           title={t('reportCombined')}
+          subtitle={REPORT_INFO.combined.menuCaption}
           link={buildLink('/reports/combined')}
           icon={<StarIcon />}
           selected={location.pathname === '/reports/combined'}
         />
         <MenuItem
           title={t('reportEvents')}
+          subtitle={REPORT_INFO.events.menuCaption}
           link={buildLink('/reports/events')}
           icon={<NotificationsActiveIcon />}
           selected={location.pathname === '/reports/events'}
         />
         <MenuItem
           title={t('sharedGeofences')}
+          subtitle={REPORT_INFO.geofences.menuCaption}
           link={buildLink('/reports/geofences')}
           icon={<PlaceIcon />}
           selected={location.pathname === '/reports/geofences'}
         />
         <MenuItem
           title={t('reportTrips')}
+          subtitle={REPORT_INFO.trips.menuCaption}
           link={buildLink('/reports/trips')}
           icon={<PlayCircleFilledIcon />}
           selected={location.pathname === '/reports/trips'}
         />
         <MenuItem
           title={t('reportStops')}
+          subtitle={REPORT_INFO.stops.menuCaption}
           link={buildLink('/reports/stops')}
           icon={<PauseCircleFilledIcon />}
           selected={location.pathname === '/reports/stops'}
         />
         <MenuItem
           title={t('reportSummary')}
+          subtitle={REPORT_INFO.summary.menuCaption}
           link={buildLink('/reports/summary')}
           icon={<FormatListBulletedIcon />}
           selected={location.pathname === '/reports/summary'}
         />
         <MenuItem
           title={t('reportChart')}
+          subtitle={REPORT_INFO.chart.menuCaption}
           link={buildLink('/reports/chart')}
           icon={<TrendingUpIcon />}
           selected={location.pathname === '/reports/chart'}
         />
-        <MenuItem title={t('reportReplay')} link={buildLink('/replay')} icon={<RouteIcon />} />
+        <MenuItem
+          title={t('reportReplay')}
+          subtitle={REPORT_INFO.replay.menuCaption}
+          link={buildLink('/replay')}
+          icon={<RouteIcon />}
+        />
         <MenuItem
           title={t('reportPositions')}
+          subtitle={REPORT_INFO.positions.menuCaption}
           link={buildLink('/reports/route')}
           icon={<TimelineIcon />}
           selected={location.pathname === '/reports/route'}
@@ -102,6 +116,7 @@ const ReportsMenu = () => {
       <List>
         <MenuItem
           title={t('sharedLogs')}
+          subtitle={REPORT_INFO.logs.menuCaption}
           link="/reports/logs"
           icon={<NotesIcon />}
           selected={location.pathname === '/reports/logs'}
@@ -109,6 +124,7 @@ const ReportsMenu = () => {
         {!readonly && (
           <MenuItem
             title={t('reportScheduled')}
+            subtitle={REPORT_INFO.scheduled.menuCaption}
             link="/reports/scheduled"
             icon={<EventRepeatIcon />}
             selected={location.pathname === '/reports/scheduled'}
@@ -117,6 +133,7 @@ const ReportsMenu = () => {
         {admin && (
           <MenuItem
             title={t('statisticsTitle')}
+            subtitle={REPORT_INFO.statistics.menuCaption}
             link="/reports/statistics"
             icon={<BarChartIcon />}
             selected={location.pathname === '/reports/statistics'}
@@ -125,6 +142,7 @@ const ReportsMenu = () => {
         {admin && (
           <MenuItem
             title={t('reportAudit')}
+            subtitle={REPORT_INFO.audit.menuCaption}
             link="/reports/audit"
             icon={<VerifiedUserIcon />}
             selected={location.pathname === '/reports/audit'}

@@ -7,6 +7,9 @@ import ReportFilter, { updateReportParams } from './components/ReportFilter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import PageLayout from '../common/components/PageLayout';
 import ReportsMenu from './components/ReportsMenu';
+import ReportInfoCard from './components/ReportInfoCard';
+import { ReportEmptyState } from './components/ReportEmptyState';
+import REPORT_INFO from './common/reportInfo';
 import PositionValue from '../common/components/PositionValue';
 import ColumnSelect from './components/ColumnSelect';
 import ResizeHandle from './components/ResizeHandle';
@@ -45,6 +48,7 @@ const PositionsReportPage = () => {
     ? parseInt(searchParams.get('geofenceId'))
     : null;
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
   const selectedRef = useRef();
@@ -70,6 +74,7 @@ const PositionsReportPage = () => {
       }
       deviceIds.forEach((deviceId) => query.append('deviceId', deviceId));
       setLoading(true);
+      setSearched(true);
       try {
         const response = await fetchOrThrow(`/api/positions?${query.toString()}`, {
           headers: { Accept: 'application/json' },
@@ -118,6 +123,7 @@ const PositionsReportPage = () => {
 
   return (
     <PageLayout menu={<ReportsMenu />} breadcrumbs={['reportTitle', 'reportPositions']}>
+      <ReportInfoCard reportKey="positions" info={REPORT_INFO.positions} />
       <div className={classes.container}>
         {selectedItem && (
           <>
@@ -184,44 +190,48 @@ const PositionsReportPage = () => {
             </TableHead>
             <TableBody>
               {!loading ? (
-                items.slice(0, 4000).map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className={classes.columnAction} padding="none">
-                      {selectedItem === item ? (
-                        <IconButton
-                          size="small"
-                          onClick={() => setSelectedItem(null)}
-                          ref={selectedRef}
-                        >
-                          <GpsFixedIcon fontSize="small" />
-                        </IconButton>
-                      ) : (
-                        <IconButton size="small" onClick={() => setSelectedItem(item)}>
-                          <LocationSearchingIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                    </TableCell>
-                    {columns.map((key) => (
-                      <TableCell key={key}>
-                        <PositionValue
-                          position={item}
-                          property={item.hasOwnProperty(key) ? key : null}
-                          attribute={item.hasOwnProperty(key) ? null : key}
+                items.length ? (
+                  items.slice(0, 4000).map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className={classes.columnAction} padding="none">
+                        {selectedItem === item ? (
+                          <IconButton
+                            size="small"
+                            onClick={() => setSelectedItem(null)}
+                            ref={selectedRef}
+                          >
+                            <GpsFixedIcon fontSize="small" />
+                          </IconButton>
+                        ) : (
+                          <IconButton size="small" onClick={() => setSelectedItem(item)}>
+                            <LocationSearchingIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </TableCell>
+                      {columns.map((key) => (
+                        <TableCell key={key}>
+                          <PositionValue
+                            position={item}
+                            property={item.hasOwnProperty(key) ? key : null}
+                            attribute={item.hasOwnProperty(key) ? null : key}
+                          />
+                        </TableCell>
+                      ))}
+                      <TableCell className={classes.actionCellPadding}>
+                        <CollectionActions
+                          itemId={item.id}
+                          endpoint="positions"
+                          readonly={readonly}
+                          onReload={() => {
+                            setItems(items.filter((position) => position.id !== item.id));
+                          }}
                         />
                       </TableCell>
-                    ))}
-                    <TableCell className={classes.actionCellPadding}>
-                      <CollectionActions
-                        itemId={item.id}
-                        endpoint="positions"
-                        readonly={readonly}
-                        onReload={() => {
-                          setItems(items.filter((position) => position.id !== item.id));
-                        }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))
+                    </TableRow>
+                  ))
+                ) : (
+                  <ReportEmptyState columns={columns.length + 2} searched={searched} />
+                )
               ) : (
                 <TableShimmer columns={columns.length + 1} startAction />
               )}

@@ -6,14 +6,24 @@ const useStyles = makeStyles()(() => ({
   menuItemText: {
     whiteSpace: 'nowrap',
   },
+  menuItemSubtitle: {
+    whiteSpace: 'normal',
+    fontSize: 11,
+    lineHeight: 1.3,
+  },
 }));
 
-const MenuItem = ({ title, link, icon, selected }) => {
+const MenuItem = ({ title, subtitle, link, icon, selected }) => {
   const { classes } = useStyles();
   return (
     <ListItemButton key={link} component={Link} to={link} selected={selected}>
       <ListItemIcon>{icon}</ListItemIcon>
-      <ListItemText primary={title} className={classes.menuItemText} />
+      <ListItemText
+        primary={title}
+        primaryTypographyProps={{ className: classes.menuItemText }}
+        secondary={subtitle}
+        secondaryTypographyProps={{ className: classes.menuItemSubtitle }}
+      />
     </ListItemButton>
   );
 };

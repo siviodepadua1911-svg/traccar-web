@@ -7,6 +7,9 @@ import { useAsyncTask } from '../reactHelper';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import PageLayout from '../common/components/PageLayout';
 import ReportsMenu from './components/ReportsMenu';
+import ReportInfoCard from './components/ReportInfoCard';
+import { ReportEmptyState } from './components/ReportEmptyState';
+import REPORT_INFO from './common/reportInfo';
 import TableShimmer from '../common/components/TableShimmer';
 import RemoveDialog from '../common/components/RemoveDialog';
 import fetchOrThrow from '../common/util/fetchOrThrow';
@@ -62,6 +65,7 @@ const ScheduledPage = () => {
 
   return (
     <PageLayout menu={<ReportsMenu />} breadcrumbs={['reportTitle', 'reportScheduled']}>
+      <ReportInfoCard reportKey="scheduled" info={REPORT_INFO.scheduled} />
       <Table>
         <TableHead>
           <TableRow>
@@ -73,18 +77,26 @@ const ScheduledPage = () => {
         </TableHead>
         <TableBody>
           {!loading ? (
-            items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{formatType(item.type)}</TableCell>
-                <TableCell>{item.description}</TableCell>
-                <TableCell>{calendars[item.calendarId].name}</TableCell>
-                <TableCell className={classes.columnAction} padding="none">
-                  <IconButton size="small" onClick={() => setRemovingId(item.id)}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))
+            items.length ? (
+              items.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>{formatType(item.type)}</TableCell>
+                  <TableCell>{item.description}</TableCell>
+                  <TableCell>{calendars[item.calendarId].name}</TableCell>
+                  <TableCell className={classes.columnAction} padding="none">
+                    <IconButton size="small" onClick={() => setRemovingId(item.id)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <ReportEmptyState
+                columns={4}
+                searched
+                afterMessage="Nenhum relatório agendado ainda. Abra um relatório (Viagens, Paradas...) e use o botão de calendário pra agendar o envio por e-mail."
+              />
+            )
           ) : (
             <TableShimmer columns={4} endAction />
           )}

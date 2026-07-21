@@ -1,5 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { IconButton, Paper, Slider, Toolbar, Typography, Tooltip, CircularProgress } from '@mui/material';
+import {
+  IconButton,
+  Paper,
+  Slider,
+  Toolbar,
+  Typography,
+  Tooltip,
+  CircularProgress,
+} from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import TuneIcon from '@mui/icons-material/Tune';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -16,6 +24,8 @@ import MapRoutePoints from '../map/MapRoutePoints';
 import MapPositions from '../map/MapPositions';
 import { formatTime } from '../common/util/formatter';
 import ReportFilter from '../reports/components/ReportFilter';
+import ReportInfoCard from '../reports/components/ReportInfoCard';
+import REPORT_INFO from '../reports/common/reportInfo';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { useCatchCallback } from '../reactHelper';
 import MapCamera from '../map/MapCamera';
@@ -185,7 +195,9 @@ const ReplayPage = () => {
     try {
       const coords = await snapPositions(positions);
       const deviceId = positions[0].deviceId;
-      setSmoothed(coords.map(([longitude, latitude]) => ({ latitude, longitude, speed: 0, deviceId })));
+      setSmoothed(
+        coords.map(([longitude, latitude]) => ({ latitude, longitude, speed: 0, deviceId })),
+      );
       setSmooth(true);
     } finally {
       setSmoothLoading(false);
@@ -228,8 +240,15 @@ const ReplayPage = () => {
               <>
                 <Tooltip title="Suavizar trajeto (colar nas ruas)">
                   <span>
-                    <IconButton onClick={() => (smooth ? setSmooth(false) : applySnap())} disabled={smoothLoading}>
-                      {smoothLoading ? <CircularProgress size={20} /> : <AutoFixHighIcon color={smooth ? 'primary' : 'inherit'} />}
+                    <IconButton
+                      onClick={() => (smooth ? setSmooth(false) : applySnap())}
+                      disabled={smoothLoading}
+                    >
+                      {smoothLoading ? (
+                        <CircularProgress size={20} />
+                      ) : (
+                        <AutoFixHighIcon color={smooth ? 'primary' : 'inherit'} />
+                      )}
                     </IconButton>
                   </span>
                 </Tooltip>
@@ -243,6 +262,7 @@ const ReplayPage = () => {
             )}
           </Toolbar>
         </Paper>
+        {!loaded && <ReportInfoCard reportKey="replay" info={REPORT_INFO.replay} />}
         <Paper className={classes.content} square>
           {loaded && !filterOpen && (
             <>

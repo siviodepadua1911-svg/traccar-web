@@ -17,6 +17,9 @@ import { useAttributePreference, usePreference } from '../common/util/preference
 import { useTranslation } from '../common/components/LocalizationProvider';
 import PageLayout from '../common/components/PageLayout';
 import ReportsMenu from './components/ReportsMenu';
+import ReportInfoCard from './components/ReportInfoCard';
+import { ReportEmptyState } from './components/ReportEmptyState';
+import REPORT_INFO from './common/reportInfo';
 import ColumnSelect from './components/ColumnSelect';
 import ResizeHandle from './components/ResizeHandle';
 import usePersistedState from '../common/util/usePersistedState';
@@ -65,6 +68,7 @@ const StopReportPage = () => {
   ]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
   const onShow = useCatchCallback(async ({ deviceIds, groupIds, from, to }) => {
@@ -72,6 +76,7 @@ const StopReportPage = () => {
     deviceIds.forEach((deviceId) => query.append('deviceId', deviceId));
     groupIds.forEach((groupId) => query.append('groupId', groupId));
     setLoading(true);
+    setSearched(true);
     try {
       const response = await fetchOrThrow(`/api/reports/stops?${query.toString()}`, {
         headers: { Accept: 'application/json' },
@@ -140,6 +145,7 @@ const StopReportPage = () => {
 
   return (
     <PageLayout menu={<ReportsMenu />} breadcrumbs={['reportTitle', 'reportStops']}>
+      <ReportInfoCard reportKey="stops" info={REPORT_INFO.stops} />
       <div className={classes.container}>
         {selectedItem && (
           <>
@@ -189,25 +195,29 @@ const StopReportPage = () => {
             </TableHead>
             <TableBody>
               {!loading ? (
-                items.map((item) => (
-                  <TableRow key={item.positionId}>
-                    <TableCell className={classes.columnAction} padding="none">
-                      {selectedItem === item ? (
-                        <IconButton size="small" onClick={() => setSelectedItem(null)}>
-                          <GpsFixedIcon fontSize="small" />
-                        </IconButton>
-                      ) : (
-                        <IconButton size="small" onClick={() => setSelectedItem(item)}>
-                          <LocationSearchingIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                    </TableCell>
-                    <TableCell>{devices[item.deviceId].name}</TableCell>
-                    {columns.map((key) => (
-                      <TableCell key={key}>{formatValue(item, key)}</TableCell>
-                    ))}
-                  </TableRow>
-                ))
+                items.length ? (
+                  items.map((item) => (
+                    <TableRow key={item.positionId}>
+                      <TableCell className={classes.columnAction} padding="none">
+                        {selectedItem === item ? (
+                          <IconButton size="small" onClick={() => setSelectedItem(null)}>
+                            <GpsFixedIcon fontSize="small" />
+                          </IconButton>
+                        ) : (
+                          <IconButton size="small" onClick={() => setSelectedItem(item)}>
+                            <LocationSearchingIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </TableCell>
+                      <TableCell>{devices[item.deviceId].name}</TableCell>
+                      {columns.map((key) => (
+                        <TableCell key={key}>{formatValue(item, key)}</TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <ReportEmptyState columns={columns.length + 2} searched={searched} />
+                )
               ) : (
                 <TableShimmer columns={columns.length + 2} startAction />
               )}

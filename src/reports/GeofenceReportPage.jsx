@@ -8,6 +8,9 @@ import ReportFilter, { updateReportParams } from './components/ReportFilter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import PageLayout from '../common/components/PageLayout';
 import ReportsMenu from './components/ReportsMenu';
+import ReportInfoCard from './components/ReportInfoCard';
+import { ReportEmptyState } from './components/ReportEmptyState';
+import REPORT_INFO from './common/reportInfo';
 import ColumnSelect from './components/ColumnSelect';
 import usePersistedState from '../common/util/usePersistedState';
 import { useCatch, useCatchCallback } from '../reactHelper';
@@ -44,6 +47,7 @@ const GeofenceReportPage = () => {
   ]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
 
   const onShow = useCatchCallback(
     async ({ deviceIds, groupIds, from, to }) => {
@@ -52,6 +56,7 @@ const GeofenceReportPage = () => {
       groupIds.forEach((groupId) => query.append('groupId', groupId));
       geofenceIds.forEach((geofenceId) => query.append('geofenceId', geofenceId));
       setLoading(true);
+      setSearched(true);
       try {
         const response = await fetchOrThrow(`/api/reports/geofences?${query.toString()}`, {
           headers: { Accept: 'application/json' },
@@ -97,6 +102,7 @@ const GeofenceReportPage = () => {
 
   return (
     <PageLayout menu={<ReportsMenu />} breadcrumbs={['reportTitle', 'sharedGeofences']}>
+      <ReportInfoCard reportKey="geofences" info={REPORT_INFO.geofences} />
       <div className={classes.header}>
         <ReportFilter
           onShow={onShow}
@@ -132,16 +138,20 @@ const GeofenceReportPage = () => {
         </TableHead>
         <TableBody>
           {!loading ? (
-            items.map((item) => (
-              <TableRow
-                key={`${item.deviceId}_${item.geofenceId}_${item.startTime}_${item.endTime}`}
-              >
-                <TableCell>{devices[item.deviceId]?.name || item.deviceId}</TableCell>
-                {columns.map((key) => (
-                  <TableCell key={key}>{formatValue(item, key)}</TableCell>
-                ))}
-              </TableRow>
-            ))
+            items.length ? (
+              items.map((item) => (
+                <TableRow
+                  key={`${item.deviceId}_${item.geofenceId}_${item.startTime}_${item.endTime}`}
+                >
+                  <TableCell>{devices[item.deviceId]?.name || item.deviceId}</TableCell>
+                  {columns.map((key) => (
+                    <TableCell key={key}>{formatValue(item, key)}</TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <ReportEmptyState columns={columns.length + 1} searched={searched} />
+            )
           ) : (
             <TableShimmer columns={columns.length + 1} />
           )}

@@ -25,6 +25,9 @@ import { useAttributePreference } from '../common/util/preferences';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import PageLayout from '../common/components/PageLayout';
 import ReportsMenu from './components/ReportsMenu';
+import ReportInfoCard from './components/ReportInfoCard';
+import { ReportEmptyState } from './components/ReportEmptyState';
+import REPORT_INFO from './common/reportInfo';
 import usePersistedState from '../common/util/usePersistedState';
 import ColumnSelect from './components/ColumnSelect';
 import { useCatch, useCatchCallback } from '../reactHelper';
@@ -71,6 +74,7 @@ const SummaryReportPage = () => {
   const daily = searchParams.get('daily') === 'true';
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
 
   const onShow = useCatchCallback(
     async ({ deviceIds, groupIds, from, to }) => {
@@ -78,6 +82,7 @@ const SummaryReportPage = () => {
       deviceIds.forEach((deviceId) => query.append('deviceId', deviceId));
       groupIds.forEach((groupId) => query.append('groupId', groupId));
       setLoading(true);
+      setSearched(true);
       try {
         const response = await fetchOrThrow(`/api/reports/summary?${query.toString()}`, {
           headers: { Accept: 'application/json' },
@@ -144,6 +149,7 @@ const SummaryReportPage = () => {
 
   return (
     <PageLayout menu={<ReportsMenu />} breadcrumbs={['reportTitle', 'reportSummary']}>
+      <ReportInfoCard reportKey="summary" info={REPORT_INFO.summary} />
       <div className={classes.header}>
         <ReportFilter
           onShow={onShow}
@@ -184,14 +190,18 @@ const SummaryReportPage = () => {
         </TableHead>
         <TableBody>
           {!loading ? (
-            items.map((item) => (
-              <TableRow key={`${item.deviceId}_${Date.parse(item.startTime)}`}>
-                <TableCell>{devices[item.deviceId].name}</TableCell>
-                {columns.map((key) => (
-                  <TableCell key={key}>{formatValue(item, key)}</TableCell>
-                ))}
-              </TableRow>
-            ))
+            items.length ? (
+              items.map((item) => (
+                <TableRow key={`${item.deviceId}_${Date.parse(item.startTime)}`}>
+                  <TableCell>{devices[item.deviceId].name}</TableCell>
+                  {columns.map((key) => (
+                    <TableCell key={key}>{formatValue(item, key)}</TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <ReportEmptyState columns={columns.length + 1} searched={searched} />
+            )
           ) : (
             <TableShimmer columns={columns.length + 1} />
           )}

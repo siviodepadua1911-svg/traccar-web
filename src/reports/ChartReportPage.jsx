@@ -16,6 +16,9 @@ import { formatTime } from '../common/util/formatter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import PageLayout from '../common/components/PageLayout';
 import ReportsMenu from './components/ReportsMenu';
+import ReportInfoCard from './components/ReportInfoCard';
+import { ReportEmptyBlock } from './components/ReportEmptyState';
+import REPORT_INFO from './common/reportInfo';
 import usePositionAttributes from '../common/attributes/usePositionAttributes';
 import { useCatchCallback } from '../reactHelper';
 import { useAttributePreference } from '../common/util/preferences';
@@ -45,6 +48,7 @@ const ChartReportPage = () => {
   const [types, setTypes] = useState(['speed']);
   const [selectedTypes, setSelectedTypes] = useState(['speed']);
   const [timeType, setTimeType] = useState('fixTime');
+  const [searched, setSearched] = useState(false);
 
   const values = items.map((it) =>
     selectedTypes.map((type) => it[type]).filter((value) => value != null),
@@ -57,6 +61,7 @@ const ChartReportPage = () => {
     async ({ deviceIds, from, to }) => {
       const query = new URLSearchParams({ from, to });
       deviceIds.forEach((deviceId) => query.append('deviceId', deviceId));
+      setSearched(true);
       const response = await fetchOrThrow(`/api/reports/route?${query.toString()}`, {
         headers: { Accept: 'application/json' },
       });
@@ -130,6 +135,7 @@ const ChartReportPage = () => {
 
   return (
     <PageLayout menu={<ReportsMenu />} breadcrumbs={['reportTitle', 'reportChart']}>
+      <ReportInfoCard reportKey="chart" info={REPORT_INFO.chart} />
       <ReportFilter onShow={onShow} onExport={() => {}} deviceType="single" formats={[]}>
         <div className={classes.filterItem}>
           <FormControl fullWidth>
@@ -165,6 +171,7 @@ const ChartReportPage = () => {
           </FormControl>
         </div>
       </ReportFilter>
+      {items.length === 0 && <ReportEmptyBlock searched={searched} />}
       {items.length > 0 && (
         <div className={classes.chart}>
           <ResponsiveContainer>

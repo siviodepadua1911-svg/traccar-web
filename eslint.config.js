@@ -7,7 +7,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['build/**', 'switcher.js', 'theme.js', 'vite.config.js'],
+    ignores: ['build/**', 'switcher.js', 'theme.js', 'vite.config.js', 'public/firebase-messaging-sw.js'],
   },
   js.configs.recommended,
   eslintReact.configs.recommended,

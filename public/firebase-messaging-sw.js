@@ -10,4 +10,13 @@ firebase.initializeApp({
   appId: '1:331994840306:web:d511feef0ed443a118a46b',
 });
 
-firebase.messaging();
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  const title = payload.notification?.title || payload.data?.title || 'LS Autotruck Rastreios';
+  self.registration.showNotification(title, {
+    body: payload.notification?.body || payload.data?.body,
+    icon: '/pwa-192x192.png',
+    badge: '/pwa-64x64.png',
+  });
+});

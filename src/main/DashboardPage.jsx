@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
+import { IconButton, Menu, MenuItem, Checkbox, Tooltip } from '@mui/material';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import WifiIcon from '@mui/icons-material/Wifi';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
@@ -9,11 +10,13 @@ import NavigationIcon from '@mui/icons-material/Navigation';
 import LocalParkingIcon from '@mui/icons-material/LocalParking';
 import LockIcon from '@mui/icons-material/Lock';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import MapView, { map } from '../map/core/MapView';
 import MapPositions from '../map/MapPositions';
 import MapDefaultCamera from '../map/main/MapDefaultCamera';
 import { devicesActions } from '../store';
 import { formatTime } from '../common/util/formatter';
+import usePersistedState from '../common/util/usePersistedState';
 
 const EVENT_INFO = {
   deviceOverspeed: ['Excesso de velocidade', '#c62828'],
@@ -144,12 +147,15 @@ const kmh = (p) => Math.round(((p && p.speed) || 0) * 1.852);
 const isMoving = (p) => !!(p && (p.attributes.motion === true || kmh(p) > 3));
 const hhmm = (v) => new Date(v).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
+const ALERT_TYPES = Object.keys(EVENT_INFO);
+
 const DashboardPage = () => {
   const { classes } = useStyles();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const devices = useSelector((state) => state.devices.items);
   const positions = useSelector((state) => state.session.positions);
+  const userId = useSelector((state) => state.session.user?.id) || 'anon';
 
   const deviceList = useMemo(() => Object.values(devices), [devices]);
   const fleetPositions = useMemo(() => Object.values(positions), [positions]);
@@ -175,24 +181,59 @@ const DashboardPage = () => {
     return { total: deviceList.length, online, movimento, parados, bloqueados, semSinal };
   }, [deviceList, positions]);
 
-  const [events, setEvents] = useState([]);
+  const [rawEvents, setRawEvents] = useState([]);
+  const deviceListRef = useRef(deviceList);
+  deviceListRef.current = deviceList;
+
   useEffect(() => {
-    if (!deviceCount) return;
-    const from = new Date();
-    from.setHours(0, 0, 0, 0);
-    const params = new URLSearchParams();
-    params.append('from', from.toISOString());
-    params.append('to', new Date().toISOString());
-    deviceList.forEach((d) => params.append('deviceId', d.id));
-    params.append('type', 'allEvents');
-    fetch(`/api/reports/events?${params.toString()}`, { headers: { Accept: 'application/json' } })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        const reversed = Array.isArray(data) ? data.slice().reverse() : [];
-        setEvents(collapseRepeatedCommandResults(reversed).slice(0, 15));
-      })
-      .catch(() => {});
+    if (!deviceCount) return undefined;
+    const load = () => {
+      const from = new Date();
+      from.setHours(0, 0, 0, 0);
+      const params = new URLSearchParams();
+      params.append('from', from.toISOString());
+      params.append('to', new Date().toISOString());
+      deviceListRef.current.forEach((d) => params.append('deviceId', d.id));
+      params.append('type', 'allEvents');
+      fetch(`/api/reports/events?${params.toString()}`, { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : []))
+        .then((data) => {
+          const reversed = Array.isArray(data) ? data.slice().reverse() : [];
+          setRawEvents(collapseRepeatedCommandResults(reversed).slice(0, 60));
+        })
+        .catch(() => {});
+    };
+    load();
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
   }, [deviceCount]);
+
+  // "Limpar" so esconde na tela deste usuario (nada apagado no banco); alertas
+  // com eventTime depois do clique voltam a aparecer normalmente.
+  const [clearedAt, setClearedAt] = usePersistedState(`lsDashboardAlertsClearedAt_${userId}`, 0);
+  // Tipos de alerta habilitados no funil, salvos por usuario. Ausente/true = mostra.
+  const [typeFilters, setTypeFilters] = usePersistedState(`lsDashboardAlertTypes_${userId}`, {});
+  const [filterAnchor, setFilterAnchor] = useState(null);
+
+  const displayedEvents = useMemo(
+    () =>
+      rawEvents
+        .filter((e) => typeFilters[e.type] !== false)
+        .filter((e) => new Date(e.eventTime).getTime() > clearedAt)
+        .slice(0, 15),
+    [rawEvents, typeFilters, clearedAt],
+  );
+
+  const toggleAlertType = useCallback(
+    (type) => {
+      setTypeFilters((prev) => ({ ...prev, [type]: prev[type] === false ? true : false }));
+    },
+    [setTypeFilters],
+  );
+
+  const clearAlerts = useCallback(() => {
+    setClearedAt(Date.now());
+  }, [setClearedAt]);
 
   const mapBoxRef = useRef(null);
   useEffect(() => {
@@ -322,11 +363,46 @@ const DashboardPage = () => {
 
         <div className={classes.panel}>
           <div className={classes.panelTitle}>
-            Alertas de hoje
-            {events.length > 0 && <span className={classes.badge}>{events.length}</span>}
+            <span>
+              Alertas de hoje
+              {displayedEvents.length > 0 && (
+                <span className={classes.badge} style={{ marginLeft: 6 }}>
+                  {displayedEvents.length}
+                </span>
+              )}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Tooltip title="Escolher quais tipos de alerta aparecem">
+                <IconButton size="small" onClick={(ev) => setFilterAnchor(ev.currentTarget)}>
+                  <FilterAltIcon fontSize="small" sx={{ color: '#607d8b', fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+              <span
+                onClick={clearAlerts}
+                style={{ fontSize: 11, color: '#1C7ED6', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Limpar
+              </span>
+            </span>
           </div>
-          {events.length === 0 && <div className={classes.empty}>Nenhum alerta hoje</div>}
-          {events.map((e) => {
+          <Menu
+            anchorEl={filterAnchor}
+            open={Boolean(filterAnchor)}
+            onClose={() => setFilterAnchor(null)}
+          >
+            {ALERT_TYPES.map((type) => (
+              <MenuItem key={type} onClick={() => toggleAlertType(type)} dense>
+                <Checkbox
+                  size="small"
+                  checked={typeFilters[type] !== false}
+                  sx={{ p: 0.5, mr: 0.5 }}
+                />
+                {EVENT_INFO[type][0]}
+              </MenuItem>
+            ))}
+          </Menu>
+          {displayedEvents.length === 0 && <div className={classes.empty}>Nenhum alerta</div>}
+          {displayedEvents.map((e) => {
             const [label, color] = eventInfo(e.type);
             const dev = devices[e.deviceId];
             return (

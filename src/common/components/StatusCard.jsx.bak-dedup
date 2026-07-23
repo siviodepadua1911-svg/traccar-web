@@ -27,6 +27,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import RouteIcon from '@mui/icons-material/Route';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -797,8 +798,15 @@ const StatusCard = ({
             <div style={{ display: 'flex', justifyContent: 'space-around' }}>
               <ShortcutButton
                 c={c}
+                icon={<RouteIcon />}
+                label="Trajeto"
+                onClick={() => navigate(`/replay?deviceId=${deviceId}`)}
+                disabled={disableActions}
+              />
+              <ShortcutButton
+                c={c}
                 icon={<NotificationsIcon />}
-                label="Meus alertas"
+                label="Alertas"
                 onClick={() => setAlertsOpen(true)}
                 disabled={disableActions}
               />

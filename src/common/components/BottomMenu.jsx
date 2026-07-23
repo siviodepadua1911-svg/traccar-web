@@ -1,145 +1,170 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Paper, BottomNavigation, BottomNavigationAction, Badge } from '@mui/material';
-
+import { Paper, Badge, useMediaQuery } from '@mui/material';
+import { makeStyles } from 'tss-react/mui';
+import MapIcon from '@mui/icons-material/Map';
 import RouteIcon from '@mui/icons-material/Route';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import SettingsIcon from '@mui/icons-material/Settings';
-import MapIcon from '@mui/icons-material/Map';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-
-import { sessionActions } from '../../store';
-import { useTranslation } from './LocalizationProvider';
+import DescriptionIcon from '@mui/icons-material/Description';
+import FenceIcon from '@mui/icons-material/Fence';
+import MenuIcon from '@mui/icons-material/Menu';
 import { useRestriction } from '../util/permissions';
-import { nativePostMessage } from './NativeInterface';
+import { lsCardColors } from '../theme/lsCardColors';
+
+const useStyles = makeStyles()(() => ({
+  scroll: {
+    display: 'flex',
+    overflowX: 'auto',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+    WebkitOverflowScrolling: 'touch',
+    '&::-webkit-scrollbar': { display: 'none' },
+  },
+  item: {
+    flex: '0 0 auto',
+    minWidth: 70,
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    padding: '7px 12px 6px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 2,
+    borderTop: '2px solid transparent',
+    fontFamily: 'inherit',
+    transition: 'color .15s',
+  },
+  label: { fontSize: 10.5, whiteSpace: 'nowrap', lineHeight: 1.1 },
+  fade: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: 22,
+    pointerEvents: 'none',
+  },
+}));
 
 const BottomMenu = () => {
+  const { classes } = useStyles();
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
-  const t = useTranslation();
 
   const readonly = useRestriction('readonly');
   const disableReports = useRestriction('disableReports');
   const devices = useSelector((state) => state.devices.items);
   const user = useSelector((state) => state.session.user);
+  const server = useSelector((state) => state.session.server);
   const socket = useSelector((state) => state.session.socket);
+  const events = useSelector((state) => state.events.items);
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
 
-  const currentSelection = () => {
-    if (location.pathname.startsWith('/settings/notification')) {
-      return 'alerts';
-    }
-    if (location.pathname.startsWith('/settings')) {
-      return 'settings';
-    }
-    if (location.pathname.startsWith('/replay')) {
-      return 'replay';
-    }
-    if (location.pathname === '/') {
-      return 'map';
-    }
+  const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
+  const dark =
+    user?.attributes?.darkMode !== undefined
+      ? user.attributes.darkMode
+      : server?.attributes?.darkMode !== undefined
+        ? server.attributes.darkMode
+        : prefersDark;
+  const c = lsCardColors(dark);
+  const ACTIVE = '#85B7EB';
+
+  const current = (() => {
+    const p = location.pathname;
+    if (p.startsWith('/settings/notification')) return 'alerts';
+    if (p.startsWith('/reports')) return 'reports';
+    if (p.startsWith('/geofence')) return 'cerca';
+    if (p.startsWith('/replay')) return 'replay';
+    if (p.startsWith('/settings')) return 'menu';
+    if (p === '/') return 'map';
     return null;
-  };
+  })();
 
-  const handleLogout = async () => {
-    const notificationToken = window.localStorage.getItem('notificationToken');
-    if (notificationToken && !user.readonly) {
-      window.localStorage.removeItem('notificationToken');
-      const tokens = user.attributes.notificationTokens?.split(',') || [];
-      if (tokens.includes(notificationToken)) {
-        const updatedUser = {
-          ...user,
-          attributes: {
-            ...user.attributes,
-            notificationTokens:
-              tokens.length > 1
-                ? tokens.filter((it) => it !== notificationToken).join(',')
-                : undefined,
-          },
-        };
-        await fetch(`/api/users/${user.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedUser),
-        });
-      }
+  const replayTarget = () => {
+    let id = selectedDeviceId;
+    if (id == null) {
+      const ids = Object.keys(devices);
+      if (ids.length === 1) id = ids[0];
     }
-
-    await fetch('/api/session', { method: 'DELETE' });
-    nativePostMessage('logout');
-    navigate('/login');
-    dispatch(sessionActions.updateUser(null));
+    return id != null ? `/replay?deviceId=${id}` : '/replay';
   };
 
-  const handleSelection = (event, value) => {
-    switch (value) {
-      case 'map':
-        navigate('/');
-        break;
-      case 'replay': {
-        let id = selectedDeviceId;
-        if (id == null) {
-          const deviceIds = Object.keys(devices);
-          if (deviceIds.length === 1) {
-            id = deviceIds[0];
-          }
-        }
-
-        navigate(id != null ? `/replay?deviceId=${id}` : '/replay');
-        break;
-      }
-      case 'alerts':
-        navigate('/settings/notifications');
-        break;
-      case 'settings':
-        navigate('/settings/preferences?menu=true');
-        break;
-      case 'logout':
-        handleLogout();
-        break;
-      default:
-        break;
-    }
-  };
+  const items = [
+    {
+      key: 'map',
+      label: 'Mapa',
+      icon: <MapIcon />,
+      go: () => navigate('/'),
+      dot: socket === false,
+    },
+    !disableReports && {
+      key: 'replay',
+      label: 'Trajeto',
+      icon: <RouteIcon />,
+      go: () => navigate(replayTarget()),
+    },
+    {
+      key: 'alerts',
+      label: 'Alertas',
+      icon: <NotificationsIcon />,
+      go: () => navigate('/settings/notifications'),
+      dot: events.length > 0 && current !== 'alerts',
+    },
+    !disableReports && {
+      key: 'reports',
+      label: 'Relatorios',
+      icon: <DescriptionIcon />,
+      go: () => navigate('/reports/combined'),
+    },
+    !readonly && {
+      key: 'cerca',
+      label: 'Criar cerca',
+      icon: <FenceIcon />,
+      go: () => navigate('/geofences'),
+    },
+    {
+      key: 'menu',
+      label: readonly ? 'Conta' : 'Menu',
+      icon: <MenuIcon />,
+      go: () => navigate('/settings/preferences?menu=true'),
+    },
+  ].filter(Boolean);
 
   return (
-    <Paper square elevation={3}>
-      <BottomNavigation value={currentSelection()} onChange={handleSelection} showLabels>
-        <BottomNavigationAction
-          label={t('mapTitle')}
-          icon={
-            <Badge color="error" variant="dot" overlap="circular" invisible={socket !== false}>
-              <MapIcon />
-            </Badge>
-          }
-          value="map"
-        />
-        {!disableReports && (
-          <BottomNavigationAction label={t('reportReplay')} icon={<RouteIcon />} value="replay" />
-        )}
-        {!readonly && (
-          <BottomNavigationAction
-            label={t('sharedNotifications')}
-            icon={<NotificationsIcon />}
-            value="alerts"
-          />
-        )}
-        {!readonly && (
-          <BottomNavigationAction
-            label={t('settingsTitle')}
-            icon={<SettingsIcon />}
-            value="settings"
-          />
-        )}
-        {readonly && (
-          <BottomNavigationAction
-            label={t('loginLogout')}
-            icon={<ExitToAppIcon />}
-            value="logout"
-          />
-        )}
-      </BottomNavigation>
+    <Paper
+      square
+      elevation={3}
+      style={{ position: 'relative', background: c.surface, borderTop: `1px solid ${c.border}` }}
+    >
+      <div className={classes.scroll}>
+        {items.map((it) => {
+          const on = current === it.key;
+          return (
+            <button
+              key={it.key}
+              type="button"
+              className={classes.item}
+              onClick={it.go}
+              style={{
+                color: on ? ACTIVE : c.textSecondary,
+                borderTopColor: on ? ACTIVE : 'transparent',
+              }}
+            >
+              <Badge color="error" variant="dot" overlap="circular" invisible={!it.dot}>
+                {it.icon}
+              </Badge>
+              <span className={classes.label} style={{ fontWeight: on ? 700 : 500 }}>
+                {it.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div
+        className={classes.fade}
+        style={{ background: `linear-gradient(to right, ${c.surface}00, ${c.surface})` }}
+      />
     </Paper>
   );
 };

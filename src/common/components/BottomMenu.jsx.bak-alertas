@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Paper, Badge, useMediaQuery } from '@mui/material';
@@ -9,9 +8,8 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FenceIcon from '@mui/icons-material/Fence';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useRestriction, useDeviceReadonly } from '../util/permissions';
+import { useRestriction } from '../util/permissions';
 import { lsCardColors } from '../theme/lsCardColors';
-import LsAlertsDialog from './LsAlertsDialog';
 
 const useStyles = makeStyles()(() => ({
   scroll: {
@@ -54,7 +52,6 @@ const BottomMenu = () => {
   const location = useLocation();
 
   const readonly = useRestriction('readonly');
-  const deviceReadonly = useDeviceReadonly();
   const disableReports = useRestriction('disableReports');
   const devices = useSelector((state) => state.devices.items);
   const user = useSelector((state) => state.session.user);
@@ -62,9 +59,6 @@ const BottomMenu = () => {
   const socket = useSelector((state) => state.session.socket);
   const events = useSelector((state) => state.events.items);
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
-  const device = devices[selectedDeviceId];
-
-  const [alertsOpen, setAlertsOpen] = useState(false);
 
   const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
   const dark =
@@ -96,14 +90,6 @@ const BottomMenu = () => {
     return id != null ? `/replay?deviceId=${id}` : '/replay';
   };
 
-  const openAlertas = () => {
-    if (deviceReadonly) {
-      setAlertsOpen(true);
-    } else {
-      navigate('/settings/notifications');
-    }
-  };
-
   const items = [
     {
       key: 'map',
@@ -122,8 +108,8 @@ const BottomMenu = () => {
       key: 'alerts',
       label: 'Alertas',
       icon: <NotificationsIcon />,
-      go: openAlertas,
-      dot: events.length > 0 && current !== 'alerts' && !alertsOpen,
+      go: () => navigate('/settings/notifications'),
+      dot: events.length > 0 && current !== 'alerts',
     },
     !disableReports && {
       key: 'reports',
@@ -146,50 +132,40 @@ const BottomMenu = () => {
   ].filter(Boolean);
 
   return (
-    <>
-      <Paper
-        square
-        elevation={3}
-        style={{ position: 'relative', background: c.surface, borderTop: `1px solid ${c.border}` }}
-      >
-        <div className={classes.scroll}>
-          {items.map((it) => {
-            const on = current === it.key;
-            return (
-              <button
-                key={it.key}
-                type="button"
-                className={classes.item}
-                onClick={it.go}
-                style={{
-                  color: on ? ACTIVE : c.textSecondary,
-                  borderTopColor: on ? ACTIVE : 'transparent',
-                }}
-              >
-                <Badge color="error" variant="dot" overlap="circular" invisible={!it.dot}>
-                  {it.icon}
-                </Badge>
-                <span className={classes.label} style={{ fontWeight: on ? 700 : 500 }}>
-                  {it.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <div
-          className={classes.fade}
-          style={{ background: `linear-gradient(to right, ${c.surface}00, ${c.surface})` }}
-        />
-      </Paper>
-      {alertsOpen && (
-        <LsAlertsDialog
-          deviceId={selectedDeviceId}
-          deviceName={device ? device.name : ''}
-          device={device}
-          onClose={() => setAlertsOpen(false)}
-        />
-      )}
-    </>
+    <Paper
+      square
+      elevation={3}
+      style={{ position: 'relative', background: c.surface, borderTop: `1px solid ${c.border}` }}
+    >
+      <div className={classes.scroll}>
+        {items.map((it) => {
+          const on = current === it.key;
+          return (
+            <button
+              key={it.key}
+              type="button"
+              className={classes.item}
+              onClick={it.go}
+              style={{
+                color: on ? ACTIVE : c.textSecondary,
+                borderTopColor: on ? ACTIVE : 'transparent',
+              }}
+            >
+              <Badge color="error" variant="dot" overlap="circular" invisible={!it.dot}>
+                {it.icon}
+              </Badge>
+              <span className={classes.label} style={{ fontWeight: on ? 700 : 500 }}>
+                {it.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div
+        className={classes.fade}
+        style={{ background: `linear-gradient(to right, ${c.surface}00, ${c.surface})` }}
+      />
+    </Paper>
   );
 };
 

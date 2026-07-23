@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   IconButton,
   Paper,
@@ -21,13 +21,14 @@ import { useSelector } from 'react-redux';
 import MapView from '../map/core/MapView';
 import MapRoutePath from '../map/MapRoutePath';
 import MapRoutePoints from '../map/MapRoutePoints';
+import MapStopMarkers from '../map/MapStopMarkers';
 import MapPositions from '../map/MapPositions';
 import { formatTime } from '../common/util/formatter';
 import ReportFilter from '../reports/components/ReportFilter';
 import ReportInfoCard from '../reports/components/ReportInfoCard';
 import REPORT_INFO from '../reports/common/reportInfo';
 import { useTranslation } from '../common/components/LocalizationProvider';
-import { useCatchCallback } from '../reactHelper';
+import { useCatch, useCatchCallback } from '../reactHelper';
 import MapCamera from '../map/MapCamera';
 import MapDefaultCamera from '../map/main/MapDefaultCamera';
 import MapGeofence from '../map/MapGeofence';
@@ -36,6 +37,7 @@ import MapScale from '../map/MapScale';
 import BackIcon from '../common/components/BackIcon';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 import snapPositions from '../common/util/lsSnapToRoads';
+import { collapseStops, simplifyPositions } from '../common/util/lsRouteCleanup';
 import MapOverlay from '../map/overlay/MapOverlay';
 
 const useStyles = makeStyles()((theme) => ({
@@ -149,10 +151,13 @@ const ReplayPage = () => {
   }, [index, positions]);
 
   const onPointClick = useCallback(
-    (_, index) => {
-      setIndex(index);
+    (id) => {
+      const index = positions.findIndex((position) => position.id === id);
+      if (index >= 0) {
+        setIndex(index);
+      }
     },
-    [setIndex],
+    [positions, setIndex],
   );
 
   const onMarkerClick = useCallback(
@@ -186,7 +191,7 @@ const ReplayPage = () => {
     [t],
   );
 
-  const applySnap = useCatchCallback(async () => {
+  const runSnap = useCallback(async () => {
     if (smoothed) {
       setSmooth(true);
       return;
@@ -204,6 +209,27 @@ const ReplayPage = () => {
     }
   }, [positions, smoothed]);
 
+  // Clique manual no botao da varinha: falha mostra o aviso vermelho normalmente.
+  const applySnap = useCatch(runSnap);
+
+  // Suaviza (encaixa nas ruas) automaticamente sempre que um trajeto novo termina de
+  // carregar - o botao continua ali pra quem quiser desligar e ver o trajeto cru.
+  // Ao contrario do clique manual, se o OSRM publico falhar aqui degrada em silencio
+  // (o rastro simplificado normal ja fica bom sozinho) - sem toast de erro.
+  useEffect(() => {
+    if (loaded) {
+      runSnap().catch(() => {});
+    }
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [loaded]);
+
+  // So mexe na EXIBICAO do trajeto - os dados crus continuam intactos em `positions`.
+  const stopCollapsedPositions = useMemo(() => collapseStops(positions), [positions]);
+  const lineDisplayPositions = useMemo(
+    () => (smooth && smoothed ? smoothed : simplifyPositions(stopCollapsedPositions)),
+    [smooth, smoothed, stopCollapsedPositions],
+  );
+
   const handleDownload = () => {
     const query = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
     window.location.assign(`/api/positions/kml?${query.toString()}`);
@@ -214,8 +240,13 @@ const ReplayPage = () => {
       <MapView>
         <MapOverlay />
         <MapGeofence />
-        <MapRoutePath positions={smooth && smoothed ? smoothed : positions} />
-        <MapRoutePoints positions={positions} onClick={onPointClick} showSpeedControl />
+        <MapRoutePath positions={lineDisplayPositions} />
+        <MapRoutePoints
+          positions={stopCollapsedPositions}
+          onClick={onPointClick}
+          showSpeedControl
+        />
+        <MapStopMarkers positions={stopCollapsedPositions} />
         {index < positions.length && (
           <MapPositions
             positions={[positions[index]]}

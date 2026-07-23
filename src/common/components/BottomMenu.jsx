@@ -1,20 +1,11 @@
-import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  Paper,
-  BottomNavigation,
-  BottomNavigationAction,
-  Menu,
-  MenuItem,
-  Typography,
-  Badge,
-} from '@mui/material';
+import { Paper, BottomNavigation, BottomNavigationAction, Badge } from '@mui/material';
 
-import DescriptionIcon from '@mui/icons-material/Description';
+import RouteIcon from '@mui/icons-material/Route';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import SettingsIcon from '@mui/icons-material/Settings';
 import MapIcon from '@mui/icons-material/Map';
-import PersonIcon from '@mui/icons-material/Person';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
 import { sessionActions } from '../../store';
@@ -35,17 +26,15 @@ const BottomMenu = () => {
   const socket = useSelector((state) => state.session.socket);
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
 
-  const [anchorEl, setAnchorEl] = useState(null);
-
   const currentSelection = () => {
-    if (location.pathname === `/settings/user/${user.id}`) {
-      return 'account';
+    if (location.pathname.startsWith('/settings/notification')) {
+      return 'alerts';
     }
     if (location.pathname.startsWith('/settings')) {
       return 'settings';
     }
-    if (location.pathname.startsWith('/reports')) {
-      return 'reports';
+    if (location.pathname.startsWith('/replay')) {
+      return 'replay';
     }
     if (location.pathname === '/') {
       return 'map';
@@ -53,14 +42,7 @@ const BottomMenu = () => {
     return null;
   };
 
-  const handleAccount = () => {
-    setAnchorEl(null);
-    navigate(`/settings/user/${user.id}`);
-  };
-
   const handleLogout = async () => {
-    setAnchorEl(null);
-
     const notificationToken = window.localStorage.getItem('notificationToken');
     if (notificationToken && !user.readonly) {
       window.localStorage.removeItem('notificationToken');
@@ -95,7 +77,7 @@ const BottomMenu = () => {
       case 'map':
         navigate('/');
         break;
-      case 'reports': {
+      case 'replay': {
         let id = selectedDeviceId;
         if (id == null) {
           const deviceIds = Object.keys(devices);
@@ -104,18 +86,14 @@ const BottomMenu = () => {
           }
         }
 
-        if (id != null) {
-          navigate(`/reports/combined?deviceId=${id}`);
-        } else {
-          navigate('/reports/combined');
-        }
+        navigate(id != null ? `/replay?deviceId=${id}` : '/replay');
         break;
       }
+      case 'alerts':
+        navigate('/settings/notifications');
+        break;
       case 'settings':
         navigate('/settings/preferences?menu=true');
-        break;
-      case 'account':
-        setAnchorEl(event.currentTarget);
         break;
       case 'logout':
         handleLogout();
@@ -138,10 +116,13 @@ const BottomMenu = () => {
           value="map"
         />
         {!disableReports && (
+          <BottomNavigationAction label={t('reportReplay')} icon={<RouteIcon />} value="replay" />
+        )}
+        {!readonly && (
           <BottomNavigationAction
-            label={t('reportTitle')}
-            icon={<DescriptionIcon />}
-            value="reports"
+            label={t('sharedNotifications')}
+            icon={<NotificationsIcon />}
+            value="alerts"
           />
         )}
         {!readonly && (
@@ -151,24 +132,14 @@ const BottomMenu = () => {
             value="settings"
           />
         )}
-        {readonly ? (
+        {readonly && (
           <BottomNavigationAction
             label={t('loginLogout')}
             icon={<ExitToAppIcon />}
             value="logout"
           />
-        ) : (
-          <BottomNavigationAction label={t('settingsUser')} icon={<PersonIcon />} value="account" />
         )}
       </BottomNavigation>
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-        <MenuItem onClick={handleAccount}>
-          <Typography color="textPrimary">{t('settingsUser')}</Typography>
-        </MenuItem>
-        <MenuItem onClick={handleLogout}>
-          <Typography color="error">{t('loginLogout')}</Typography>
-        </MenuItem>
-      </Menu>
     </Paper>
   );
 };

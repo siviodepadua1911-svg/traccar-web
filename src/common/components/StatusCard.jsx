@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect, useReducer, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Rnd } from 'react-rnd';
 import {
+  useMediaQuery,
+  useTheme,
   Card,
   CardContent,
   Typography,
-  CardActions,
   IconButton,
   Table,
   TableBody,
@@ -14,36 +15,29 @@ import {
   TableCell,
   Menu,
   MenuItem,
-  CardMedia,
-  TableFooter,
+  Chip,
   Link,
-  Tooltip,
   Avatar,
   Checkbox,
-  Dialog as LsConfirmDialog,
-  DialogTitle as LsConfirmTitle,
-  DialogContent as LsConfirmContent,
-  DialogContentText as LsConfirmText,
-  DialogActions as LsConfirmActions,
-  Button as LsConfirmButton,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import CloseIcon from '@mui/icons-material/Close';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import RouteIcon from '@mui/icons-material/Route';
-import SendIcon from '@mui/icons-material/Send';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import EditIcon from '@mui/icons-material/Edit';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PendingIcon from '@mui/icons-material/Pending';
 import SettingsIcon from '@mui/icons-material/Settings';
 import KeyIcon from '@mui/icons-material/Key';
 import BoltIcon from '@mui/icons-material/Bolt';
+import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
 import PowerIcon from '@mui/icons-material/Power';
-import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
 import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
@@ -53,15 +47,17 @@ import { useTranslation } from './LocalizationProvider';
 import RemoveDialog from './RemoveDialog';
 import LsAlertsDialog from './LsAlertsDialog';
 import LsDeviceEvents from './LsDeviceEvents';
+import LsSlideToConfirm from './LsSlideToConfirm';
 import PositionValue from './PositionValue';
 import { useDeviceReadonly, useRestriction } from '../util/permissions';
 import usePositionAttributes from '../attributes/usePositionAttributes';
 import { devicesActions } from '../../store';
 import { useCatch, useCatchCallback } from '../../reactHelper';
-import { useAttributePreference } from '../util/preferences';
+import { useAttributePreference, usePreference } from '../util/preferences';
 import fetchOrThrow from '../util/fetchOrThrow';
 import { translateResult } from '../util/lsCommandResult';
-import { formatTime } from '../util/formatter';
+import { formatTime, formatAddress, formatDurationShort } from '../util/formatter';
+import { lsCardColors } from '../theme/lsCardColors';
 
 const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   card: {
@@ -74,31 +70,6 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
     [theme.breakpoints.up('sm')]: {
       borderRadius: 0,
     },
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: theme.spacing(1, 1, 0, 2),
-    color: theme.palette.text.secondary,
-  },
-  media: {
-    height: theme.dimensions.popupImageHeight,
-    '& > div': {
-      color: theme.palette.common.white,
-      mixBlendMode: 'difference',
-    },
-  },
-  content: {
-    paddingTop: theme.spacing(1),
-    paddingBottom: theme.spacing(1),
-    flexGrow: 1,
-    overflow: 'auto',
-  },
-  icon: {
-    width: '25px',
-    height: '25px',
-    filter: 'brightness(0) invert(1)',
   },
   table: {
     '& .MuiTableCell-sizeSmall': {
@@ -115,43 +86,47 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   sectionTitle: {
     marginTop: theme.spacing(1.5),
     fontWeight: 600,
-    color: theme.palette.primary.main,
-  },
-  actions: {
-    justifyContent: 'space-between',
   },
   root: {
     pointerEvents: 'none',
     position: 'fixed',
     zIndex: 1300,
-    [theme.breakpoints.up('sm')]: {
-      left: '12px',
-      top: '149px',
-    },
-    [theme.breakpoints.down('sm')]: {
-      left: '50%',
-      transform: 'translateX(-50%)',
-      bottom: `calc(${theme.spacing(3)} + ${theme.dimensions.bottomBarHeight}px)`,
-    },
+    left: '12px',
+    top: '149px',
+  },
+  mobileRoot: {
+    pointerEvents: 'none',
+    position: 'fixed',
+    zIndex: 1300,
+    left: 0,
+    right: 0,
+    bottom: `calc(${theme.spacing(1)} + ${theme.dimensions.bottomBarHeight}px)`,
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  mobileCard: {
+    pointerEvents: 'auto',
+    width: 'calc(100% - 24px)',
+    maxWidth: 480,
+    maxHeight: '70vh',
+    display: 'flex',
+    flexDirection: 'column',
+    borderRadius: 12,
   },
 }));
 
-const StatusRow = ({ name, content }) => {
-  const { classes } = useStyles({ desktopPadding: 0 });
-
-  return (
-    <TableRow>
-      <TableCell className={classes.cell}>
-        <Typography variant="body2">{name}</Typography>
-      </TableCell>
-      <TableCell className={classes.cell}>
-        <Typography variant="body2" color="textSecondary">
-          {content}
-        </Typography>
-      </TableCell>
-    </TableRow>
-  );
-};
+const StatusRow = ({ name, content }) => (
+  <TableRow>
+    <TableCell style={{ borderBottom: 'none' }}>
+      <Typography variant="body2">{name}</Typography>
+    </TableCell>
+    <TableCell style={{ borderBottom: 'none' }}>
+      <Typography variant="body2" color="textSecondary">
+        {content}
+      </Typography>
+    </TableCell>
+  </TableRow>
+);
 
 const rawValue = (v) => {
   if (v === null || v === undefined) return '—';
@@ -374,8 +349,160 @@ const Speedometer = ({ speed }) => {
   );
 };
 
-const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPadding = 0 }) => {
+// Endereco por extenso via geocodificacao reversa sob demanda (Nominatim/OSM
+// atras de /api/server/geocode) - so busca quando o card abre, com cache local
+// pra nao repetir a consulta ao navegar entre veiculos ou reabrir o mesmo.
+const LsAddress = ({ position, color }) => {
+  const geocoderEnabled = useSelector((state) => state.session.server.geocoderEnabled);
+  const coordinateFormat = usePreference('coordinateFormat');
+  const [address, setAddress] = useState(position.address || null);
+  const cacheRef = useRef(new Map());
+
+  useEffect(() => {
+    if (position.address) {
+      setAddress(position.address);
+      return undefined;
+    }
+    if (!geocoderEnabled) {
+      setAddress(null);
+      return undefined;
+    }
+    const key = `${position.latitude.toFixed(4)},${position.longitude.toFixed(4)}`;
+    if (cacheRef.current.has(key)) {
+      setAddress(cacheRef.current.get(key));
+      return undefined;
+    }
+    let cancelled = false;
+    const query = new URLSearchParams({
+      latitude: position.latitude,
+      longitude: position.longitude,
+    });
+    fetchOrThrow(`/api/server/geocode?${query.toString()}`)
+      .then((response) => response.text())
+      .then((text) => {
+        if (!cancelled) {
+          cacheRef.current.set(key, text);
+          setAddress(text);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAddress(null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [position.latitude, position.longitude, position.address, geocoderEnabled]);
+
+  return (
+    <Typography variant="body2" style={{ color }}>
+      {address ||
+        formatAddress(
+          { latitude: position.latitude, longitude: position.longitude },
+          coordinateFormat,
+        )}
+    </Typography>
+  );
+};
+
+const StatusBox = ({ c, icon, label, value, sub, color }) => (
+  <div
+    style={{
+      flex: 1,
+      minWidth: 0,
+      background: c.surfaceAlt,
+      border: `1px solid ${c.border}`,
+      borderRadius: 10,
+      padding: '8px 6px',
+      textAlign: 'center',
+    }}
+  >
+    <div style={{ color: color || c.accent, display: 'flex', justifyContent: 'center' }}>
+      {icon}
+    </div>
+    <Typography
+      variant="caption"
+      style={{ color: c.textSecondary, display: 'block', marginTop: 2 }}
+    >
+      {label}
+    </Typography>
+    <Typography variant="body2" noWrap style={{ color: c.text, fontWeight: 700 }}>
+      {value}
+    </Typography>
+    {sub && (
+      <Typography variant="caption" style={{ color: color || c.textSecondary, display: 'block' }}>
+        {sub}
+      </Typography>
+    )}
+  </div>
+);
+
+const ShortcutButton = ({ c, icon, label, onClick, disabled }) => (
+  <div
+    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 64 }}
+  >
+    <IconButton size="small" disabled={disabled} onClick={onClick} style={{ color: c.accent }}>
+      {icon}
+    </IconButton>
+    <Typography variant="caption" style={{ color: disabled ? c.border : c.textSecondary }}>
+      {label}
+    </Typography>
+  </div>
+);
+
+const ignitionBoxInfo = (a) => {
+  if (!('ignition' in a)) return { value: '—', sub: null, color: undefined };
+  return a.ignition
+    ? { value: 'Ligada', sub: null, color: COLORS.ok }
+    : { value: 'Desligada', sub: null, color: COLORS.warn };
+};
+
+const signalBoxInfo = (a) => {
+  if (!('rssi' in a)) return { value: '—', sub: null, color: undefined };
+  const v = Number(a.rssi);
+  const max = v > 5 ? 31 : 5;
+  const pct = Math.round((v / max) * 100);
+  const color = pct >= 70 ? COLORS.ok : pct >= 40 ? COLORS.warn : COLORS.bad;
+  const label = pct >= 70 ? 'Forte' : pct >= 40 ? 'Médio' : 'Fraco';
+  return { value: label, sub: `${pct}%`, color };
+};
+
+const batteryBoxInfo = (a) => {
+  if (!('power' in a)) return { value: '—', sub: null, color: undefined };
+  const va = Number(a.power);
+  const sys24 = va > 18;
+  const vMin = sys24 ? 25 : 13;
+  const vMax = sys24 ? 28 : 15;
+  const vOff = sys24 ? 24 : 12.8;
+  let sub = 'Motor desligado';
+  let color = '#5f6368';
+  if (va > vMax) {
+    sub = 'Voltagem alta';
+    color = COLORS.bad;
+  } else if (va >= vMin) {
+    sub = 'Carregando';
+    color = COLORS.ok;
+  } else if (va > vOff) {
+    sub = 'Motor ligado';
+    color = COLORS.ok;
+  }
+  return { value: `${va.toFixed(1)} V`, sub, color };
+};
+
+const StatusCard = ({
+  deviceId,
+  position,
+  onClose,
+  disableActions,
+  desktopPadding = 0,
+  deviceIds,
+}) => {
   const { classes } = useStyles({ desktopPadding });
+  const theme = useTheme();
+  const dark = theme.palette.mode === 'dark';
+  const c = lsCardColors(dark);
+  const desktop = useMediaQuery(theme.breakpoints.up('md'));
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const t = useTranslation();
@@ -386,6 +513,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const shareDisabled = useSelector((state) => state.session.server.attributes.disableShare);
   const user = useSelector((state) => state.session.user);
   const device = useSelector((state) => state.devices.items[deviceId]);
+  const stopSince = useSelector((state) => state.session.stopSince[deviceId]);
 
   const deviceImage = device?.attributes?.deviceImage;
 
@@ -404,7 +532,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const [anchorEl, setAnchorEl] = useState(null);
 
   const [removing, setRemoving] = useState(false);
-  const [confirmCommand, setConfirmCommand] = useState(null);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [settingsAnchor, setSettingsAnchor] = useState(null);
@@ -422,6 +549,21 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
     const next = { ...sections, [key]: !sections[key] };
     setSections(next);
     localStorage.setItem('lsCardSections', JSON.stringify(next));
+  };
+
+  // Atualiza o "Parado ha Xh" da pill periodicamente sem precisar de nova posicao.
+  const [, forceTick] = useReducer((n) => n + 1, 0);
+  useEffect(() => {
+    const interval = setInterval(forceTick, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const navIndex = deviceIds ? deviceIds.indexOf(deviceId) : -1;
+  const canNavigate = Boolean(deviceIds) && deviceIds.length > 1 && navIndex >= 0;
+  const navigateDevice = (offset) => {
+    if (!canNavigate) return;
+    const nextIndex = (navIndex + offset + deviceIds.length) % deviceIds.length;
+    dispatch(devicesActions.selectId(deviceIds[nextIndex]));
   };
 
   const handleRemove = useCatch(async (removed) => {
@@ -456,7 +598,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
     if (user && user.limitCommands) {
       const listResponse = await fetchOrThrow(`/api/commands/send?deviceId=${deviceId}`);
       const available = await listResponse.json();
-      const saved = available.find((c) => c.type === type);
+      const saved = available.find((c2) => c2.type === type);
       if (!saved) {
         throw Error('Comando não liberado para este veículo - fale com a LS Autotruck');
       }
@@ -474,353 +616,451 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
     });
   });
 
-  return (
-    <>
-      <div className={classes.root}>
-        {device && (
-          <Rnd
-            default={{
-              x: savedPos.x,
-              y: savedPos.y,
-              width: savedSize.w || 360,
-              height: savedSize.h || Math.min(window.innerHeight - 200, 940),
-            }}
-            onDragStop={(e, d) =>
-              localStorage.setItem('lsCardPos', JSON.stringify({ x: d.x, y: d.y }))
-            }
-            onResizeStop={(e, dir, ref) =>
-              localStorage.setItem(
-                'lsCardSize3',
-                JSON.stringify({ w: ref.offsetWidth, h: ref.offsetHeight }),
-              )
-            }
-            minHeight={230}
-            minWidth={300}
-            maxWidth={620}
-            enableResizing={{ bottom: true, right: true, bottomRight: true }}
-            resizeHandleStyles={{ bottom: { height: '18px', bottom: 0 } }}
-            resizeHandleComponent={{
-              bottom: (
-                <div
-                  style={{
-                    width: '100%',
-                    height: 18,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'ns-resize',
-                  }}
-                >
-                  <div
-                    style={{ width: 48, height: 5, borderRadius: 3, backgroundColor: '#b6c2d2' }}
-                  />
-                </div>
-              ),
-            }}
-            dragHandleClassName="draggable-header"
-            style={{ position: 'relative', pointerEvents: 'auto' }}
+  const blocked = Boolean(position?.attributes?.blocked);
+  const moving = Boolean(position?.attributes?.motion);
+
+  let pill = null;
+  if (position) {
+    if (blocked) {
+      pill = { label: 'Bloqueado', bg: '#c62828', fg: '#fff' };
+    } else if (moving) {
+      pill = { label: 'Em movimento', bg: '#1565c0', fg: '#fff' };
+    } else {
+      const label = stopSince
+        ? `Parado há ${formatDurationShort(Math.max(0, Date.now() - new Date(stopSince).getTime()))}`
+        : 'Parado';
+      pill = { label, bg: c.surfaceAlt, fg: c.textSecondary };
+    }
+  }
+
+  const cardBody = device && (
+    <div
+      style={{
+        background: c.surface,
+        color: c.text,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+      }}
+    >
+      <div
+        className="draggable-header"
+        style={{
+          padding: '10px 8px',
+          cursor: desktop ? 'move' : 'default',
+          borderBottom: `1px solid ${c.border}`,
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <IconButton
+            size="small"
+            onClick={() => navigateDevice(-1)}
+            disabled={!canNavigate}
+            style={{ color: canNavigate ? c.textSecondary : c.border }}
           >
-            <Card elevation={3} className={classes.card}>
-              <div
-                className="draggable-header"
-                style={{ padding: '10px 10px 2px 14px', cursor: 'move' }}
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <Avatar variant="rounded" style={{ width: 38, height: 38, background: c.surfaceAlt }}>
+              <img
+                style={{ width: 24, height: 24 }}
+                src={mapIcons[mapIconKey(device.category)]}
+                alt=""
+              />
+            </Avatar>
+            <span
+              style={{
+                position: 'absolute',
+                right: -2,
+                bottom: -2,
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                background: device.status === 'online' ? '#2e7d32' : '#9aa0a6',
+                border: `2px solid ${c.surface}`,
+              }}
+            />
+          </div>
+          <div style={{ minWidth: 0, flexGrow: 1 }}>
+            <Typography
+              variant="body1"
+              noWrap
+              style={{ fontWeight: 700, lineHeight: 1.2, color: c.text }}
+            >
+              {device.name}
+            </Typography>
+            <Typography
+              variant="caption"
+              noWrap
+              style={{ display: 'block', color: c.textSecondary }}
+            >
+              {[
+                device.attributes?.placa,
+                canNavigate ? `${navIndex + 1} de ${deviceIds.length}` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </Typography>
+          </div>
+          <IconButton
+            size="small"
+            onClick={() => navigateDevice(1)}
+            disabled={!canNavigate}
+            style={{ color: canNavigate ? c.textSecondary : c.border }}
+          >
+            <ChevronRightIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+            disabled={!position}
+            style={{ color: c.textSecondary }}
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={onClose}
+            onTouchStart={onClose}
+            style={{ color: c.textSecondary }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </div>
+      </div>
+
+      {position ? (
+        <CardContent style={{ flexGrow: 1, overflow: 'auto', padding: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <Chip
+                size="small"
+                label={pill.label}
+                style={{ background: pill.bg, color: pill.fg, fontWeight: 600 }}
+              />
+              <Typography variant="caption" style={{ color: c.textSecondary }}>
+                {formatTime(position.fixTime, 'minutes')}
+              </Typography>
+              <Typography variant="caption" style={{ color: c.textSecondary }}>
+                {`${Math.round(position.speed * 1.852)} km/h`}
+              </Typography>
+            </div>
+
+            <div>
+              <LsAddress position={position} color={c.text} />
+              <Link
+                href={`https://www.google.com/maps/search/?api=1&query=${position.latitude}%2C${position.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="caption"
+                style={{ color: c.accent }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                  <div style={{ minWidth: 0, flexGrow: 1 }}>
-                    <Typography variant="body1" noWrap style={{ fontWeight: 600, lineHeight: 1.2 }}>
-                      {device.name}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      style={{
-                        display: 'block',
-                        fontWeight: 600,
-                        color: device.status === 'online' ? '#2e7d32' : '#d32f2f',
-                      }}
-                    >
-                      {device.status === 'online' ? 'Conectado' : 'Desconectado'}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="textSecondary"
-                      noWrap
-                      style={{ display: 'block' }}
-                    >
-                      {position && position.attributes.totalDistance != null
-                        ? `${Math.round(position.attributes.totalDistance / 1000).toLocaleString('pt-BR')} km`
-                        : ''}
-                    </Typography>
-                  </div>
-                  <IconButton size="small" onClick={(e) => setSettingsAnchor(e.currentTarget)}>
+                Ver no mapa
+              </Link>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <StatusBox
+                c={c}
+                icon={<KeyIcon fontSize="small" />}
+                label="Ignição"
+                {...ignitionBoxInfo(position.attributes)}
+              />
+              <StatusBox
+                c={c}
+                icon={<SignalCellularAltIcon fontSize="small" />}
+                label="Sinal"
+                {...signalBoxInfo(position.attributes)}
+              />
+              <StatusBox
+                c={c}
+                icon={<BoltIcon fontSize="small" />}
+                label="Bateria"
+                {...batteryBoxInfo(position.attributes)}
+              />
+            </div>
+
+            <LsSlideToConfirm
+              label={blocked ? 'DESLIZE PARA DESBLOQUEAR' : 'DESLIZE PARA BLOQUEAR'}
+              color={blocked ? '#2e7d32' : '#c62828'}
+              icon={
+                blocked ? (
+                  <LockOpenIcon style={{ color: '#2e7d32' }} />
+                ) : (
+                  <LockIcon style={{ color: '#c62828' }} />
+                )
+              }
+              onConfirm={() => sendCommand(blocked ? 'engineResume' : 'engineStop')}
+              disabled={disableActions || deviceReadonly}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+              <ShortcutButton
+                c={c}
+                icon={<RouteIcon />}
+                label="Trajeto"
+                onClick={() => navigate(`/replay?deviceId=${deviceId}`)}
+                disabled={disableActions}
+              />
+              <ShortcutButton
+                c={c}
+                icon={<NotificationsIcon />}
+                label="Alertas"
+                onClick={() => setAlertsOpen(true)}
+                disabled={disableActions}
+              />
+              <ShortcutButton
+                c={c}
+                icon={showAll ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                label="Ficha completa"
+                onClick={() => setShowAll(!showAll)}
+              />
+            </div>
+
+            {showAll && (
+              <div
+                style={{
+                  borderTop: `1px solid ${c.border}`,
+                  paddingTop: 8,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => setSettingsAnchor(e.currentTarget)}
+                    style={{ color: c.textSecondary }}
+                  >
                     <SettingsIcon fontSize="small" />
                   </IconButton>
-                  <IconButton size="small" onClick={onClose} onTouchStart={onClose}>
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
-                  {sections.speedo && position && (
-                    <div style={{ width: 132, flexShrink: 0 }}>
-                      <Speedometer speed={position.speed * 1.852} />
-                    </div>
-                  )}
-                  <Avatar
-                    variant="rounded"
-                    src={deviceImage ? `/api/media/${device.uniqueId}/${deviceImage}` : undefined}
+                {sections.speedo && (
+                  <div style={{ width: 160, margin: '0 auto' }}>
+                    <Speedometer speed={position.speed * 1.852} />
+                  </div>
+                )}
+                <Avatar
+                  variant="rounded"
+                  src={deviceImage ? `/api/media/${device.uniqueId}/${deviceImage}` : undefined}
+                  style={{
+                    width: '100%',
+                    height: 140,
+                    backgroundColor: c.surfaceAlt,
+                    border: `1px solid ${c.border}`,
+                    borderRadius: 10,
+                  }}
+                >
+                  <img
+                    style={{ width: 56, height: 56 }}
+                    src={mapIcons[mapIconKey(device.category)]}
+                    alt=""
+                  />
+                </Avatar>
+                <Table size="small" className={classes.table}>
+                  <TableBody>
+                    {positionItems
+                      .split(',')
+                      .filter(
+                        (key) =>
+                          position.hasOwnProperty(key) || position.attributes.hasOwnProperty(key),
+                      )
+                      .map((key) => (
+                        <StatusRow
+                          key={key}
+                          name={positionAttributes[key]?.name || key}
+                          content={
+                            <PositionValue
+                              position={position}
+                              property={position.hasOwnProperty(key) ? key : null}
+                              attribute={position.hasOwnProperty(key) ? null : key}
+                            />
+                          }
+                        />
+                      ))}
+                  </TableBody>
+                </Table>
+                {sections.eventos && <LsDeviceEvents deviceId={deviceId} />}
+                {sections.sensores && (
+                  <>
+                    <Typography variant="subtitle2" className={classes.sectionTitle}>
+                      Sensores
+                    </Typography>
+                    <Table size="small" className={classes.table}>
+                      <TableBody>
+                        <SensorRows position={position} />
+                      </TableBody>
+                    </Table>
+                  </>
+                )}
+                {sections.resposta && position.attributes.result && (
+                  <>
+                    <Typography variant="subtitle2" className={classes.sectionTitle}>
+                      Última resposta do rastreador
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="textSecondary"
+                      style={{ wordBreak: 'break-word' }}
+                    >
+                      {translateResult(position.attributes.result)}
+                    </Typography>
+                  </>
+                )}
+                {sections.conect && (
+                  <>
+                    <Typography variant="subtitle2" className={classes.sectionTitle}>
+                      Conectividade
+                    </Typography>
+                    <Table size="small" className={classes.table}>
+                      <TableBody>
+                        <StatusRow name="Modelo" content={device.model || '—'} />
+                        <StatusRow name="ID / IMEI" content={device.uniqueId} />
+                        <StatusRow name="Telefone (chip)" content={device.phone || '—'} />
+                        <StatusRow name="Protocolo" content={position.protocol || '—'} />
+                        <StatusRow
+                          name="Última comunicação"
+                          content={formatTime(device.lastUpdate, 'seconds')}
+                        />
+                        <StatusRow
+                          name="Status"
+                          content={
+                            device.status === 'online'
+                              ? 'Conectado'
+                              : device.status === 'offline'
+                                ? 'Desconectado'
+                                : 'Desconhecido'
+                          }
+                        />
+                      </TableBody>
+                    </Table>
+                  </>
+                )}
+                {sections.perfil && (
+                  <>
+                    <Typography variant="subtitle2" className={classes.sectionTitle}>
+                      Perfil
+                    </Typography>
+                    <Table size="small" className={classes.table}>
+                      <TableBody>
+                        <StatusRow name="Categoria" content={device.category || 'padrão'} />
+                        {device.contact && <StatusRow name="Contato" content={device.contact} />}
+                        {Object.entries(device.attributes || {})
+                          .filter(([k]) => k !== 'deviceImage')
+                          .map(([k, v]) => (
+                            <StatusRow key={k} name={k} content={rawValue(v)} />
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </>
+                )}
+                {sections.params && (
+                  <>
+                    <Typography variant="subtitle2" className={classes.sectionTitle}>
+                      {`Parâmetros recebidos (${Object.keys(position.attributes).length})`}
+                    </Typography>
+                    <Table size="small" className={classes.table}>
+                      <TableBody>
+                        <StatusRow name="Válido (GPS)" content={rawValue(position.valid)} />
+                        <StatusRow name="Latitude" content={position.latitude.toFixed(6)} />
+                        <StatusRow name="Longitude" content={position.longitude.toFixed(6)} />
+                        <StatusRow name="Altitude" content={`${Math.round(position.altitude)} m`} />
+                        <StatusRow
+                          name="Velocidade"
+                          content={`${Math.round(position.speed * 1.852)} km/h`}
+                        />
+                        <StatusRow name="Direção" content={`${Math.round(position.course)}°`} />
+                        {position.accuracy > 0 && (
+                          <StatusRow
+                            name="Precisão"
+                            content={`${Math.round(position.accuracy)} m`}
+                          />
+                        )}
+                        {Object.keys(position.attributes)
+                          .sort()
+                          .map((k) => (
+                            <StatusRow
+                              key={k}
+                              name={k}
+                              content={rawValue(position.attributes[k])}
+                            />
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      ) : (
+        <CardContent style={{ textAlign: 'center' }}>
+          <Typography variant="body2" style={{ color: c.textSecondary }}>
+            Sem posição recebida ainda
+          </Typography>
+        </CardContent>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      <div className={desktop ? classes.root : classes.mobileRoot}>
+        {device &&
+          (desktop ? (
+            <Rnd
+              default={{
+                x: savedPos.x,
+                y: savedPos.y,
+                width: savedSize.w || 360,
+                height: savedSize.h || Math.min(window.innerHeight - 200, 940),
+              }}
+              onDragStop={(e, d) =>
+                localStorage.setItem('lsCardPos', JSON.stringify({ x: d.x, y: d.y }))
+              }
+              onResizeStop={(e, dir, ref) =>
+                localStorage.setItem(
+                  'lsCardSize3',
+                  JSON.stringify({ w: ref.offsetWidth, h: ref.offsetHeight }),
+                )
+              }
+              minHeight={230}
+              minWidth={300}
+              maxWidth={620}
+              enableResizing={{ bottom: true, right: true, bottomRight: true }}
+              resizeHandleStyles={{ bottom: { height: '18px', bottom: 0 } }}
+              resizeHandleComponent={{
+                bottom: (
+                  <div
                     style={{
-                      width: 170,
-                      height: 112,
-                      backgroundColor: '#eef2f8',
-                      border: '2px solid #c9d3e0',
-                      borderRadius: 10,
-                      marginLeft: 'auto',
+                      width: '100%',
+                      height: 18,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'ns-resize',
                     }}
                   >
-                    <img
-                      style={{ width: 56, height: 56 }}
-                      src={mapIcons[mapIconKey(device.category)]}
-                      alt=""
+                    <div
+                      style={{ width: 48, height: 5, borderRadius: 3, backgroundColor: '#b6c2d2' }}
                     />
-                  </Avatar>
-                </div>
-              </div>
-              {position && (
-                <CardContent className={classes.content}>
-                  <Table size="small" className={classes.table}>
-                    <TableBody>
-                      {positionItems
-                        .split(',')
-                        .filter(
-                          (key) =>
-                            position.hasOwnProperty(key) || position.attributes.hasOwnProperty(key),
-                        )
-                        .map((key) => (
-                          <StatusRow
-                            key={key}
-                            name={positionAttributes[key]?.name || key}
-                            content={
-                              <PositionValue
-                                position={position}
-                                property={position.hasOwnProperty(key) ? key : null}
-                                attribute={position.hasOwnProperty(key) ? null : key}
-                              />
-                            }
-                          />
-                        ))}
-                    </TableBody>
-                    <TableFooter>
-                      <TableRow>
-                        <TableCell colSpan={2} className={classes.cell}>
-                          <Typography variant="body2">
-                            <Link
-                              component="button"
-                              type="button"
-                              onClick={() => setShowAll(!showAll)}
-                            >
-                              {showAll ? 'Ocultar ficha ▲' : 'Ficha completa ▼'}
-                            </Link>
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    </TableFooter>
-                  </Table>
-                  {sections.eventos && <LsDeviceEvents deviceId={deviceId} />}
-                  {showAll && (
-                    <>
-                      {sections.sensores && (
-                        <>
-                          <Typography variant="subtitle2" className={classes.sectionTitle}>
-                            Sensores
-                          </Typography>
-                          <Table size="small" className={classes.table}>
-                            <TableBody>
-                              <SensorRows position={position} />
-                            </TableBody>
-                          </Table>
-                        </>
-                      )}
-                      {sections.resposta && position.attributes.result && (
-                        <>
-                          <Typography variant="subtitle2" className={classes.sectionTitle}>
-                            Última resposta do rastreador
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="textSecondary"
-                            style={{ wordBreak: 'break-word' }}
-                          >
-                            {translateResult(position.attributes.result)}
-                          </Typography>
-                        </>
-                      )}
-                      {sections.conect && (
-                        <>
-                          <Typography variant="subtitle2" className={classes.sectionTitle}>
-                            Conectividade
-                          </Typography>
-                          <Table size="small" className={classes.table}>
-                            <TableBody>
-                              <StatusRow name="Modelo" content={device.model || '—'} />
-                              <StatusRow name="ID / IMEI" content={device.uniqueId} />
-                              <StatusRow name="Telefone (chip)" content={device.phone || '—'} />
-                              <StatusRow name="Protocolo" content={position.protocol || '—'} />
-                              <StatusRow
-                                name="Última comunicação"
-                                content={formatTime(device.lastUpdate, 'seconds')}
-                              />
-                              <StatusRow
-                                name="Status"
-                                content={
-                                  device.status === 'online'
-                                    ? 'Conectado'
-                                    : device.status === 'offline'
-                                      ? 'Desconectado'
-                                      : 'Desconhecido'
-                                }
-                              />
-                            </TableBody>
-                          </Table>
-                        </>
-                      )}
-                      {sections.perfil && (
-                        <>
-                          <Typography variant="subtitle2" className={classes.sectionTitle}>
-                            Perfil
-                          </Typography>
-                          <Table size="small" className={classes.table}>
-                            <TableBody>
-                              <StatusRow name="Categoria" content={device.category || 'padrão'} />
-                              {device.contact && (
-                                <StatusRow name="Contato" content={device.contact} />
-                              )}
-                              {Object.entries(device.attributes || {})
-                                .filter(([k]) => k !== 'deviceImage')
-                                .map(([k, v]) => (
-                                  <StatusRow key={k} name={k} content={rawValue(v)} />
-                                ))}
-                            </TableBody>
-                          </Table>
-                        </>
-                      )}
-                      {sections.params && (
-                        <>
-                          <Typography variant="subtitle2" className={classes.sectionTitle}>
-                            {`Parâmetros recebidos (${Object.keys(position.attributes).length})`}
-                          </Typography>
-                          <Table size="small" className={classes.table}>
-                            <TableBody>
-                              <StatusRow name="Válido (GPS)" content={rawValue(position.valid)} />
-                              <StatusRow name="Latitude" content={position.latitude.toFixed(6)} />
-                              <StatusRow name="Longitude" content={position.longitude.toFixed(6)} />
-                              <StatusRow
-                                name="Altitude"
-                                content={`${Math.round(position.altitude)} m`}
-                              />
-                              <StatusRow
-                                name="Velocidade"
-                                content={`${Math.round(position.speed * 1.852)} km/h`}
-                              />
-                              <StatusRow
-                                name="Direção"
-                                content={`${Math.round(position.course)}°`}
-                              />
-                              {position.accuracy > 0 && (
-                                <StatusRow
-                                  name="Precisão"
-                                  content={`${Math.round(position.accuracy)} m`}
-                                />
-                              )}
-                              {Object.keys(position.attributes)
-                                .sort()
-                                .map((k) => (
-                                  <StatusRow
-                                    key={k}
-                                    name={k}
-                                    content={rawValue(position.attributes[k])}
-                                  />
-                                ))}
-                            </TableBody>
-                          </Table>
-                        </>
-                      )}
-                    </>
-                  )}
-                </CardContent>
-              )}
-              <CardActions className={classes.actions} disableSpacing>
-                <Tooltip title={t('sharedExtra')}>
-                  <IconButton
-                    color="secondary"
-                    onClick={(e) => setAnchorEl(e.currentTarget)}
-                    disabled={!position}
-                  >
-                    <PendingIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={t('reportReplay')}>
-                  <IconButton
-                    onClick={() => navigate(`/replay?deviceId=${deviceId}`)}
-                    disabled={disableActions || !position}
-                  >
-                    <RouteIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Bloquear">
-                  <IconButton
-                    color="error"
-                    onClick={() => setConfirmCommand('engineStop')}
-                    disabled={disableActions || !position}
-                  >
-                    <LockIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Desbloquear">
-                  <IconButton
-                    color="success"
-                    onClick={() => setConfirmCommand('engineResume')}
-                    disabled={disableActions || !position}
-                  >
-                    <LockOpenIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Meus alertas">
-                  <IconButton
-                    color="primary"
-                    onClick={() => setAlertsOpen(true)}
-                    disabled={disableActions}
-                  >
-                    <NotificationsIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={t('commandTitle')}>
-                  <IconButton
-                    onClick={() => navigate(`/settings/device/${deviceId}/command`)}
-                    disabled={disableActions}
-                  >
-                    <SendIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={t('sharedEdit')}>
-                  <IconButton
-                    onClick={() => navigate(`/settings/device/${deviceId}`)}
-                    disabled={disableActions || deviceReadonly}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={t('sharedRemove')}>
-                  <IconButton
-                    color="error"
-                    onClick={() => setRemoving(true)}
-                    disabled={disableActions || deviceReadonly}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-              </CardActions>
+                  </div>
+                ),
+              }}
+              dragHandleClassName="draggable-header"
+              style={{ position: 'relative', pointerEvents: 'auto' }}
+            >
+              <Card elevation={3} className={classes.card}>
+                {cardBody}
+              </Card>
+            </Rnd>
+          ) : (
+            <Card elevation={3} className={classes.mobileCard}>
+              {cardBody}
             </Card>
-          </Rnd>
-        )}
+          ))}
       </div>
       {alertsOpen && (
         <LsAlertsDialog
@@ -830,31 +1070,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
           onClose={() => setAlertsOpen(false)}
         />
       )}
-      <LsConfirmDialog open={Boolean(confirmCommand)} onClose={() => setConfirmCommand(null)}>
-        <LsConfirmTitle>
-          {`${confirmCommand === 'engineStop' ? 'Bloquear' : 'Desbloquear'} ${device ? device.name : ''}?`}
-        </LsConfirmTitle>
-        <LsConfirmContent>
-          <LsConfirmText>
-            {confirmCommand === 'engineStop'
-              ? 'O veículo será imobilizado. Confirme para enviar o comando.'
-              : 'O bloqueio será liberado. Confirme para enviar o comando.'}
-          </LsConfirmText>
-        </LsConfirmContent>
-        <LsConfirmActions>
-          <LsConfirmButton onClick={() => setConfirmCommand(null)}>Cancelar</LsConfirmButton>
-          <LsConfirmButton
-            variant="contained"
-            color={confirmCommand === 'engineStop' ? 'error' : 'success'}
-            onClick={() => {
-              sendCommand(confirmCommand);
-              setConfirmCommand(null);
-            }}
-          >
-            Confirmar
-          </LsConfirmButton>
-        </LsConfirmActions>
-      </LsConfirmDialog>
       <Menu
         anchorEl={settingsAnchor}
         open={Boolean(settingsAnchor)}
@@ -916,11 +1131,26 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
               {navigationAppTitle}
             </MenuItem>
           )}
+          <MenuItem
+            onClick={() => navigate(`/settings/device/${deviceId}/command`)}
+            disabled={disableActions}
+          >
+            {t('commandTitle')}
+          </MenuItem>
+          <MenuItem
+            onClick={() => navigate(`/settings/device/${deviceId}`)}
+            disabled={disableActions || deviceReadonly}
+          >
+            {t('sharedEdit')}
+          </MenuItem>
           {!shareDisabled && !user.temporary && (
             <MenuItem onClick={() => navigate(`/settings/device/${deviceId}/share`)}>
               <Typography color="secondary">{t('sharedShare')}</Typography>
             </MenuItem>
           )}
+          <MenuItem onClick={() => setRemoving(true)} disabled={disableActions || deviceReadonly}>
+            <Typography color="error">{t('sharedRemove')}</Typography>
+          </MenuItem>
         </Menu>
       )}
       <RemoveDialog

@@ -111,6 +111,39 @@ const PreferencesPage = () => {
   return (
     <PageLayout menu={<SettingsMenu />} breadcrumbs={['settingsTitle', 'sharedPreferences']}>
       <Container maxWidth="xs" className={classes.container}>
+        <Accordion defaultExpanded>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle1">Aparência</Typography>
+          </AccordionSummary>
+          <AccordionDetails className={classes.details}>
+            <FormControl>
+              <InputLabel>Tema</InputLabel>
+              <Select
+                label="Tema"
+                value={
+                  attributes.hasOwnProperty('darkMode')
+                    ? attributes.darkMode
+                      ? 'dark'
+                      : 'light'
+                    : 'auto'
+                }
+                onChange={(e) => {
+                  const next = { ...attributes };
+                  if (e.target.value === 'auto') {
+                    delete next.darkMode;
+                  } else {
+                    next.darkMode = e.target.value === 'dark';
+                  }
+                  setAttributes(next);
+                }}
+              >
+                <MenuItem value="auto">Automático (do sistema)</MenuItem>
+                <MenuItem value="light">Claro</MenuItem>
+                <MenuItem value="dark">Escuro</MenuItem>
+              </Select>
+            </FormControl>
+          </AccordionDetails>
+        </Accordion>
         {!readonly && (
           <>
             <Accordion defaultExpanded>

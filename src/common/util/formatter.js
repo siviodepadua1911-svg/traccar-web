@@ -94,6 +94,18 @@ export const formatSpeed = (value, unit, t) =>
 export const formatVolume = (value, unit, t) =>
   `${volumeFromLiters(value, unit).toFixed(2)} ${volumeUnitString(unit, t)}`;
 
+// "5 min", "1h 20min" etc - duracao curta sem depender de traducao (usado no card
+// do veiculo e nos marcadores de parada do Replay).
+export const formatDurationShort = (ms) => {
+  const totalMinutes = Math.round(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0) {
+    return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
+  }
+  return `${Math.max(minutes, 1)} min`;
+};
+
 export const formatNumericHours = (value, t) => {
   const hours = Math.floor(value / 3600000);
   const minutes = Math.floor((value % 3600000) / 60000);

@@ -37,10 +37,23 @@ const FirebaseNotifications = () => {
         return undefined;
       }
 
+      const existingRegistrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(
+        existingRegistrations
+          .filter(
+            (reg) =>
+              reg.scope === `${window.location.origin}/` &&
+              reg.active?.scriptURL.endsWith('/firebase-messaging-sw.js'),
+          )
+          .map((reg) => reg.unregister()),
+      );
+
       const { initializeApp } = await import('firebase/app');
       const { getMessaging, getToken, onMessage } = await import('firebase/messaging');
 
-      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+        scope: '/firebase-cloud-messaging-push-scope',
+      });
       const app = initializeApp(firebaseConfig);
       const messaging = getMessaging(app);
 

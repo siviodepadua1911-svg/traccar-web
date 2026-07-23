@@ -20,11 +20,18 @@ const cache = {
 
 const AppThemeProvider = ({ children }) => {
   const server = useSelector((state) => state.session.server);
+  const user = useSelector((state) => state.session.user);
   const { direction } = useLocalization();
 
+  const userDarkMode = user?.attributes?.darkMode;
   const serverDarkMode = server?.attributes?.darkMode;
   const preferDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
-  const darkMode = serverDarkMode !== undefined ? serverDarkMode : preferDarkMode;
+  const darkMode =
+    userDarkMode !== undefined
+      ? userDarkMode
+      : serverDarkMode !== undefined
+        ? serverDarkMode
+        : preferDarkMode;
 
   const themeInstance = theme(server, darkMode, direction);
 

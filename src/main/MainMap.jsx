@@ -18,6 +18,8 @@ import MapGeocoder from '../map/control/MapGeocoder';
 import MapScale from '../map/MapScale';
 import MapRuler from '../map/control/MapRuler';
 import MapNotification from '../map/control/MapNotification';
+import MapFollowButton from '../map/main/MapFollowButton';
+import MapFollowAlert from '../map/main/MapFollowAlert';
 import useFeatures from '../common/util/useFeatures';
 
 const MainMap = ({ filteredPositions, selectedPosition, onEventsClick }) => {
@@ -56,6 +58,7 @@ const MainMap = ({ filteredPositions, selectedPosition, onEventsClick }) => {
         />
         <MapDefaultCamera filteredPositions={filteredPositions} />
         <MapSelectedDevice />
+        <MapFollowButton />
         <PoiMap />
         <MapRuler positions={filteredPositions} onActiveChange={setRulerActive} />
         {!features.disableEvents && (
@@ -65,6 +68,7 @@ const MainMap = ({ filteredPositions, selectedPosition, onEventsClick }) => {
       <MapScale />
       <MapCurrentLocation />
       <MapGeocoder />
+      <MapFollowAlert />
       {desktop && (
         <MapPadding
           start={

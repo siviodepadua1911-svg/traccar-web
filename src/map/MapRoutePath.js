@@ -24,7 +24,7 @@ const MapRoutePath = ({ positions }) => {
     return null;
   });
 
-  const mapLineWidth = useAttributePreference('mapLineWidth', 2);
+  const mapLineWidth = useAttributePreference('mapLineWidth', 4);
   const mapLineOpacity = useAttributePreference('mapLineOpacity', 1);
 
   useEffect(() => {

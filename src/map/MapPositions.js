@@ -310,8 +310,10 @@ const MapPositions = ({
         },
       });
 
-      map.on('mouseenter', source, onMouseEnter);
-      map.on('mouseleave', source, onMouseLeave);
+      if (desktop) {
+        map.on('mouseenter', source, onMouseEnter);
+        map.on('mouseleave', source, onMouseLeave);
+      }
       map.on('click', source, onMarkerClickCallback);
     });
     map.addLayer({
@@ -345,8 +347,10 @@ const MapPositions = ({
       }
 
       [id, selected].forEach((source) => {
-        map.off('mouseenter', source, onMouseEnter);
-        map.off('mouseleave', source, onMouseLeave);
+        if (desktop) {
+          map.off('mouseenter', source, onMouseEnter);
+          map.off('mouseleave', source, onMouseLeave);
+        }
         map.off('click', source, onMarkerClickCallback);
 
         if (map.getLayer(source)) {
@@ -370,6 +374,7 @@ const MapPositions = ({
     id,
     selected,
     titleField,
+    desktop,
   ]);
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { Divider, List } from '@mui/material';
+import { Divider, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import DrawIcon from '@mui/icons-material/Draw';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -15,25 +15,61 @@ import HelpIcon from '@mui/icons-material/Help';
 import PaymentIcon from '@mui/icons-material/Payment';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import CalculateIcon from '@mui/icons-material/Calculate';
-import { useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '../../common/components/LocalizationProvider';
 import { useAdministrator, useManager, useRestriction } from '../../common/util/permissions';
 import useFeatures from '../../common/util/useFeatures';
 import MenuItem from '../../common/components/MenuItem';
+import { sessionActions } from '../../store';
+import { nativePostMessage } from '../../common/components/NativeInterface';
 
 const SettingsMenu = () => {
   const t = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const readonly = useRestriction('readonly');
   const admin = useAdministrator();
   const manager = useManager();
-  const userId = useSelector((state) => state.session.user.id);
+  const user = useSelector((state) => state.session.user);
+  const userId = user.id;
   const supportLink = useSelector((state) => state.session.server.attributes.support);
   const billingLink = useSelector((state) => state.session.user.attributes.billingLink);
 
   const features = useFeatures();
+
+  const handleLogout = async () => {
+    const notificationToken = window.localStorage.getItem('notificationToken');
+    if (notificationToken && !user.readonly) {
+      window.localStorage.removeItem('notificationToken');
+      const tokens = user.attributes.notificationTokens?.split(',') || [];
+      if (tokens.includes(notificationToken)) {
+        const updatedUser = {
+          ...user,
+          attributes: {
+            ...user.attributes,
+            notificationTokens:
+              tokens.length > 1
+                ? tokens.filter((it) => it !== notificationToken).join(',')
+                : undefined,
+          },
+        };
+        await fetch(`/api/users/${user.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedUser),
+        });
+      }
+    }
+
+    await fetch('/api/session', { method: 'DELETE' });
+    nativePostMessage('logout');
+    navigate('/login');
+    dispatch(sessionActions.updateUser(null));
+  };
 
   return (
     <>
@@ -134,6 +170,12 @@ const SettingsMenu = () => {
             icon={<HelpIcon sx={{ color: '#5e35b1' }} />}
           />
         )}
+        <ListItemButton onClick={handleLogout}>
+          <ListItemIcon>
+            <ExitToAppIcon sx={{ color: '#d32f2f' }} />
+          </ListItemIcon>
+          <ListItemText primary={t('loginLogout')} />
+        </ListItemButton>
       </List>
       {manager && (
         <>

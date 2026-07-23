@@ -203,6 +203,7 @@ const MainPage = () => {
           position={selectedPosition}
           onClose={() => dispatch(devicesActions.selectId(null))}
           desktopPadding={theme.dimensions.drawerWidthDesktop}
+          deviceIds={filteredDevices.map((device) => device.id)}
         />
       )}
     </div>

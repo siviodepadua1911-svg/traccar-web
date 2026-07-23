@@ -2,11 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 
 const GLIDE_MS = 5000;
 const MAX_GLIDE_METERS = 2000;
+// Ruido normal de GPS com o veiculo parado nao deve fazer o marcador "tremer" no mapa.
+const MIN_GLIDE_METERS = 30;
 const FRAME_MS = 66;
 
 const glideShown = new Map();
 const glideListeners = new Set();
-const publishGlide = () => { glideListeners.forEach((listener) => listener()); };
+const publishGlide = () => {
+  glideListeners.forEach((listener) => listener());
+};
 
 export const subscribeLsGlide = (listener) => {
   glideListeners.add(listener);
@@ -41,14 +45,22 @@ export default (positions, enabled) => {
       if (!anim) {
         anims.set(target.deviceId, { shown: target, target, start: 0 });
         glideShown.set(target.deviceId, [target.longitude, target.latitude]);
-      } else if (anim.target.latitude !== target.latitude || anim.target.longitude !== target.longitude) {
-        const origin = { ...anim.shown };
-        if (metersBetween(origin, target) > MAX_GLIDE_METERS) {
-          anims.set(target.deviceId, { shown: target, target, start: 0 });
-          glideShown.set(target.deviceId, [target.longitude, target.latitude]);
+      } else if (
+        anim.target.latitude !== target.latitude ||
+        anim.target.longitude !== target.longitude
+      ) {
+        const stationary = target.attributes?.motion === false;
+        if (stationary && metersBetween(anim.target, target) < MIN_GLIDE_METERS) {
+          anim.target = target;
         } else {
-          anims.set(target.deviceId, { origin, shown: origin, target, start: now });
-          glideShown.set(target.deviceId, [origin.longitude, origin.latitude]);
+          const origin = { ...anim.shown };
+          if (metersBetween(origin, target) > MAX_GLIDE_METERS) {
+            anims.set(target.deviceId, { shown: target, target, start: 0 });
+            glideShown.set(target.deviceId, [target.longitude, target.latitude]);
+          } else {
+            anims.set(target.deviceId, { origin, shown: origin, target, start: now });
+            glideShown.set(target.deviceId, [origin.longitude, origin.latitude]);
+          }
         }
       } else {
         anim.target = target;

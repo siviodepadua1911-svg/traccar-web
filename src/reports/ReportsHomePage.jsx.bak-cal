@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
-import { Select, MenuItem, FormControl, TextField, CircularProgress } from '@mui/material';
+import { Select, MenuItem, FormControl, CircularProgress } from '@mui/material';
 import dayjs from 'dayjs';
 import RouteIcon from '@mui/icons-material/Route';
 import AltRouteIcon from '@mui/icons-material/AltRoute';
@@ -20,7 +20,7 @@ import MapIcon from '@mui/icons-material/Map';
 const TYPES = [
   {
     label: 'Percurso',
-    desc: 'Onde o veículo andou',
+    desc: 'Onde o veiculo andou',
     Icon: RouteIcon,
     fetch: 'trips',
     render: 'summary',
@@ -28,7 +28,7 @@ const TYPES = [
   },
   {
     label: 'Viagens',
-    desc: 'Saída, chegada, distância',
+    desc: 'Saida, chegada, distancia',
     Icon: AltRouteIcon,
     fetch: 'trips',
     render: 'trips',
@@ -42,40 +42,40 @@ const TYPES = [
   },
   {
     label: 'Resumo',
-    desc: 'Km e velocidade máxima',
+    desc: 'Km e velocidade maxima',
     Icon: AssessmentIcon,
     fetch: 'trips',
     render: 'summary',
   },
   {
     label: 'Velocidade',
-    desc: 'Máxima e trechos rápidos',
+    desc: 'Maxima e trechos rapidos',
     Icon: SpeedIcon,
     fetch: 'trips',
     render: 'speed',
   },
   {
     label: 'Alertas',
-    desc: 'Histórico de avisos',
+    desc: 'Historico de avisos',
     Icon: NotificationsIcon,
     fetch: 'events',
     render: 'events',
   },
   {
     label: 'Cercas',
-    desc: 'Entradas e saídas',
+    desc: 'Entradas e saidas',
     Icon: FenceIcon,
     fetch: 'events',
     render: 'events',
     types: 'geofenceEnter,geofenceExit',
   },
   {
-    label: 'Gráfico',
+    label: 'Grafico',
     desc: 'Velocidade / altitude',
     Icon: ShowChartIcon,
     fetch: 'trips',
     render: 'summary',
-    open: { label: 'Abrir gráfico', route: 'chart' },
+    open: { label: 'Abrir grafico', route: 'chart' },
   },
 ];
 
@@ -83,7 +83,7 @@ const PERIODS = [
   ['today', 'Hoje'],
   ['yesterday', 'Ontem'],
   ['last7', '7 dias'],
-  ['thisMonth', 'Este mês'],
+  ['thisMonth', 'Este mes'],
   ['custom', 'Datas'],
 ];
 
@@ -98,7 +98,7 @@ const range = (period) => {
     case 'thisMonth':
       return [dayjs().startOf('month'), dayjs().endOf('month')];
     default:
-      return [dayjs().startOf('day'), dayjs().endOf('day')];
+      return null;
   }
 };
 
@@ -122,18 +122,18 @@ const dm = (s) =>
     : '';
 const EV = {
   deviceOverspeed: ['Excesso de velocidade', '#c62828'],
-  deviceMoving: ['Começou a se mover', '#1C7ED6'],
+  deviceMoving: ['Comecou a se mover', '#1C7ED6'],
   deviceStopped: ['Parou', '#607d8b'],
-  ignitionOn: ['Ignição ligada', '#f08c00'],
-  ignitionOff: ['Ignição desligada', '#607d8b'],
+  ignitionOn: ['Ignicao ligada', '#f08c00'],
+  ignitionOff: ['Ignicao desligada', '#607d8b'],
   geofenceEnter: ['Entrou na cerca', '#1C7ED6'],
   geofenceExit: ['Saiu da cerca', '#1C7ED6'],
   deviceOnline: ['Conectou', '#2e7d32'],
   deviceOffline: ['Desconectou', '#90a4ae'],
-  deviceInactive: ['Sem comunicação', '#90a4ae'],
+  deviceInactive: ['Sem comunicacao', '#90a4ae'],
   alarm: ['Alarme', '#c62828'],
-  maintenance: ['Manutenção', '#f08c00'],
-  deviceFuelDrop: ['Queda de combustível', '#c62828'],
+  maintenance: ['Manutencao', '#f08c00'],
+  deviceFuelDrop: ['Queda de combustivel', '#c62828'],
   commandResult: ['Resposta de comando', '#607d8b'],
 };
 const ev = (t) => EV[t] || [t, '#607d8b'];
@@ -155,7 +155,6 @@ const useStyles = makeStyles()((theme) => ({
     textTransform: 'uppercase',
     letterSpacing: '.03em',
   },
-  lab2: { fontSize: 11.5, fontWeight: 700, color: '#0d2a5c', margin: theme.spacing(2, 0, 1) },
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, 1fr)',
@@ -190,7 +189,6 @@ const useStyles = makeStyles()((theme) => ({
     gap: 5,
   },
   chipOn: { background: '#0d2a5c', color: '#fff', borderColor: '#0d2a5c', fontWeight: 600 },
-  dateRow: { display: 'flex', gap: 8, marginTop: 10 },
   go: {
     marginTop: theme.spacing(2.5),
     background: '#0d2a5c',
@@ -231,8 +229,6 @@ const useStyles = makeStyles()((theme) => ({
   },
   statLab: { fontSize: 11, color: '#607d8b' },
   statVal: { fontSize: 22, fontWeight: 700, color: '#0d2a5c', marginTop: 2 },
-  bar: { height: 6, borderRadius: 4, background: '#eef1f6', marginTop: 6, overflow: 'hidden' },
-  barFill: { height: '100%', background: '#1C7ED6', borderRadius: 4 },
   item: {
     background: '#fff',
     border: '1px solid #eef1f5',
@@ -266,6 +262,9 @@ const useStyles = makeStyles()((theme) => ({
     width: '100%',
     fontFamily: 'inherit',
   },
+  lab2: { fontSize: 11.5, fontWeight: 700, color: '#0d2a5c', margin: theme.spacing(2, 0, 1) },
+  bar: { height: 6, borderRadius: 4, background: '#eef1f6', marginTop: 6, overflow: 'hidden' },
+  barFill: { height: '100%', background: '#1C7ED6', borderRadius: 4 },
   empty: { textAlign: 'center', color: '#90a4ae', fontSize: 14, padding: theme.spacing(5, 2) },
   loading: {
     display: 'flex',
@@ -289,31 +288,23 @@ const ReportsHomePage = () => {
   );
   const [typeIdx, setTypeIdx] = useState(0);
   const [period, setPeriod] = useState('today');
-  const [dtFrom, setDtFrom] = useState(dayjs().subtract(6, 'day').format('YYYY-MM-DD'));
-  const [dtTo, setDtTo] = useState(dayjs().format('YYYY-MM-DD'));
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
-  const periodLabel =
-    period === 'custom'
-      ? `${dayjs(dtFrom).format('DD/MM')} a ${dayjs(dtTo).format('DD/MM')}`
-      : PERIODS.find((x) => x[0] === period)[1];
+  const periodLabel = PERIODS.find((x) => x[0] === period)[1];
   const deviceName = (devices[deviceId] && devices[deviceId].name) || '';
-
-  const dateRange = () => {
-    if (period === 'custom') {
-      return [dayjs(dtFrom).startOf('day'), dayjs(dtTo).endOf('day')];
-    }
-    return range(period);
-  };
 
   const handleGo = async () => {
     const type = TYPES[typeIdx];
-    const [from, to] = dateRange();
+    const r = range(period);
     const params = new URLSearchParams();
     if (deviceId) params.append('deviceId', String(deviceId));
-    params.set('from', from.toISOString());
-    params.set('to', to.toISOString());
+    if (!r) {
+      navigate(`/reports/${type.open ? type.open.route : type.fetch}?${params.toString()}`);
+      return;
+    }
+    params.set('from', r[0].toISOString());
+    params.set('to', r[1].toISOString());
     if (type.fetch === 'events') {
       (type.types ? type.types.split(',') : ['allEvents']).forEach((tp) =>
         params.append('type', tp),
@@ -327,12 +318,49 @@ const ReportsHomePage = () => {
       });
       const data = resp.ok ? await resp.json() : [];
       let summary = [];
+      if (type.render === 'speed') {
+        const trips = [...data].sort((a, b) => (b.maxSpeed || 0) - (a.maxSpeed || 0));
+        const maxSp = trips.reduce((a, t) => Math.max(a, t.maxSpeed || 0), 0);
+        const totalDist = data.reduce((a, t) => a + (t.distance || 0), 0);
+        const movingMs = data.reduce((a, t) => a + (t.duration || 0), 0);
+        const avgKmh = movingMs > 0 ? Math.round(totalDist / 1000 / (movingMs / 3600000)) : 0;
+        if (!trips.length) {
+          return <div className={classes.empty}>Sem movimento nesse periodo.</div>;
+        }
+        return (
+          <>
+            <div className={classes.stats}>
+              <div className={classes.stat}>
+                <div className={classes.statLab}>Velocidade maxima</div>
+                <div className={classes.statVal}>{`${kmh(maxSp)} km/h`}</div>
+              </div>
+              <div className={classes.stat}>
+                <div className={classes.statLab}>Velocidade media</div>
+                <div className={classes.statVal}>{`${avgKmh} km/h`}</div>
+              </div>
+            </div>
+            <div className={classes.lab2}>Trechos mais rapidos</div>
+            {trips.map((t, i) => (
+              <div className={classes.item} key={i}>
+                <div className={classes.itemTop}>
+                  <span>{`${hm(t.startTime)} -> ${hm(t.endTime)}`}</span>
+                  <span>{`${kmh(t.maxSpeed)} km/h`}</span>
+                </div>
+                <div className={classes.bar}>
+                  <div
+                    className={classes.barFill}
+                    style={{
+                      width: `${maxSp > 0 ? Math.round(((t.maxSpeed || 0) / maxSp) * 100) : 0}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </>
+        );
+      }
       if (type.render === 'summary') {
-        const sp = new URLSearchParams();
-        if (deviceId) sp.append('deviceId', String(deviceId));
-        sp.set('from', from.toISOString());
-        sp.set('to', to.toISOString());
-        const sr = await fetch(`/api/reports/summary?${sp.toString()}`, {
+        const sr = await fetch(`/api/reports/summary?${params.toString()}`, {
           headers: { Accept: 'application/json' },
         });
         summary = sr.ok ? await sr.json() : [];
@@ -343,60 +371,26 @@ const ReportsHomePage = () => {
         summary: Array.isArray(summary) ? summary : [],
       });
     } catch {
-      setResult({ type, data: [], summary: [] });
+      setResult({ type, data: [] });
     }
     setLoading(false);
   };
 
   const openFull = (type) => {
-    const [from, to] = dateRange();
+    const r = range(period);
     const params = new URLSearchParams();
     if (deviceId) params.append('deviceId', String(deviceId));
-    params.set('from', from.toISOString());
-    params.set('to', to.toISOString());
+    if (r) {
+      params.set('from', r[0].toISOString());
+      params.set('to', r[1].toISOString());
+    }
     navigate(`/reports/${type.open.route}?${params.toString()}`);
   };
 
   const renderResult = () => {
     const { type, data } = result;
-    if (type.render === 'speed') {
-      const trips = [...data].sort((a, b) => (b.maxSpeed || 0) - (a.maxSpeed || 0));
-      const maxSp = trips.reduce((a, t) => Math.max(a, t.maxSpeed || 0), 0);
-      const totalDist = data.reduce((a, t) => a + (t.distance || 0), 0);
-      const movingMs = data.reduce((a, t) => a + (t.duration || 0), 0);
-      const avgKmh = movingMs > 0 ? Math.round(totalDist / 1000 / (movingMs / 3600000)) : 0;
-      if (!trips.length) return <div className={classes.empty}>Sem movimento nesse período.</div>;
-      return (
-        <>
-          <div className={classes.stats}>
-            <div className={classes.stat}>
-              <div className={classes.statLab}>Velocidade máxima</div>
-              <div className={classes.statVal}>{`${kmh(maxSp)} km/h`}</div>
-            </div>
-            <div className={classes.stat}>
-              <div className={classes.statLab}>Velocidade média</div>
-              <div className={classes.statVal}>{`${avgKmh} km/h`}</div>
-            </div>
-          </div>
-          <div className={classes.lab2}>Trechos mais rápidos</div>
-          {trips.map((t, i) => (
-            <div className={classes.item} key={i}>
-              <div className={classes.itemTop}>
-                <span>{`${hm(t.startTime)} -> ${hm(t.endTime)}`}</span>
-                <span>{`${kmh(t.maxSpeed)} km/h`}</span>
-              </div>
-              <div className={classes.bar}>
-                <div
-                  className={classes.barFill}
-                  style={{
-                    width: `${maxSp > 0 ? Math.round(((t.maxSpeed || 0) / maxSp) * 100) : 0}%`,
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </>
-      );
+    if (!data.length && type.render !== 'summary') {
+      return <div className={classes.empty}>Nenhum dado nesse periodo.</div>;
     }
     if (type.render === 'summary') {
       const trips = data;
@@ -408,19 +402,19 @@ const ReportsHomePage = () => {
       const hasData = trips.length > 0 || engineMs > 0;
       return (
         <>
-          {!hasData && <div className={classes.empty}>Sem dados nesse período.</div>}
+          {!hasData && <div className={classes.empty}>Sem movimento nesse periodo.</div>}
           {hasData && (
             <div className={classes.stats}>
               <div className={classes.stat}>
-                <div className={classes.statLab}>Distância</div>
+                <div className={classes.statLab}>Distancia</div>
                 <div className={classes.statVal}>{`${km(totalDist)} km`}</div>
               </div>
               <div className={classes.stat}>
-                <div className={classes.statLab}>Velocidade máxima</div>
+                <div className={classes.statLab}>Velocidade maxima</div>
                 <div className={classes.statVal}>{`${kmh(maxSp)} km/h`}</div>
               </div>
               <div className={classes.stat}>
-                <div className={classes.statLab}>Velocidade média</div>
+                <div className={classes.statLab}>Velocidade media</div>
                 <div className={classes.statVal}>{`${avgKmh} km/h`}</div>
               </div>
               <div className={classes.stat}>
@@ -428,7 +422,7 @@ const ReportsHomePage = () => {
                 <div className={classes.statVal}>{dur(movingMs)}</div>
               </div>
               <div className={classes.stat}>
-                <div className={classes.statLab}>Ignição ligada</div>
+                <div className={classes.statLab}>Ignicao ligada</div>
                 <div className={classes.statVal}>{dur(engineMs)}</div>
               </div>
             </div>
@@ -442,7 +436,6 @@ const ReportsHomePage = () => {
         </>
       );
     }
-    if (!data.length) return <div className={classes.empty}>Nenhum dado nesse período.</div>;
     if (type.render === 'trips') {
       return data.map((t, i) => (
         <div className={classes.item} key={i}>
@@ -452,7 +445,7 @@ const ReportsHomePage = () => {
           </div>
           <div
             className={classes.itemSub}
-          >{`${dur(t.duration)} - máx ${kmh(t.maxSpeed)} km/h`}</div>
+          >{`${dur(t.duration)} - max ${kmh(t.maxSpeed)} km/h`}</div>
           {(t.startAddress || t.endAddress) && (
             <div
               className={classes.itemSub}
@@ -468,7 +461,7 @@ const ReportsHomePage = () => {
             <span>{t.address || 'Parada'}</span>
             <span>{dur(t.duration)}</span>
           </div>
-          <div className={classes.itemSub}>{dm(t.startTime)}</div>
+          <div className={classes.itemSub}>{`${dm(t.startTime)}`}</div>
         </div>
       ));
     }
@@ -492,7 +485,7 @@ const ReportsHomePage = () => {
       <div className={classes.root}>
         <div className={classes.loading}>
           <CircularProgress />
-          <div>Gerando relatório...</div>
+          <div>Gerando relatorio...</div>
         </div>
       </div>
     );
@@ -502,7 +495,7 @@ const ReportsHomePage = () => {
     return (
       <div className={classes.root}>
         <div className={classes.back} onClick={() => setResult(null)}>
-          <ArrowBackIcon sx={{ fontSize: 20 }} /> Novo relatório
+          <ArrowBackIcon sx={{ fontSize: 20 }} /> Novo relatorio
         </div>
         <div className={classes.title}>{result.type.label}</div>
         <div className={classes.sub}>{`${deviceName} - ${periodLabel}`}</div>
@@ -513,9 +506,9 @@ const ReportsHomePage = () => {
 
   return (
     <div className={classes.root}>
-      <div className={classes.title}>Relatórios</div>
+      <div className={classes.title}>Relatorios</div>
 
-      <div className={classes.lab}>Veículo</div>
+      <div className={classes.lab}>Veiculo</div>
       <FormControl fullWidth size="small">
         <Select
           className={classes.device}
@@ -523,7 +516,7 @@ const ReportsHomePage = () => {
           onChange={(e) => setDeviceId(e.target.value)}
           displayEmpty
         >
-          {deviceList.length === 0 && <MenuItem value="">Nenhum veículo</MenuItem>}
+          {deviceList.length === 0 && <MenuItem value="">Nenhum veiculo</MenuItem>}
           {deviceList.map((d) => (
             <MenuItem key={d.id} value={d.id}>
               {d.name}
@@ -532,7 +525,7 @@ const ReportsHomePage = () => {
         </Select>
       </FormControl>
 
-      <div className={classes.lab}>O que você quer ver?</div>
+      <div className={classes.lab}>O que voce quer ver?</div>
       <div className={classes.grid}>
         {TYPES.map((it, i) => {
           const { Icon } = it;
@@ -550,7 +543,7 @@ const ReportsHomePage = () => {
         })}
       </div>
 
-      <div className={classes.lab}>Período</div>
+      <div className={classes.lab}>Periodo</div>
       <div className={classes.chips}>
         {PERIODS.map(([key, label]) => (
           <div
@@ -563,33 +556,9 @@ const ReportsHomePage = () => {
           </div>
         ))}
       </div>
-      {period === 'custom' && (
-        <div className={classes.dateRow}>
-          <TextField
-            type="date"
-            label="De"
-            size="small"
-            fullWidth
-            value={dtFrom}
-            onChange={(e) => setDtFrom(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            sx={{ background: '#fff', borderRadius: 1 }}
-          />
-          <TextField
-            type="date"
-            label="Até"
-            size="small"
-            fullWidth
-            value={dtTo}
-            onChange={(e) => setDtTo(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            sx={{ background: '#fff', borderRadius: 1 }}
-          />
-        </div>
-      )}
 
       <button type="button" className={classes.go} onClick={handleGo} disabled={!deviceId}>
-        <VisibilityIcon sx={{ fontSize: 20 }} /> Ver relatório
+        <VisibilityIcon sx={{ fontSize: 20 }} /> Ver relatorio
       </button>
     </div>
   );

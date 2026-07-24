@@ -17,10 +17,26 @@ const useStyles = makeStyles()(() => ({
     position: 'fixed',
     inset: 0,
     zIndex: 1600,
-    background: '#eef1f6',
+    background: '#c4cbd6',
+    display: 'flex',
+    justifyContent: 'center',
+    overflow: 'auto',
+  },
+  panel: {
     display: 'flex',
     flexDirection: 'column',
+    width: '100%',
+    maxWidth: 480,
+    minHeight: '100%',
+    background: '#eef1f6',
     fontFamily: 'Inter, Roboto, sans-serif',
+    '@media (min-width:600px)': {
+      minHeight: 'auto',
+      margin: '24px 0',
+      borderRadius: 12,
+      overflow: 'hidden',
+      boxShadow: '0 8px 40px rgba(0,0,0,.35)',
+    },
   },
   header: {
     background: '#0d2a5c',
@@ -35,12 +51,19 @@ const useStyles = makeStyles()(() => ({
   body: { flex: 1, overflow: 'auto' },
   photo: {
     position: 'relative',
-    height: 150,
+    height: 180,
     background: 'linear-gradient(135deg,#2b3a52,#516b8f)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     color: 'rgba(255,255,255,.6)',
+    overflow: 'hidden',
+    flex: 'none',
+  },
+  photoImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
   },
   photoBtn: {
     position: 'absolute',
@@ -160,133 +183,128 @@ const LsFichaCompleta = ({ device, position, onClose }) => {
 
   return (
     <div className={classes.overlay}>
-      <div className={classes.header}>
-        <ArrowBackIcon style={{ cursor: 'pointer' }} onClick={onClose} />
-        <div className={classes.hName}>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>{device.name}</div>
-          <div style={{ fontSize: 10.5, color: '#a9c4e8' }}>Ficha completa</div>
-        </div>
-        <ShareIcon style={{ cursor: 'pointer', color: '#a9c4e8' }} onClick={share} />
-      </div>
-
-      <div className={classes.body}>
-        <div
-          className={classes.photo}
-          style={
-            img
-              ? {
-                  backgroundImage: `url(${img})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }
-              : undefined
-          }
-        >
-          {!img && <DirectionsCarIcon style={{ fontSize: 52 }} />}
-          <label className={classes.photoBtn}>
-            <CameraAltIcon style={{ fontSize: 14 }} />{' '}
-            {busy ? 'Enviando...' : img ? 'Trocar foto' : 'Adicionar foto'}
-            <input type="file" accept="image/*" hidden onChange={onFile} disabled={busy} />
-          </label>
-        </div>
-
-        <div className={classes.sec}>
-          <div className={classes.secTitle}>Situacao agora</div>
-          <Row label="Velocidade" value={`${kmh(position.speed)} km/h`} />
-          {a.ignition !== undefined && (
-            <Row
-              label="Ignicao"
-              value={a.ignition ? 'Ligada' : 'Desligada'}
-              color={a.ignition ? '#2e7d32' : '#607d8b'}
-            />
-          )}
-          {a.blocked !== undefined && (
-            <Row
-              label="Bloqueio"
-              value={a.blocked ? 'Bloqueado' : 'Liberado'}
-              color={a.blocked ? '#c62828' : '#2e7d32'}
-            />
-          )}
-          {a.motion !== undefined && (
-            <Row label="Movimento" value={a.motion ? 'Em movimento' : 'Parado'} />
-          )}
-        </div>
-
-        {(a.rssi !== undefined || a.sat !== undefined) && (
-          <div className={classes.sec}>
-            <div className={classes.secTitle}>Sinal & GPS</div>
-            {a.rssi !== undefined && <Row label="Sinal GSM" value={a.rssi} />}
-            {a.sat !== undefined && <Row label="Satelites" value={a.sat} />}
+      <div className={classes.panel}>
+        <div className={classes.header}>
+          <ArrowBackIcon style={{ cursor: 'pointer' }} onClick={onClose} />
+          <div className={classes.hName}>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>{device.name}</div>
+            <div style={{ fontSize: 10.5, color: '#a9c4e8' }}>Ficha completa</div>
           </div>
-        )}
+          <ShareIcon style={{ cursor: 'pointer', color: '#a9c4e8' }} onClick={share} />
+        </div>
 
-        {(a.power !== undefined || a.batteryLevel !== undefined) && (
+        <div className={classes.body}>
+          <div className={classes.photo}>
+            {img ? (
+              <img src={img} alt={device.name} className={classes.photoImg} />
+            ) : (
+              <DirectionsCarIcon style={{ fontSize: 52 }} />
+            )}
+            <label className={classes.photoBtn}>
+              <CameraAltIcon style={{ fontSize: 14 }} />{' '}
+              {busy ? 'Enviando...' : img ? 'Trocar foto' : 'Adicionar foto'}
+              <input type="file" accept="image/*" hidden onChange={onFile} disabled={busy} />
+            </label>
+          </div>
+
           <div className={classes.sec}>
-            <div className={classes.secTitle}>Energia</div>
-            {a.power !== undefined && (
-              <Row label="Voltagem" value={`${Number(a.power).toFixed(1)} V`} />
-            )}
-            {a.batteryLevel !== undefined && (
-              <Row label="Bateria interna" value={`${a.batteryLevel}%`} />
-            )}
-            {a.charge !== undefined && (
+            <div className={classes.secTitle}>Situacao agora</div>
+            <Row label="Velocidade" value={`${kmh(position.speed)} km/h`} />
+            {a.ignition !== undefined && (
               <Row
-                label="Carga"
-                value={a.charge ? 'Carregando' : 'Nao'}
-                color={a.charge ? '#2e7d32' : '#607d8b'}
+                label="Ignicao"
+                value={a.ignition ? 'Ligada' : 'Desligada'}
+                color={a.ignition ? '#2e7d32' : '#607d8b'}
               />
             )}
+            {a.blocked !== undefined && (
+              <Row
+                label="Bloqueio"
+                value={a.blocked ? 'Bloqueado' : 'Liberado'}
+                color={a.blocked ? '#c62828' : '#2e7d32'}
+              />
+            )}
+            {a.motion !== undefined && (
+              <Row label="Movimento" value={a.motion ? 'Em movimento' : 'Parado'} />
+            )}
           </div>
-        )}
 
-        <div className={classes.sec}>
-          <div className={classes.secTitle}>Localizacao</div>
-          <div className={classes.addr}>
-            {position.address || 'Toque abaixo para ver o local no mapa'}
-          </div>
-          <div className={classes.mapsRow}>
-            <a
-              className={classes.mapBtn}
-              href={`https://www.google.com/maps/search/?api=1&query=${lat},${lon}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <MapIcon style={{ fontSize: 17 }} />
-              Google Maps
-            </a>
-            <a
-              className={classes.mapBtn}
-              href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <StreetviewIcon style={{ fontSize: 17 }} />
-              Street View
-            </a>
-          </div>
-          <div style={{ marginTop: 6 }}>
-            <Row label="Hora GPS" value={formatTime(position.fixTime, 'seconds')} />
-          </div>
-        </div>
-
-        <div className={classes.sec}>
-          <div className={classes.secTitle}>Veiculo</div>
-          {a.totalDistance !== undefined && (
-            <Row
-              label="Hodometro"
-              value={`${(a.totalDistance / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} km`}
-            />
+          {(a.rssi !== undefined || a.sat !== undefined) && (
+            <div className={classes.sec}>
+              <div className={classes.secTitle}>Sinal & GPS</div>
+              {a.rssi !== undefined && <Row label="Sinal GSM" value={a.rssi} />}
+              {a.sat !== undefined && <Row label="Satelites" value={a.sat} />}
+            </div>
           )}
-          {a.odometer !== undefined && a.odometer > 0 && (
-            <Row
-              label="Odometro"
-              value={`${(a.odometer / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} km`}
-            />
-          )}
-          <Row label="Categoria" value={device.category || 'rastreador'} />
-        </div>
 
-        <div className={classes.end} />
+          {(a.power !== undefined || a.batteryLevel !== undefined) && (
+            <div className={classes.sec}>
+              <div className={classes.secTitle}>Energia</div>
+              {a.power !== undefined && (
+                <Row label="Voltagem" value={`${Number(a.power).toFixed(1)} V`} />
+              )}
+              {a.batteryLevel !== undefined && (
+                <Row label="Bateria interna" value={`${a.batteryLevel}%`} />
+              )}
+              {a.charge !== undefined && (
+                <Row
+                  label="Carga"
+                  value={a.charge ? 'Carregando' : 'Nao'}
+                  color={a.charge ? '#2e7d32' : '#607d8b'}
+                />
+              )}
+            </div>
+          )}
+
+          <div className={classes.sec}>
+            <div className={classes.secTitle}>Localizacao</div>
+            <div className={classes.addr}>
+              {position.address || 'Toque abaixo para ver o local no mapa'}
+            </div>
+            <div className={classes.mapsRow}>
+              <a
+                className={classes.mapBtn}
+                href={`https://www.google.com/maps/search/?api=1&query=${lat},${lon}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <MapIcon style={{ fontSize: 17 }} />
+                Google Maps
+              </a>
+              <a
+                className={classes.mapBtn}
+                href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <StreetviewIcon style={{ fontSize: 17 }} />
+                Street View
+              </a>
+            </div>
+            <div style={{ marginTop: 6 }}>
+              <Row label="Hora GPS" value={formatTime(position.fixTime, 'seconds')} />
+            </div>
+          </div>
+
+          <div className={classes.sec}>
+            <div className={classes.secTitle}>Veiculo</div>
+            {a.totalDistance !== undefined && (
+              <Row
+                label="Hodometro"
+                value={`${(a.totalDistance / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} km`}
+              />
+            )}
+            {a.odometer !== undefined && a.odometer > 0 && (
+              <Row
+                label="Odometro"
+                value={`${(a.odometer / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} km`}
+              />
+            )}
+            <Row label="Categoria" value={device.category || 'rastreador'} />
+          </div>
+
+          <div className={classes.end} />
+        </div>
       </div>
     </div>
   );

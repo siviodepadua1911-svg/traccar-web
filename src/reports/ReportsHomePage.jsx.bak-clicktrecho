@@ -365,7 +365,6 @@ const ReportsHomePage = () => {
   const [result, setResult] = useState(null);
   const mapBoxRef = useRef(null);
   const [chartMetric, setChartMetric] = useState('speed');
-  const [selectedTrip, setSelectedTrip] = useState(null);
 
   useEffect(() => {
     const resize = () => {
@@ -412,23 +411,22 @@ const ReportsHomePage = () => {
     }
     setLoading(true);
     setResult(null);
-    setSelectedTrip(null);
     try {
       if (type.render === 'map') {
-        const [posResp, tripsResp] = await Promise.all([
-          fetch(`/api/positions?${params.toString()}`, {
+        const [combResp, tripsResp] = await Promise.all([
+          fetch(`/api/reports/combined?${params.toString()}`, {
             headers: { Accept: 'application/json' },
           }),
           fetch(`/api/reports/trips?${params.toString()}`, {
             headers: { Accept: 'application/json' },
           }),
         ]);
-        const positions = posResp.ok ? await posResp.json() : [];
+        const combined = combResp.ok ? await combResp.json() : [];
         const trips = tripsResp.ok ? await tripsResp.json() : [];
         setResult({
           type,
           data: Array.isArray(trips) ? trips : [],
-          positions: Array.isArray(positions) ? positions : [],
+          combined: Array.isArray(combined) ? combined : [],
         });
         setLoading(false);
         return;
@@ -659,21 +657,8 @@ const ReportsHomePage = () => {
       );
     }
     if (type.render === 'map') {
-      const pts = result.positions || [];
+      const route = (result.combined && result.combined[0] && result.combined[0].route) || [];
       const trips = data;
-      const fullRoute = pts.map((p) => [p.longitude, p.latitude]);
-      let route = fullRoute;
-      if (selectedTrip != null && trips[selectedTrip]) {
-        const tr = trips[selectedTrip];
-        const f = new Date(tr.startTime).getTime();
-        const tt = new Date(tr.endTime).getTime();
-        const seg = pts
-          .filter((p) => new Date(p.fixTime).getTime() >= f && new Date(p.fixTime).getTime() <= tt)
-          .map((p) => [p.longitude, p.latitude]);
-        if (seg.length > 1) {
-          route = seg;
-        }
-      }
       const totalDist = trips.reduce((a, t) => a + (t.distance || 0), 0);
       const movingMs = trips.reduce((a, t) => a + (t.duration || 0), 0);
       const maxSp = trips.reduce((a, t) => Math.max(a, t.maxSpeed || 0), 0);
@@ -683,22 +668,12 @@ const ReportsHomePage = () => {
           {route.length > 1 ? (
             <div className={classes.mapBox} ref={mapBoxRef}>
               <MapViewCore>
-                <MapRouteCoordinates
-                  key={`r${selectedTrip}`}
-                  name={deviceName}
-                  coordinates={route}
-                  deviceId={deviceId}
-                />
+                <MapRouteCoordinates name={deviceName} coordinates={route} deviceId={deviceId} />
               </MapViewCore>
-              <MapCamera key={`c${selectedTrip}`} coordinates={route} />
+              <MapCamera coordinates={route} />
             </div>
           ) : (
             <div className={classes.empty}>Sem percurso nesse período.</div>
-          )}
-          {selectedTrip != null && (
-            <div className={classes.resetLink} onClick={() => setSelectedTrip(null)}>
-              ← Ver percurso completo
-            </div>
           )}
           {trips.length > 0 && (
             <div className={classes.stats}>
@@ -724,17 +699,7 @@ const ReportsHomePage = () => {
             <>
               <div className={classes.lab2}>{`Trechos do percurso (${trips.length})`}</div>
               {trips.map((t, i) => (
-                <div
-                  className={cx(classes.item, selectedTrip === i && classes.itemOn)}
-                  key={i}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    setSelectedTrip(i);
-                    if (mapBoxRef.current) {
-                      mapBoxRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                  }}
-                >
+                <div className={classes.item} key={i}>
                   <div className={classes.itemTop}>
                     <span>{`Trecho ${i + 1}`}</span>
                     <span>{`${km(t.distance)} km`}</span>

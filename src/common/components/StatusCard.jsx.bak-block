@@ -509,8 +509,6 @@ const StatusCard = ({
 
   const shareDisabled = useSelector((state) => state.session.server.attributes.disableShare);
   const user = useSelector((state) => state.session.user);
-  const canBlock =
-    !deviceReadonly || (user && user.attributes && user.attributes.lsPerfil === 'bloqueio');
   const device = useSelector((state) => state.devices.items[deviceId]);
   const stopSince = useSelector((state) => state.session.stopSince[deviceId]);
 
@@ -790,7 +788,7 @@ const StatusCard = ({
                 )
               }
               onConfirm={() => sendCommand(blocked ? 'engineResume' : 'engineStop')}
-              disabled={disableActions || !canBlock}
+              disabled={disableActions || deviceReadonly}
             />
 
             <div style={{ display: 'flex', justifyContent: 'space-around' }}>

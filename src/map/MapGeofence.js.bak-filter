@@ -13,7 +13,6 @@ const MapGeofence = () => {
   const mapGeofences = useAttributePreference('mapGeofences', true);
 
   const geofences = useSelector((state) => state.geofences.items);
-  const user = useSelector((state) => state.session.user);
 
   useEffect(() => {
     if (mapGeofences) {
@@ -83,15 +82,11 @@ const MapGeofence = () => {
       map.getSource(id)?.setData({
         type: 'FeatureCollection',
         features: Object.values(geofences)
-          .filter(
-            (geofence) =>
-              !geofence.attributes.hide &&
-              (!geofence.attributes.lsOwner || geofence.attributes.lsOwner === user?.id),
-          )
+          .filter((geofence) => !geofence.attributes.hide)
           .map((geofence) => geofenceToFeature(theme, geofence)),
       });
     }
-  }, [mapGeofences, geofences, id, theme, user]);
+  }, [mapGeofences, geofences, id, theme]);
 
   return null;
 };

@@ -281,7 +281,7 @@ const GeofencesPage = () => {
       const response = await fetchOrThrow('/api/geofences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), area, attributes: { lsOwner: userId } }),
+        body: JSON.stringify({ name: name.trim(), area, attributes: {} }),
       });
       const geofence = await response.json();
 

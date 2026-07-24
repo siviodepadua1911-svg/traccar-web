@@ -402,6 +402,99 @@ const ReportsHomePage = () => {
     setLoading(true);
     setResult(null);
     try {
+      if (type.render === 'chart') {
+        const positions = data;
+        if (positions.length < 2) {
+          return <div className={classes.empty}>Sem dados nesse período.</div>;
+        }
+        const step = Math.max(1, Math.ceil(positions.length / 150));
+        const chartData = positions
+          .filter((_, i) => i % step === 0)
+          .map((pp) => ({
+            t: hm(pp.fixTime),
+            speed: Math.round((pp.speed || 0) * 1.852),
+            alt: Math.round(pp.altitude || 0),
+          }));
+        const isSpeed = chartMetric === 'speed';
+        const dataKey = isSpeed ? 'speed' : 'alt';
+        const unit = isSpeed ? ' km/h' : ' m';
+        const maxV = positions.reduce(
+          (a, pp) =>
+            Math.max(
+              a,
+              isSpeed ? Math.round((pp.speed || 0) * 1.852) : Math.round(pp.altitude || 0),
+            ),
+          0,
+        );
+        return (
+          <>
+            <div className={classes.toggle}>
+              <div
+                className={cx(classes.tg, isSpeed && classes.tgOn)}
+                onClick={() => setChartMetric('speed')}
+              >
+                Velocidade
+              </div>
+              <div
+                className={cx(classes.tg, !isSpeed && classes.tgOn)}
+                onClick={() => setChartMetric('altitude')}
+              >
+                Altitude
+              </div>
+            </div>
+            <div className={classes.chartCard}>
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 8, left: -12, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="lsGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#1C7ED6" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="#1C7ED6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eef1f6" vertical={false} />
+                  <XAxis
+                    dataKey="t"
+                    tick={{ fontSize: 10, fill: '#90a4ae' }}
+                    tickLine={false}
+                    axisLine={false}
+                    minTickGap={44}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: '#90a4ae' }}
+                    tickLine={false}
+                    axisLine={false}
+                    width={34}
+                  />
+                  <Tooltip
+                    formatter={(v) => [`${v}${unit}`, isSpeed ? 'Velocidade' : 'Altitude']}
+                    labelStyle={{ color: '#0d2a5c', fontWeight: 600 }}
+                    contentStyle={{ borderRadius: 10, border: '1px solid #e3e8ef', fontSize: 12 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey={dataKey}
+                    stroke="#1C7ED6"
+                    strokeWidth={2.5}
+                    fill="url(#lsGrad)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            <div className={classes.stats}>
+              <div className={classes.stat}>
+                <div className={classes.statLab}>
+                  {isSpeed ? 'Velocidade máxima' : 'Altitude máxima'}
+                </div>
+                <div className={classes.statVal}>{`${maxV}${unit}`}</div>
+              </div>
+              <div className={classes.stat}>
+                <div className={classes.statLab}>Pontos no período</div>
+                <div className={classes.statVal}>{positions.length}</div>
+              </div>
+            </div>
+          </>
+        );
+      }
       if (type.render === 'map') {
         const [combResp, tripsResp] = await Promise.all([
           fetch(`/api/reports/combined?${params.toString()}`, {
@@ -517,99 +610,6 @@ const ReportsHomePage = () => {
 
   const renderResult = () => {
     const { type, data } = result;
-    if (type.render === 'chart') {
-      const positions = data;
-      if (positions.length < 2) {
-        return <div className={classes.empty}>Sem dados nesse período.</div>;
-      }
-      const step = Math.max(1, Math.ceil(positions.length / 150));
-      const chartData = positions
-        .filter((_, i) => i % step === 0)
-        .map((pp) => ({
-          t: hm(pp.fixTime),
-          speed: Math.round((pp.speed || 0) * 1.852),
-          alt: Math.round(pp.altitude || 0),
-        }));
-      const isSpeed = chartMetric === 'speed';
-      const dataKey = isSpeed ? 'speed' : 'alt';
-      const unit = isSpeed ? ' km/h' : ' m';
-      const maxV = positions.reduce(
-        (a, pp) =>
-          Math.max(
-            a,
-            isSpeed ? Math.round((pp.speed || 0) * 1.852) : Math.round(pp.altitude || 0),
-          ),
-        0,
-      );
-      return (
-        <>
-          <div className={classes.toggle}>
-            <div
-              className={cx(classes.tg, isSpeed && classes.tgOn)}
-              onClick={() => setChartMetric('speed')}
-            >
-              Velocidade
-            </div>
-            <div
-              className={cx(classes.tg, !isSpeed && classes.tgOn)}
-              onClick={() => setChartMetric('altitude')}
-            >
-              Altitude
-            </div>
-          </div>
-          <div className={classes.chartCard}>
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={chartData} margin={{ top: 10, right: 8, left: -12, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="lsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#1C7ED6" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#1C7ED6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#eef1f6" vertical={false} />
-                <XAxis
-                  dataKey="t"
-                  tick={{ fontSize: 10, fill: '#90a4ae' }}
-                  tickLine={false}
-                  axisLine={false}
-                  minTickGap={44}
-                />
-                <YAxis
-                  tick={{ fontSize: 10, fill: '#90a4ae' }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={34}
-                />
-                <Tooltip
-                  formatter={(v) => [`${v}${unit}`, isSpeed ? 'Velocidade' : 'Altitude']}
-                  labelStyle={{ color: '#0d2a5c', fontWeight: 600 }}
-                  contentStyle={{ borderRadius: 10, border: '1px solid #e3e8ef', fontSize: 12 }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey={dataKey}
-                  stroke="#1C7ED6"
-                  strokeWidth={2.5}
-                  fill="url(#lsGrad)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          <div className={classes.stats}>
-            <div className={classes.stat}>
-              <div className={classes.statLab}>
-                {isSpeed ? 'Velocidade máxima' : 'Altitude máxima'}
-              </div>
-              <div className={classes.statVal}>{`${maxV}${unit}`}</div>
-            </div>
-            <div className={classes.stat}>
-              <div className={classes.statLab}>Pontos no período</div>
-              <div className={classes.statVal}>{positions.length}</div>
-            </div>
-          </div>
-        </>
-      );
-    }
     if (type.render === 'map') {
       const route = (result.combined && result.combined[0] && result.combined[0].route) || [];
       const trips = data;

@@ -515,7 +515,7 @@ const ReportsHomePage = () => {
         return;
       }
       if (type.render === 'chart') {
-        const rr = await fetch(`/api/reports/route?${params.toString()}`, {
+        const rr = await fetch(`/api/positions?${params.toString()}`, {
           headers: { Accept: 'application/json' },
         });
         const positions = rr.ok ? await rr.json() : [];

@@ -20,15 +20,6 @@ import MapViewCore, { map } from '../map/core/MapView';
 import MapRouteCoordinates from '../map/MapRouteCoordinates';
 import MapCamera from '../map/MapCamera';
 import ShareIcon from '@mui/icons-material/Share';
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from 'recharts';
 
 const TYPES = [
   {
@@ -85,8 +76,9 @@ const TYPES = [
     label: 'Gráfico',
     desc: 'Velocidade / altitude',
     Icon: ShowChartIcon,
-    fetch: 'route',
-    render: 'chart',
+    fetch: 'trips',
+    render: 'summary',
+    open: { label: 'Abrir gráfico', route: 'chart' },
   },
 ];
 
@@ -306,27 +298,6 @@ const useStyles = makeStyles()((theme) => ({
     fontFamily: 'inherit',
   },
   empty: { textAlign: 'center', color: '#90a4ae', fontSize: 14, padding: theme.spacing(5, 2) },
-  toggle: { display: 'flex', gap: 8, marginBottom: 12 },
-  tg: {
-    flex: 1,
-    textAlign: 'center',
-    padding: '8px 0',
-    borderRadius: 10,
-    background: '#fff',
-    border: '1.5px solid #e1e7f0',
-    color: '#5b6b82',
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  tgOn: { background: '#0d2a5c', color: '#fff', borderColor: '#0d2a5c' },
-  chartCard: {
-    background: '#fff',
-    border: '1px solid #e6eaf0',
-    borderRadius: 14,
-    padding: '12px 6px 6px',
-    marginBottom: 14,
-  },
   loading: {
     display: 'flex',
     flexDirection: 'column',
@@ -354,7 +325,6 @@ const ReportsHomePage = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const mapBoxRef = useRef(null);
-  const [chartMetric, setChartMetric] = useState('speed');
 
   useEffect(() => {
     const resize = () => {
@@ -402,99 +372,6 @@ const ReportsHomePage = () => {
     setLoading(true);
     setResult(null);
     try {
-      if (type.render === 'chart') {
-        const positions = data;
-        if (positions.length < 2) {
-          return <div className={classes.empty}>Sem dados nesse período.</div>;
-        }
-        const step = Math.max(1, Math.ceil(positions.length / 150));
-        const chartData = positions
-          .filter((_, i) => i % step === 0)
-          .map((pp) => ({
-            t: hm(pp.fixTime),
-            speed: Math.round((pp.speed || 0) * 1.852),
-            alt: Math.round(pp.altitude || 0),
-          }));
-        const isSpeed = chartMetric === 'speed';
-        const dataKey = isSpeed ? 'speed' : 'alt';
-        const unit = isSpeed ? ' km/h' : ' m';
-        const maxV = positions.reduce(
-          (a, pp) =>
-            Math.max(
-              a,
-              isSpeed ? Math.round((pp.speed || 0) * 1.852) : Math.round(pp.altitude || 0),
-            ),
-          0,
-        );
-        return (
-          <>
-            <div className={classes.toggle}>
-              <div
-                className={cx(classes.tg, isSpeed && classes.tgOn)}
-                onClick={() => setChartMetric('speed')}
-              >
-                Velocidade
-              </div>
-              <div
-                className={cx(classes.tg, !isSpeed && classes.tgOn)}
-                onClick={() => setChartMetric('altitude')}
-              >
-                Altitude
-              </div>
-            </div>
-            <div className={classes.chartCard}>
-              <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={chartData} margin={{ top: 10, right: 8, left: -12, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="lsGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#1C7ED6" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#1C7ED6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#eef1f6" vertical={false} />
-                  <XAxis
-                    dataKey="t"
-                    tick={{ fontSize: 10, fill: '#90a4ae' }}
-                    tickLine={false}
-                    axisLine={false}
-                    minTickGap={44}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 10, fill: '#90a4ae' }}
-                    tickLine={false}
-                    axisLine={false}
-                    width={34}
-                  />
-                  <Tooltip
-                    formatter={(v) => [`${v}${unit}`, isSpeed ? 'Velocidade' : 'Altitude']}
-                    labelStyle={{ color: '#0d2a5c', fontWeight: 600 }}
-                    contentStyle={{ borderRadius: 10, border: '1px solid #e3e8ef', fontSize: 12 }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey={dataKey}
-                    stroke="#1C7ED6"
-                    strokeWidth={2.5}
-                    fill="url(#lsGrad)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            <div className={classes.stats}>
-              <div className={classes.stat}>
-                <div className={classes.statLab}>
-                  {isSpeed ? 'Velocidade máxima' : 'Altitude máxima'}
-                </div>
-                <div className={classes.statVal}>{`${maxV}${unit}`}</div>
-              </div>
-              <div className={classes.stat}>
-                <div className={classes.statLab}>Pontos no período</div>
-                <div className={classes.statVal}>{positions.length}</div>
-              </div>
-            </div>
-          </>
-        );
-      }
       if (type.render === 'map') {
         const [combResp, tripsResp] = await Promise.all([
           fetch(`/api/reports/combined?${params.toString()}`, {
@@ -511,15 +388,6 @@ const ReportsHomePage = () => {
           data: Array.isArray(trips) ? trips : [],
           combined: Array.isArray(combined) ? combined : [],
         });
-        setLoading(false);
-        return;
-      }
-      if (type.render === 'chart') {
-        const rr = await fetch(`/api/reports/route?${params.toString()}`, {
-          headers: { Accept: 'application/json' },
-        });
-        const positions = rr.ok ? await rr.json() : [];
-        setResult({ type, data: Array.isArray(positions) ? positions : [] });
         setLoading(false);
         return;
       }

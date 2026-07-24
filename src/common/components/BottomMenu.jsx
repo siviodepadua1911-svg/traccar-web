@@ -9,7 +9,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FenceIcon from '@mui/icons-material/Fence';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useRestriction, useDeviceReadonly } from '../util/permissions';
+import { useRestriction } from '../util/permissions';
 import { lsCardColors } from '../theme/lsCardColors';
 import LsAlertsDialog from './LsAlertsDialog';
 
@@ -54,7 +54,6 @@ const BottomMenu = () => {
   const location = useLocation();
 
   const readonly = useRestriction('readonly');
-  const deviceReadonly = useDeviceReadonly();
   const disableReports = useRestriction('disableReports');
   const devices = useSelector((state) => state.devices.items);
   const user = useSelector((state) => state.session.user);
@@ -96,13 +95,7 @@ const BottomMenu = () => {
     return id != null ? `/replay?deviceId=${id}` : '/replay';
   };
 
-  const openAlertas = () => {
-    if (deviceReadonly) {
-      setAlertsOpen(true);
-    } else {
-      navigate('/settings/notifications');
-    }
-  };
+  const openAlertas = () => setAlertsOpen(true);
 
   const items = [
     {

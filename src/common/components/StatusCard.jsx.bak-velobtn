@@ -19,7 +19,6 @@ import {
   Link,
   Avatar,
   Checkbox,
-  Button,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import CloseIcon from '@mui/icons-material/Close';
@@ -732,9 +731,6 @@ const StatusCard = ({
       {position ? (
         <CardContent style={{ flexGrow: 1, overflow: 'auto', padding: 12 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ maxWidth: 178, margin: '0 auto', width: '100%' }}>
-              <Speedometer speed={position.speed * 1.852} />
-            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <Chip
                 size="small"
@@ -783,33 +779,19 @@ const StatusCard = ({
               />
             </div>
 
-            <Button
-              fullWidth
-              variant="contained"
-              startIcon={blocked ? <LockOpenIcon /> : <LockIcon />}
+            <LsSlideToConfirm
+              label={blocked ? 'DESLIZE PARA DESBLOQUEAR' : 'DESLIZE PARA BLOQUEAR'}
+              color={blocked ? '#2e7d32' : '#c62828'}
+              icon={
+                blocked ? (
+                  <LockOpenIcon style={{ color: '#2e7d32' }} />
+                ) : (
+                  <LockIcon style={{ color: '#c62828' }} />
+                )
+              }
+              onConfirm={() => sendCommand(blocked ? 'engineResume' : 'engineStop')}
               disabled={disableActions || !canBlock}
-              onClick={() => {
-                if (
-                  window.confirm(
-                    blocked ? 'Desbloquear o motor do veiculo?' : 'Bloquear o motor do veiculo?',
-                  )
-                ) {
-                  sendCommand(blocked ? 'engineResume' : 'engineStop');
-                }
-              }}
-              style={{
-                background:
-                  disableActions || !canBlock ? c.border : blocked ? '#2e7d32' : '#c62828',
-                color: '#fff',
-                borderRadius: 24,
-                padding: 11,
-                fontWeight: 700,
-                textTransform: 'none',
-                fontSize: 14,
-              }}
-            >
-              {blocked ? 'DESBLOQUEAR' : 'BLOQUEAR'}
-            </Button>
+            />
 
             <div style={{ display: 'flex', justifyContent: 'space-around' }}>
               <ShortcutButton

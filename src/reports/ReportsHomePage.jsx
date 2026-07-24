@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
-import { Select, MenuItem, FormControl } from '@mui/material';
+import { Select, MenuItem, FormControl, CircularProgress } from '@mui/material';
 import dayjs from 'dayjs';
 import RouteIcon from '@mui/icons-material/Route';
 import AltRouteIcon from '@mui/icons-material/AltRoute';
@@ -14,16 +14,69 @@ import FenceIcon from '@mui/icons-material/Fence';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import MapIcon from '@mui/icons-material/Map';
 
 const TYPES = [
-  ['combined', 'Percurso', 'Onde o veiculo andou', RouteIcon, null],
-  ['trips', 'Viagens', 'Saida, chegada, distancia', AltRouteIcon, null],
-  ['stops', 'Paradas', 'Onde parou e quanto tempo', PauseCircleIcon, null],
-  ['summary', 'Resumo', 'Km e velocidade maxima', AssessmentIcon, null],
-  ['chart', 'Velocidade', 'Velocidade ao longo do dia', SpeedIcon, 'speed'],
-  ['events', 'Alertas', 'Historico de avisos', NotificationsIcon, null],
-  ['geofences', 'Cercas', 'Entradas e saidas', FenceIcon, null],
-  ['chart', 'Grafico', 'Velocidade / altitude', ShowChartIcon, null],
+  {
+    label: 'Percurso',
+    desc: 'Onde o veiculo andou',
+    Icon: RouteIcon,
+    fetch: 'summary',
+    render: 'summary',
+    open: { label: 'Ver no mapa', route: 'combined' },
+  },
+  {
+    label: 'Viagens',
+    desc: 'Saida, chegada, distancia',
+    Icon: AltRouteIcon,
+    fetch: 'trips',
+    render: 'trips',
+  },
+  {
+    label: 'Paradas',
+    desc: 'Onde parou e quanto tempo',
+    Icon: PauseCircleIcon,
+    fetch: 'stops',
+    render: 'stops',
+  },
+  {
+    label: 'Resumo',
+    desc: 'Km e velocidade maxima',
+    Icon: AssessmentIcon,
+    fetch: 'summary',
+    render: 'summary',
+  },
+  {
+    label: 'Velocidade',
+    desc: 'Velocidade e maxima',
+    Icon: SpeedIcon,
+    fetch: 'summary',
+    render: 'summary',
+  },
+  {
+    label: 'Alertas',
+    desc: 'Historico de avisos',
+    Icon: NotificationsIcon,
+    fetch: 'events',
+    render: 'events',
+  },
+  {
+    label: 'Cercas',
+    desc: 'Entradas e saidas',
+    Icon: FenceIcon,
+    fetch: 'events',
+    render: 'events',
+    types: 'geofenceEnter,geofenceExit',
+  },
+  {
+    label: 'Grafico',
+    desc: 'Velocidade / altitude',
+    Icon: ShowChartIcon,
+    fetch: 'summary',
+    render: 'summary',
+    open: { label: 'Abrir grafico', route: 'chart' },
+  },
 ];
 
 const PERIODS = [
@@ -48,6 +101,42 @@ const range = (period) => {
       return null;
   }
 };
+
+const km = (m) => ((m || 0) / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+const kmh = (kn) => Math.round((kn || 0) * 1.852);
+const dur = (ms) => {
+  const min = Math.round((ms || 0) / 60000);
+  if (min < 60) return `${min} min`;
+  return `${Math.floor(min / 60)}h ${min % 60}min`;
+};
+const hm = (s) =>
+  s ? new Date(s).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+const dm = (s) =>
+  s
+    ? new Date(s).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '';
+const EV = {
+  deviceOverspeed: ['Excesso de velocidade', '#c62828'],
+  deviceMoving: ['Comecou a se mover', '#1C7ED6'],
+  deviceStopped: ['Parou', '#607d8b'],
+  ignitionOn: ['Ignicao ligada', '#f08c00'],
+  ignitionOff: ['Ignicao desligada', '#607d8b'],
+  geofenceEnter: ['Entrou na cerca', '#1C7ED6'],
+  geofenceExit: ['Saiu da cerca', '#1C7ED6'],
+  deviceOnline: ['Conectou', '#2e7d32'],
+  deviceOffline: ['Desconectou', '#90a4ae'],
+  deviceInactive: ['Sem comunicacao', '#90a4ae'],
+  alarm: ['Alarme', '#c62828'],
+  maintenance: ['Manutencao', '#f08c00'],
+  deviceFuelDrop: ['Queda de combustivel', '#c62828'],
+  commandResult: ['Resposta de comando', '#607d8b'],
+};
+const ev = (t) => EV[t] || [t, '#607d8b'];
 
 const useStyles = makeStyles()((theme) => ({
   root: {
@@ -120,6 +209,68 @@ const useStyles = makeStyles()((theme) => ({
     '&:disabled': { opacity: 0.5, cursor: 'default' },
   },
   device: { background: '#fff', borderRadius: 10 },
+  back: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    color: '#0d2a5c',
+    fontWeight: 600,
+    fontSize: 15,
+    cursor: 'pointer',
+    marginBottom: theme.spacing(1.5),
+  },
+  sub: { fontSize: 12, color: '#90a4ae', marginBottom: theme.spacing(1.5) },
+  stats: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 },
+  stat: {
+    background: '#fff',
+    border: '1px solid #e6eaf0',
+    borderRadius: 12,
+    padding: theme.spacing(1.5),
+  },
+  statLab: { fontSize: 11, color: '#607d8b' },
+  statVal: { fontSize: 22, fontWeight: 700, color: '#0d2a5c', marginTop: 2 },
+  item: {
+    background: '#fff',
+    border: '1px solid #eef1f5',
+    borderRadius: 11,
+    padding: theme.spacing(1.25, 1.5),
+    marginBottom: 8,
+  },
+  itemTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: 13.5,
+    fontWeight: 600,
+    color: '#16233a',
+  },
+  itemSub: { fontSize: 11.5, color: '#90a4ae', marginTop: 2 },
+  openBtn: {
+    marginTop: theme.spacing(2),
+    background: '#fff',
+    color: '#0d47a1',
+    border: '1.5px solid #cfe0f5',
+    borderRadius: 11,
+    padding: theme.spacing(1.5),
+    fontWeight: 600,
+    fontSize: 14,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    width: '100%',
+    fontFamily: 'inherit',
+  },
+  empty: { textAlign: 'center', color: '#90a4ae', fontSize: 14, padding: theme.spacing(5, 2) },
+  loading: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 12,
+    padding: theme.spacing(6, 2),
+    color: '#607d8b',
+  },
 }));
 
 const ReportsHomePage = () => {
@@ -134,20 +285,160 @@ const ReportsHomePage = () => {
   );
   const [typeIdx, setTypeIdx] = useState(0);
   const [period, setPeriod] = useState('today');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
 
-  const handleGo = () => {
-    const route = TYPES[typeIdx][0];
-    const extra = TYPES[typeIdx][4];
+  const periodLabel = PERIODS.find((x) => x[0] === period)[1];
+  const deviceName = (devices[deviceId] && devices[deviceId].name) || '';
+
+  const handleGo = async () => {
+    const type = TYPES[typeIdx];
+    const r = range(period);
     const params = new URLSearchParams();
     if (deviceId) params.append('deviceId', String(deviceId));
+    if (!r) {
+      navigate(`/reports/${type.open ? type.open.route : type.fetch}?${params.toString()}`);
+      return;
+    }
+    params.set('from', r[0].toISOString());
+    params.set('to', r[1].toISOString());
+    if (type.fetch === 'events') {
+      (type.types ? type.types.split(',') : ['allEvents']).forEach((tp) =>
+        params.append('type', tp),
+      );
+    }
+    setLoading(true);
+    setResult(null);
+    try {
+      const resp = await fetch(`/api/reports/${type.fetch}?${params.toString()}`, {
+        headers: { Accept: 'application/json' },
+      });
+      const data = resp.ok ? await resp.json() : [];
+      setResult({ type, data: Array.isArray(data) ? data : [] });
+    } catch {
+      setResult({ type, data: [] });
+    }
+    setLoading(false);
+  };
+
+  const openFull = (type) => {
     const r = range(period);
+    const params = new URLSearchParams();
+    if (deviceId) params.append('deviceId', String(deviceId));
     if (r) {
       params.set('from', r[0].toISOString());
       params.set('to', r[1].toISOString());
     }
-    if (extra) params.set('type', extra);
-    navigate(`/reports/${route}?${params.toString()}`);
+    navigate(`/reports/${type.open.route}?${params.toString()}`);
   };
+
+  const renderResult = () => {
+    const { type, data } = result;
+    if (!data.length && type.render !== 'summary') {
+      return <div className={classes.empty}>Nenhum dado nesse periodo.</div>;
+    }
+    if (type.render === 'summary') {
+      const s = data[0] || {};
+      const hasData = data.length > 0;
+      return (
+        <>
+          {!hasData && <div className={classes.empty}>Sem movimento nesse periodo.</div>}
+          {hasData && (
+            <div className={classes.stats}>
+              <div className={classes.stat}>
+                <div className={classes.statLab}>Distancia</div>
+                <div className={classes.statVal}>{`${km(s.distance)} km`}</div>
+              </div>
+              <div className={classes.stat}>
+                <div className={classes.statLab}>Velocidade maxima</div>
+                <div className={classes.statVal}>{`${kmh(s.maxSpeed)} km/h`}</div>
+              </div>
+              <div className={classes.stat}>
+                <div className={classes.statLab}>Velocidade media</div>
+                <div className={classes.statVal}>{`${kmh(s.averageSpeed)} km/h`}</div>
+              </div>
+              <div className={classes.stat}>
+                <div className={classes.statLab}>Tempo em movimento</div>
+                <div className={classes.statVal}>{dur(s.engineHours)}</div>
+              </div>
+            </div>
+          )}
+          {type.open && (
+            <button type="button" className={classes.openBtn} onClick={() => openFull(type)}>
+              <MapIcon sx={{ fontSize: 19 }} />
+              {type.open.label}
+            </button>
+          )}
+        </>
+      );
+    }
+    if (type.render === 'trips') {
+      return data.map((t, i) => (
+        <div className={classes.item} key={i}>
+          <div className={classes.itemTop}>
+            <span>{`${hm(t.startTime)} -> ${hm(t.endTime)}`}</span>
+            <span>{`${km(t.distance)} km`}</span>
+          </div>
+          <div
+            className={classes.itemSub}
+          >{`${dur(t.duration)} - max ${kmh(t.maxSpeed)} km/h`}</div>
+          {(t.startAddress || t.endAddress) && (
+            <div
+              className={classes.itemSub}
+            >{`${t.startAddress || '...'} -> ${t.endAddress || '...'}`}</div>
+          )}
+        </div>
+      ));
+    }
+    if (type.render === 'stops') {
+      return data.map((t, i) => (
+        <div className={classes.item} key={i}>
+          <div className={classes.itemTop}>
+            <span>{t.address || 'Parada'}</span>
+            <span>{dur(t.duration)}</span>
+          </div>
+          <div className={classes.itemSub}>{`${dm(t.startTime)}`}</div>
+        </div>
+      ));
+    }
+    return data.map((e, i) => {
+      const [lab, color] = ev(e.type);
+      return (
+        <div className={classes.item} key={i}>
+          <div className={classes.itemTop}>
+            <span style={{ color }}>{lab}</span>
+            <span style={{ fontWeight: 400, fontSize: 12, color: '#90a4ae' }}>
+              {dm(e.eventTime)}
+            </span>
+          </div>
+        </div>
+      );
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className={classes.root}>
+        <div className={classes.loading}>
+          <CircularProgress />
+          <div>Gerando relatorio...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (result) {
+    return (
+      <div className={classes.root}>
+        <div className={classes.back} onClick={() => setResult(null)}>
+          <ArrowBackIcon sx={{ fontSize: 20 }} /> Novo relatorio
+        </div>
+        <div className={classes.title}>{result.type.label}</div>
+        <div className={classes.sub}>{`${deviceName} - ${periodLabel}`}</div>
+        {renderResult()}
+      </div>
+    );
+  }
 
   return (
     <div className={classes.root}>
@@ -173,16 +464,16 @@ const ReportsHomePage = () => {
       <div className={classes.lab}>O que voce quer ver?</div>
       <div className={classes.grid}>
         {TYPES.map((it, i) => {
-          const Icon = it[3];
+          const { Icon } = it;
           return (
             <div
-              key={it[1]}
+              key={it.label}
               className={cx(classes.card, i === typeIdx && classes.cardOn)}
               onClick={() => setTypeIdx(i)}
             >
               <Icon sx={{ color: '#1C7ED6', fontSize: 22 }} />
-              <div className={classes.cardName}>{it[1]}</div>
-              <div className={classes.cardDesc}>{it[2]}</div>
+              <div className={classes.cardName}>{it.label}</div>
+              <div className={classes.cardDesc}>{it.desc}</div>
             </div>
           );
         })}
@@ -203,8 +494,7 @@ const ReportsHomePage = () => {
       </div>
 
       <button type="button" className={classes.go} onClick={handleGo} disabled={!deviceId}>
-        <VisibilityIcon sx={{ fontSize: 20 }} />
-        Ver relatorio
+        <VisibilityIcon sx={{ fontSize: 20 }} /> Ver relatorio
       </button>
     </div>
   );

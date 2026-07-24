@@ -306,9 +306,9 @@ const useStyles = makeStyles()((theme) => ({
     fontFamily: 'inherit',
   },
   empty: { textAlign: 'center', color: '#90a4ae', fontSize: 14, padding: theme.spacing(5, 2) },
-  toggle: { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  toggle: { display: 'flex', gap: 8, marginBottom: 12 },
   tg: {
-    flex: '1 1 40%',
+    flex: 1,
     textAlign: 'center',
     padding: '8px 0',
     borderRadius: 10,
@@ -529,32 +529,18 @@ const ReportsHomePage = () => {
           t: hm(pp.fixTime),
           speed: Math.round((pp.speed || 0) * 1.852),
           alt: Math.round(pp.altitude || 0),
-          ignition: pp.attributes && pp.attributes.ignition ? 1 : 0,
-          power: (pp.attributes && pp.attributes.power) || 0,
         }));
       const isSpeed = chartMetric === 'speed';
-      const isAltitude = chartMetric === 'altitude';
-      const isIgnition = chartMetric === 'ignition';
-      const dataKey = isSpeed ? 'speed' : isAltitude ? 'alt' : isIgnition ? 'ignition' : 'power';
-      const unit = isSpeed ? ' km/h' : isAltitude ? ' m' : isIgnition ? '' : ' V';
-      const metricLabel = isSpeed
-        ? 'Velocidade'
-        : isAltitude
-          ? 'Altitude'
-          : isIgnition
-            ? 'Ignição'
-            : 'Voltagem';
-      const maxV = positions.reduce((a, pp) => {
-        if (isSpeed) return Math.max(a, Math.round((pp.speed || 0) * 1.852));
-        if (isAltitude) return Math.max(a, Math.round(pp.altitude || 0));
-        if (isIgnition) return a;
-        return Math.max(a, (pp.attributes && pp.attributes.power) || 0);
-      }, 0);
-      const onPct = chartData.length
-        ? Math.round(
-            (chartData.filter((d) => d.ignition === 1).length / chartData.length) * 100,
-          )
-        : 0;
+      const dataKey = isSpeed ? 'speed' : 'alt';
+      const unit = isSpeed ? ' km/h' : ' m';
+      const maxV = positions.reduce(
+        (a, pp) =>
+          Math.max(
+            a,
+            isSpeed ? Math.round((pp.speed || 0) * 1.852) : Math.round(pp.altitude || 0),
+          ),
+        0,
+      );
       return (
         <>
           <div className={classes.toggle}>
@@ -565,22 +551,10 @@ const ReportsHomePage = () => {
               Velocidade
             </div>
             <div
-              className={cx(classes.tg, isAltitude && classes.tgOn)}
+              className={cx(classes.tg, !isSpeed && classes.tgOn)}
               onClick={() => setChartMetric('altitude')}
             >
               Altitude
-            </div>
-            <div
-              className={cx(classes.tg, isIgnition && classes.tgOn)}
-              onClick={() => setChartMetric('ignition')}
-            >
-              Ignição
-            </div>
-            <div
-              className={cx(classes.tg, chartMetric === 'power' && classes.tgOn)}
-              onClick={() => setChartMetric('power')}
-            >
-              Voltagem
             </div>
           </div>
           <div className={classes.chartCard}>
@@ -605,20 +579,14 @@ const ReportsHomePage = () => {
                   tickLine={false}
                   axisLine={false}
                   width={34}
-                  domain={isIgnition ? [0, 1] : ['auto', 'auto']}
-                  ticks={isIgnition ? [0, 1] : undefined}
-                  tickFormatter={isIgnition ? (v) => (v ? 'Ligado' : 'Desligado') : undefined}
                 />
                 <Tooltip
-                  formatter={(v) => [
-                    isIgnition ? (v ? 'Ligado' : 'Desligado') : `${v}${unit}`,
-                    metricLabel,
-                  ]}
+                  formatter={(v) => [`${v}${unit}`, isSpeed ? 'Velocidade' : 'Altitude']}
                   labelStyle={{ color: '#0d2a5c', fontWeight: 600 }}
                   contentStyle={{ borderRadius: 10, border: '1px solid #e3e8ef', fontSize: 12 }}
                 />
                 <Area
-                  type={isIgnition ? 'stepAfter' : 'monotone'}
+                  type="monotone"
                   dataKey={dataKey}
                   stroke="#1C7ED6"
                   strokeWidth={2.5}
@@ -630,17 +598,9 @@ const ReportsHomePage = () => {
           <div className={classes.stats}>
             <div className={classes.stat}>
               <div className={classes.statLab}>
-                {isSpeed
-                  ? 'Velocidade máxima'
-                  : isAltitude
-                    ? 'Altitude máxima'
-                    : isIgnition
-                      ? 'Tempo ligado'
-                      : 'Voltagem máxima'}
+                {isSpeed ? 'Velocidade máxima' : 'Altitude máxima'}
               </div>
-              <div className={classes.statVal}>
-                {isIgnition ? `${onPct}%` : `${maxV}${unit}`}
-              </div>
+              <div className={classes.statVal}>{`${maxV}${unit}`}</div>
             </div>
             <div className={classes.stat}>
               <div className={classes.statLab}>Pontos no período</div>

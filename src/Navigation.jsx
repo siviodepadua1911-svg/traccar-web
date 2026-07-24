@@ -12,6 +12,7 @@ import { useLocalization } from './common/components/LocalizationProvider';
 import fetchOrThrow from './common/util/fetchOrThrow';
 
 const CombinedReportPage = lazy(() => import('./reports/CombinedReportPage'));
+const ReportsHomePage = lazy(() => import('./reports/ReportsHomePage'));
 const PositionsReportPage = lazy(() => import('./reports/PositionsReportPage'));
 const ServerPage = lazy(() => import('./settings/ServerPage'));
 const UsersPage = lazy(() => import('./settings/UsersPage'));
@@ -187,6 +188,7 @@ const Navigation = () => {
           </Route>
 
           <Route path="reports">
+            <Route index element={<ReportsHomePage />} />
             <Route path="combined" element={<CombinedReportPage />} />
             <Route path="chart" element={<ChartReportPage />} />
             <Route path="events" element={<EventReportPage />} />

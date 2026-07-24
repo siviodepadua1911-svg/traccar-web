@@ -122,7 +122,7 @@ const BottomMenu = () => {
       key: 'reports',
       label: 'Relatorios',
       icon: <DescriptionIcon />,
-      go: () => navigate('/reports/combined'),
+      go: () => navigate('/reports'),
     },
     !readonly && {
       key: 'cerca',

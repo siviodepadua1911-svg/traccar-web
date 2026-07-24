@@ -16,7 +16,6 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MapIcon from '@mui/icons-material/Map';
-import ShareIcon from '@mui/icons-material/Share';
 
 const TYPES = [
   {
@@ -212,26 +211,6 @@ const useStyles = makeStyles()((theme) => ({
     '&:disabled': { opacity: 0.5, cursor: 'default' },
   },
   device: { background: '#fff', borderRadius: 10 },
-  resultHead: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing(1),
-  },
-  shareBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    background: '#25D366',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 20,
-    padding: theme.spacing(0.75, 1.5),
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-  },
   back: {
     display: 'flex',
     alignItems: 'center',
@@ -378,56 +357,6 @@ const ReportsHomePage = () => {
     navigate(`/reports/${type.open.route}?${params.toString()}`);
   };
 
-  const shareText = () => {
-    const { type, data } = result;
-    const lines = [`${type.label} - ${deviceName}`, periodLabel, ''];
-    if (type.render === 'summary' || type.render === 'speed') {
-      const totalDist = data.reduce((a, t) => a + (t.distance || 0), 0);
-      const movingMs = data.reduce((a, t) => a + (t.duration || 0), 0);
-      const maxSp = data.reduce((a, t) => Math.max(a, t.maxSpeed || 0), 0);
-      const avgKmh = movingMs > 0 ? Math.round(totalDist / 1000 / (movingMs / 3600000)) : 0;
-      lines.push(`Distancia: ${km(totalDist)} km`);
-      lines.push(`Velocidade maxima: ${kmh(maxSp)} km/h`);
-      lines.push(`Velocidade media: ${avgKmh} km/h`);
-      lines.push(`Tempo em movimento: ${dur(movingMs)}`);
-      if (type.render === 'summary') {
-        const engineMs =
-          (result.summary && result.summary[0] && result.summary[0].engineHours) || 0;
-        lines.push(`Ignicao ligada: ${dur(engineMs)}`);
-      }
-    } else if (type.render === 'trips') {
-      lines.push(`${data.length} viagem(ns):`);
-      data
-        .slice(0, 30)
-        .forEach((t) =>
-          lines.push(`- ${hm(t.startTime)} a ${hm(t.endTime)}: ${km(t.distance)} km`),
-        );
-    } else if (type.render === 'stops') {
-      lines.push(`${data.length} parada(s):`);
-      data
-        .slice(0, 30)
-        .forEach((t) =>
-          lines.push(
-            `- ${dm(t.startTime)}: ${dur(t.duration)}${t.address ? ` (${t.address})` : ''}`,
-          ),
-        );
-    } else {
-      lines.push(`${data.length} alerta(s):`);
-      data.slice(0, 30).forEach((e) => lines.push(`- ${dm(e.eventTime)}: ${ev(e.type)[0]}`));
-    }
-    lines.push('', 'LS Autotruck Rastreios');
-    return lines.join('\n');
-  };
-
-  const shareReport = () => {
-    const text = shareText();
-    if (navigator.share) {
-      navigator.share({ title: `${result.type.label} - ${deviceName}`, text }).catch(() => {});
-    } else {
-      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    }
-  };
-
   const renderResult = () => {
     const { type, data } = result;
     if (type.render === 'speed') {
@@ -572,13 +501,8 @@ const ReportsHomePage = () => {
   if (result) {
     return (
       <div className={classes.root}>
-        <div className={classes.resultHead}>
-          <div className={classes.back} onClick={() => setResult(null)}>
-            <ArrowBackIcon sx={{ fontSize: 20 }} /> Novo relatório
-          </div>
-          <button type="button" className={classes.shareBtn} onClick={shareReport}>
-            <ShareIcon sx={{ fontSize: 17 }} /> Compartilhar
-          </button>
+        <div className={classes.back} onClick={() => setResult(null)}>
+          <ArrowBackIcon sx={{ fontSize: 20 }} /> Novo relatório
         </div>
         <div className={classes.title}>{result.type.label}</div>
         <div className={classes.sub}>{`${deviceName} - ${periodLabel}`}</div>

@@ -49,10 +49,10 @@ const TYPES = [
   },
   {
     label: 'Velocidade',
-    desc: 'Maxima e trechos rapidos',
+    desc: 'Velocidade e maxima',
     Icon: SpeedIcon,
     fetch: 'trips',
-    render: 'speed',
+    render: 'summary',
   },
   {
     label: 'Alertas',
@@ -262,9 +262,6 @@ const useStyles = makeStyles()((theme) => ({
     width: '100%',
     fontFamily: 'inherit',
   },
-  lab2: { fontSize: 11.5, fontWeight: 700, color: '#0d2a5c', margin: theme.spacing(2, 0, 1) },
-  bar: { height: 6, borderRadius: 4, background: '#eef1f6', marginTop: 6, overflow: 'hidden' },
-  barFill: { height: '100%', background: '#1C7ED6', borderRadius: 4 },
   empty: { textAlign: 'center', color: '#90a4ae', fontSize: 14, padding: theme.spacing(5, 2) },
   loading: {
     display: 'flex',
@@ -318,47 +315,6 @@ const ReportsHomePage = () => {
       });
       const data = resp.ok ? await resp.json() : [];
       let summary = [];
-      if (type.render === 'speed') {
-        const trips = [...data].sort((a, b) => (b.maxSpeed || 0) - (a.maxSpeed || 0));
-        const maxSp = trips.reduce((a, t) => Math.max(a, t.maxSpeed || 0), 0);
-        const totalDist = data.reduce((a, t) => a + (t.distance || 0), 0);
-        const movingMs = data.reduce((a, t) => a + (t.duration || 0), 0);
-        const avgKmh = movingMs > 0 ? Math.round(totalDist / 1000 / (movingMs / 3600000)) : 0;
-        if (!trips.length) {
-          return <div className={classes.empty}>Sem movimento nesse periodo.</div>;
-        }
-        return (
-          <>
-            <div className={classes.stats}>
-              <div className={classes.stat}>
-                <div className={classes.statLab}>Velocidade maxima</div>
-                <div className={classes.statVal}>{`${kmh(maxSp)} km/h`}</div>
-              </div>
-              <div className={classes.stat}>
-                <div className={classes.statLab}>Velocidade media</div>
-                <div className={classes.statVal}>{`${avgKmh} km/h`}</div>
-              </div>
-            </div>
-            <div className={classes.lab2}>Trechos mais rapidos</div>
-            {trips.map((t, i) => (
-              <div className={classes.item} key={i}>
-                <div className={classes.itemTop}>
-                  <span>{`${hm(t.startTime)} -> ${hm(t.endTime)}`}</span>
-                  <span>{`${kmh(t.maxSpeed)} km/h`}</span>
-                </div>
-                <div className={classes.bar}>
-                  <div
-                    className={classes.barFill}
-                    style={{
-                      width: `${maxSp > 0 ? Math.round(((t.maxSpeed || 0) / maxSp) * 100) : 0}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </>
-        );
-      }
       if (type.render === 'summary') {
         const sr = await fetch(`/api/reports/summary?${params.toString()}`, {
           headers: { Accept: 'application/json' },

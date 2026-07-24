@@ -272,16 +272,6 @@ const useStyles = makeStyles()((theme) => ({
   statVal: { fontSize: 22, fontWeight: 700, color: '#0d2a5c', marginTop: 2 },
   bar: { height: 6, borderRadius: 4, background: '#eef1f6', marginTop: 6, overflow: 'hidden' },
   barFill: { height: '100%', background: '#1C7ED6', borderRadius: 4 },
-  leg: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    fontSize: 12,
-    color: '#455a64',
-    margin: '4px 0',
-  },
-  dotA: { width: 9, height: 9, borderRadius: '50%', background: '#2e7d32', flex: 'none' },
-  dotB: { width: 9, height: 9, borderRadius: '50%', background: '#c62828', flex: 'none' },
   item: {
     background: '#fff',
     border: '1px solid #eef1f5',
@@ -561,7 +551,9 @@ const ReportsHomePage = () => {
         return Math.max(a, (pp.attributes && pp.attributes.power) || 0);
       }, 0);
       const onPct = chartData.length
-        ? Math.round((chartData.filter((d) => d.ignition === 1).length / chartData.length) * 100)
+        ? Math.round(
+            (chartData.filter((d) => d.ignition === 1).length / chartData.length) * 100,
+          )
         : 0;
       return (
         <>
@@ -646,7 +638,9 @@ const ReportsHomePage = () => {
                       ? 'Tempo ligado'
                       : 'Voltagem máxima'}
               </div>
-              <div className={classes.statVal}>{isIgnition ? `${onPct}%` : `${maxV}${unit}`}</div>
+              <div className={classes.statVal}>
+                {isIgnition ? `${onPct}%` : `${maxV}${unit}`}
+              </div>
             </div>
             <div className={classes.stat}>
               <div className={classes.statLab}>Pontos no período</div>
@@ -694,30 +688,6 @@ const ReportsHomePage = () => {
                 <div className={classes.statVal}>{dur(movingMs)}</div>
               </div>
             </div>
-          )}
-          {trips.length > 0 && (
-            <>
-              <div className={classes.lab2}>{`Trechos do percurso (${trips.length})`}</div>
-              {trips.map((t, i) => (
-                <div className={classes.item} key={i}>
-                  <div className={classes.itemTop}>
-                    <span>{`Trecho ${i + 1}`}</span>
-                    <span>{`${km(t.distance)} km`}</span>
-                  </div>
-                  <div className={classes.leg}>
-                    <span className={classes.dotA} />
-                    {`Saída ${hm(t.startTime)}${t.startAddress ? ` · ${t.startAddress}` : ''}`}
-                  </div>
-                  <div className={classes.leg}>
-                    <span className={classes.dotB} />
-                    {`Chegada ${hm(t.endTime)}${t.endAddress ? ` · ${t.endAddress}` : ''}`}
-                  </div>
-                  <div
-                    className={classes.itemSub}
-                  >{`${dur(t.duration)} · máx ${kmh(t.maxSpeed)} km/h`}</div>
-                </div>
-              ))}
-            </>
           )}
         </>
       );

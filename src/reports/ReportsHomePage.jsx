@@ -283,7 +283,13 @@ const useStyles = makeStyles()((theme) => ({
   dotA: { width: 9, height: 9, borderRadius: '50%', background: '#2e7d32', flex: 'none' },
   dotB: { width: 9, height: 9, borderRadius: '50%', background: '#c62828', flex: 'none' },
   itemOn: { border: '1.5px solid #1C7ED6 !important', background: '#f2f8ff !important' },
-  resetLink: { color: '#0d47a1', fontSize: 13, fontWeight: 600, cursor: 'pointer', margin: '4px 0 12px' },
+  resetLink: {
+    color: '#0d47a1',
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    margin: '4px 0 12px',
+  },
   item: {
     background: '#fff',
     border: '1px solid #eef1f5',

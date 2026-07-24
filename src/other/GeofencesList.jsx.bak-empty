@@ -31,18 +31,9 @@ const GeofencesList = ({ onGeofenceSelected }) => {
     dispatch(geofencesActions.refresh(await response.json()));
   }, [dispatch]);
 
-  const list = Object.values(items);
-
   return (
     <List className={classes.list}>
-      {list.length === 0 && (
-        <ListItemText
-          sx={{ px: 3, py: 4, textAlign: 'center', color: 'text.secondary' }}
-          primary="Nenhuma cerca criada ainda"
-          secondary="Toque no + para criar a primeira"
-        />
-      )}
-      {list.map((item, index) => (
+      {Object.values(items).map((item, index, list) => (
         <Fragment key={item.id}>
           <ListItemButton key={item.id} onClick={() => onGeofenceSelected(item.id)}>
             <ListItemText primary={item.name} />

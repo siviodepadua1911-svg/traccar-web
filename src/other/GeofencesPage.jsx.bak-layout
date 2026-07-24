@@ -299,34 +299,32 @@ const GeofencesPage = () => {
   return (
     <div className={classes.root}>
       <div className={classes.content}>
-        {!creating && (
-          <Paper square className={classes.drawer}>
-            <Toolbar>
-              <IconButton edge="start" sx={{ mr: 2 }} onClick={() => navigate(-1)}>
-                <BackIcon />
+        <Paper square className={classes.drawer}>
+          <Toolbar>
+            <IconButton edge="start" sx={{ mr: 2 }} onClick={() => navigate(-1)}>
+              <BackIcon />
+            </IconButton>
+            <Typography variant="h6" className={classes.title}>
+              {t('sharedGeofences')}
+            </Typography>
+            <label htmlFor="upload-gpx">
+              <input
+                accept=".gpx"
+                id="upload-gpx"
+                type="file"
+                className={classes.fileInput}
+                onChange={handleFile}
+              />
+              <IconButton edge="end" component="span" onClick={() => {}}>
+                <Tooltip title={t('sharedUpload')}>
+                  <UploadFileIcon />
+                </Tooltip>
               </IconButton>
-              <Typography variant="h6" className={classes.title}>
-                {t('sharedGeofences')}
-              </Typography>
-              <label htmlFor="upload-gpx">
-                <input
-                  accept=".gpx"
-                  id="upload-gpx"
-                  type="file"
-                  className={classes.fileInput}
-                  onChange={handleFile}
-                />
-                <IconButton edge="end" component="span" onClick={() => {}}>
-                  <Tooltip title={t('sharedUpload')}>
-                    <UploadFileIcon />
-                  </Tooltip>
-                </IconButton>
-              </label>
-            </Toolbar>
-            <Divider />
-            <GeofencesList onGeofenceSelected={setSelectedGeofenceId} />
-          </Paper>
-        )}
+            </label>
+          </Toolbar>
+          <Divider />
+          <GeofencesList onGeofenceSelected={setSelectedGeofenceId} />
+        </Paper>
         <div className={classes.mapContainer}>
           <MapView>
             {creating ? (

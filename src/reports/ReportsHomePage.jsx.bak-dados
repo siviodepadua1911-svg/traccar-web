@@ -22,7 +22,7 @@ const TYPES = [
     label: 'Percurso',
     desc: 'Onde o veiculo andou',
     Icon: RouteIcon,
-    fetch: 'trips',
+    fetch: 'summary',
     render: 'summary',
     open: { label: 'Ver no mapa', route: 'combined' },
   },
@@ -44,14 +44,14 @@ const TYPES = [
     label: 'Resumo',
     desc: 'Km e velocidade maxima',
     Icon: AssessmentIcon,
-    fetch: 'trips',
+    fetch: 'summary',
     render: 'summary',
   },
   {
     label: 'Velocidade',
     desc: 'Velocidade e maxima',
     Icon: SpeedIcon,
-    fetch: 'trips',
+    fetch: 'summary',
     render: 'summary',
   },
   {
@@ -73,7 +73,7 @@ const TYPES = [
     label: 'Grafico',
     desc: 'Velocidade / altitude',
     Icon: ShowChartIcon,
-    fetch: 'trips',
+    fetch: 'summary',
     render: 'summary',
     open: { label: 'Abrir grafico', route: 'chart' },
   },
@@ -314,18 +314,7 @@ const ReportsHomePage = () => {
         headers: { Accept: 'application/json' },
       });
       const data = resp.ok ? await resp.json() : [];
-      let summary = [];
-      if (type.render === 'summary') {
-        const sr = await fetch(`/api/reports/summary?${params.toString()}`, {
-          headers: { Accept: 'application/json' },
-        });
-        summary = sr.ok ? await sr.json() : [];
-      }
-      setResult({
-        type,
-        data: Array.isArray(data) ? data : [],
-        summary: Array.isArray(summary) ? summary : [],
-      });
+      setResult({ type, data: Array.isArray(data) ? data : [] });
     } catch {
       setResult({ type, data: [] });
     }
@@ -349,13 +338,8 @@ const ReportsHomePage = () => {
       return <div className={classes.empty}>Nenhum dado nesse periodo.</div>;
     }
     if (type.render === 'summary') {
-      const trips = data;
-      const totalDist = trips.reduce((a, t) => a + (t.distance || 0), 0);
-      const movingMs = trips.reduce((a, t) => a + (t.duration || 0), 0);
-      const maxSp = trips.reduce((a, t) => Math.max(a, t.maxSpeed || 0), 0);
-      const avgKmh = movingMs > 0 ? Math.round(totalDist / 1000 / (movingMs / 3600000)) : 0;
-      const engineMs = (result.summary && result.summary[0] && result.summary[0].engineHours) || 0;
-      const hasData = trips.length > 0 || engineMs > 0;
+      const s = data[0] || {};
+      const hasData = data.length > 0;
       return (
         <>
           {!hasData && <div className={classes.empty}>Sem movimento nesse periodo.</div>}
@@ -363,23 +347,19 @@ const ReportsHomePage = () => {
             <div className={classes.stats}>
               <div className={classes.stat}>
                 <div className={classes.statLab}>Distancia</div>
-                <div className={classes.statVal}>{`${km(totalDist)} km`}</div>
+                <div className={classes.statVal}>{`${km(s.distance)} km`}</div>
               </div>
               <div className={classes.stat}>
                 <div className={classes.statLab}>Velocidade maxima</div>
-                <div className={classes.statVal}>{`${kmh(maxSp)} km/h`}</div>
+                <div className={classes.statVal}>{`${kmh(s.maxSpeed)} km/h`}</div>
               </div>
               <div className={classes.stat}>
                 <div className={classes.statLab}>Velocidade media</div>
-                <div className={classes.statVal}>{`${avgKmh} km/h`}</div>
+                <div className={classes.statVal}>{`${kmh(s.averageSpeed)} km/h`}</div>
               </div>
               <div className={classes.stat}>
                 <div className={classes.statLab}>Tempo em movimento</div>
-                <div className={classes.statVal}>{dur(movingMs)}</div>
-              </div>
-              <div className={classes.stat}>
-                <div className={classes.statLab}>Ignicao ligada</div>
-                <div className={classes.statVal}>{dur(engineMs)}</div>
+                <div className={classes.statVal}>{dur(s.engineHours)}</div>
               </div>
             </div>
           )}

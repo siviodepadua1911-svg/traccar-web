@@ -19,10 +19,8 @@ import { makeStyles } from 'tss-react/mui';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import AddIcon from '@mui/icons-material/Add';
 import RoomIcon from '@mui/icons-material/Room';
-import MyLocationIcon from '@mui/icons-material/MyLocation';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import { useNavigate } from 'react-router-dom';
-import MapView, { map } from '../map/core/MapView';
+import MapView from '../map/core/MapView';
 import MapCurrentLocation from '../map/MapCurrentLocation';
 import MapDefaultCamera from '../map/main/MapDefaultCamera';
 import MapGeofenceEdit from '../map/draw/MapGeofenceEdit';
@@ -95,25 +93,6 @@ const useStyles = makeStyles()((theme) => ({
     fontSize: 44,
     filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))',
   },
-  locBtns: {
-    position: 'absolute',
-    top: theme.spacing(1.5),
-    left: theme.spacing(1.5),
-    zIndex: 5,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing(1),
-    alignItems: 'flex-start',
-  },
-  locBtn: {
-    background: '#fff',
-    color: '#0d47a1',
-    textTransform: 'none',
-    fontSize: 12,
-    fontWeight: 600,
-    boxShadow: theme.shadows[3],
-    '&:hover': { background: '#f2f8ff' },
-  },
   sheet: {
     position: 'absolute',
     left: 0,
@@ -123,7 +102,7 @@ const useStyles = makeStyles()((theme) => ({
     padding: theme.spacing(2),
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    maxHeight: '52%',
+    maxHeight: '70%',
     overflow: 'auto',
     [theme.breakpoints.up('sm')]: {
       left: 'auto',
@@ -159,7 +138,6 @@ const GeofencesPage = () => {
   const deviceReadonly = useDeviceReadonly();
   const userId = useSelector((state) => state.session.user.id);
   const devices = useSelector((state) => state.devices.items);
-  const positions = useSelector((state) => state.session.positions);
   const deviceList = useMemo(() => Object.values(devices), [devices]);
 
   const [selectedGeofenceId, setSelectedGeofenceId] = useState();
@@ -179,22 +157,6 @@ const GeofencesPage = () => {
     setNotifyEnter(true);
     setNotifyExit(true);
     setCreating(true);
-  };
-
-  const goToMyLocation = () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => map.easeTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 15 }),
-      () => {},
-      { enableHighAccuracy: true, timeout: 8000 },
-    );
-  };
-
-  const goToVehicle = () => {
-    const p = deviceList.map((d) => positions[d.id]).find(Boolean);
-    if (p) {
-      map.easeTo({ center: [p.longitude, p.latitude], zoom: 15 });
-    }
   };
 
   const linkNotification = useCallback(
@@ -339,29 +301,6 @@ const GeofencesPage = () => {
           <MapGeocoder />
 
           {creating && <RoomIcon className={classes.centerPin} />}
-
-          {creating && (
-            <div className={classes.locBtns}>
-              <Button
-                size="small"
-                variant="contained"
-                className={classes.locBtn}
-                startIcon={<MyLocationIcon />}
-                onClick={goToMyLocation}
-              >
-                Minha localização
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                className={classes.locBtn}
-                startIcon={<DirectionsCarIcon />}
-                onClick={goToVehicle}
-              >
-                No veículo
-              </Button>
-            </div>
-          )}
 
           {!creating && (
             <Tooltip title="Nova cerca">

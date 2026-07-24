@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
@@ -16,9 +16,6 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MapIcon from '@mui/icons-material/Map';
-import MapViewCore, { map } from '../map/core/MapView';
-import MapRouteCoordinates from '../map/MapRouteCoordinates';
-import MapCamera from '../map/MapCamera';
 import ShareIcon from '@mui/icons-material/Share';
 
 const TYPES = [
@@ -26,8 +23,9 @@ const TYPES = [
     label: 'Percurso',
     desc: 'Onde o veículo andou',
     Icon: RouteIcon,
-    fetch: 'combined',
-    render: 'map',
+    fetch: 'trips',
+    render: 'summary',
+    open: { label: 'Ver no mapa', route: 'combined' },
   },
   {
     label: 'Viagens',
@@ -214,14 +212,6 @@ const useStyles = makeStyles()((theme) => ({
     '&:disabled': { opacity: 0.5, cursor: 'default' },
   },
   device: { background: '#fff', borderRadius: 10 },
-  mapBox: {
-    position: 'relative',
-    height: 280,
-    borderRadius: 12,
-    overflow: 'hidden',
-    border: '1px solid #e3e8ef',
-    marginBottom: 14,
-  },
   resultHead: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -324,25 +314,6 @@ const ReportsHomePage = () => {
   const [dtTo, setDtTo] = useState(dayjs().format('YYYY-MM-DD'));
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const mapBoxRef = useRef(null);
-
-  useEffect(() => {
-    const resize = () => {
-      if (map && map.resize) {
-        map.resize();
-      }
-    };
-    const t = setTimeout(resize, 350);
-    let ro;
-    if (mapBoxRef.current && typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(resize);
-      ro.observe(mapBoxRef.current);
-    }
-    return () => {
-      clearTimeout(t);
-      if (ro) ro.disconnect();
-    };
-  }, [result]);
 
   const periodLabel =
     period === 'custom'
@@ -372,25 +343,6 @@ const ReportsHomePage = () => {
     setLoading(true);
     setResult(null);
     try {
-      if (type.render === 'map') {
-        const [combResp, tripsResp] = await Promise.all([
-          fetch(`/api/reports/combined?${params.toString()}`, {
-            headers: { Accept: 'application/json' },
-          }),
-          fetch(`/api/reports/trips?${params.toString()}`, {
-            headers: { Accept: 'application/json' },
-          }),
-        ]);
-        const combined = combResp.ok ? await combResp.json() : [];
-        const trips = tripsResp.ok ? await tripsResp.json() : [];
-        setResult({
-          type,
-          data: Array.isArray(trips) ? trips : [],
-          combined: Array.isArray(combined) ? combined : [],
-        });
-        setLoading(false);
-        return;
-      }
       const resp = await fetch(`/api/reports/${type.fetch}?${params.toString()}`, {
         headers: { Accept: 'application/json' },
       });
@@ -478,48 +430,6 @@ const ReportsHomePage = () => {
 
   const renderResult = () => {
     const { type, data } = result;
-    if (type.render === 'map') {
-      const route = (result.combined && result.combined[0] && result.combined[0].route) || [];
-      const trips = data;
-      const totalDist = trips.reduce((a, t) => a + (t.distance || 0), 0);
-      const movingMs = trips.reduce((a, t) => a + (t.duration || 0), 0);
-      const maxSp = trips.reduce((a, t) => Math.max(a, t.maxSpeed || 0), 0);
-      const avgKmh = movingMs > 0 ? Math.round(totalDist / 1000 / (movingMs / 3600000)) : 0;
-      return (
-        <>
-          {route.length > 1 ? (
-            <div className={classes.mapBox} ref={mapBoxRef}>
-              <MapViewCore>
-                <MapRouteCoordinates name={deviceName} coordinates={route} deviceId={deviceId} />
-              </MapViewCore>
-              <MapCamera coordinates={route} />
-            </div>
-          ) : (
-            <div className={classes.empty}>Sem percurso nesse período.</div>
-          )}
-          {trips.length > 0 && (
-            <div className={classes.stats}>
-              <div className={classes.stat}>
-                <div className={classes.statLab}>Distância</div>
-                <div className={classes.statVal}>{`${km(totalDist)} km`}</div>
-              </div>
-              <div className={classes.stat}>
-                <div className={classes.statLab}>Velocidade máxima</div>
-                <div className={classes.statVal}>{`${kmh(maxSp)} km/h`}</div>
-              </div>
-              <div className={classes.stat}>
-                <div className={classes.statLab}>Velocidade média</div>
-                <div className={classes.statVal}>{`${avgKmh} km/h`}</div>
-              </div>
-              <div className={classes.stat}>
-                <div className={classes.statLab}>Tempo em movimento</div>
-                <div className={classes.statVal}>{dur(movingMs)}</div>
-              </div>
-            </div>
-          )}
-        </>
-      );
-    }
     if (type.render === 'speed') {
       const trips = [...data].sort((a, b) => (b.maxSpeed || 0) - (a.maxSpeed || 0));
       const maxSp = trips.reduce((a, t) => Math.max(a, t.maxSpeed || 0), 0);

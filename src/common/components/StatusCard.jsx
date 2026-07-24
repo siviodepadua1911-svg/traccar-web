@@ -46,6 +46,7 @@ import { useTranslation } from './LocalizationProvider';
 import RemoveDialog from './RemoveDialog';
 import LsDeviceEvents from './LsDeviceEvents';
 import LsSlideToConfirm from './LsSlideToConfirm';
+import LsFichaCompleta from './LsFichaCompleta';
 import PositionValue from './PositionValue';
 import { useDeviceReadonly, useRestriction } from '../util/permissions';
 import usePositionAttributes from '../attributes/usePositionAttributes';
@@ -532,7 +533,8 @@ const StatusCard = ({
   const [anchorEl, setAnchorEl] = useState(null);
 
   const [removing, setRemoving] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [showAll] = useState(false);
+  const [fichaOpen, setFichaOpen] = useState(false);
   const [settingsAnchor, setSettingsAnchor] = useState(null);
   const [sections, setSections] = useState(() => ({
     speedo: true,
@@ -816,7 +818,7 @@ const StatusCard = ({
                 c={c}
                 icon={showAll ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 label="Ficha completa"
-                onClick={() => setShowAll(!showAll)}
+                onClick={() => setFichaOpen(true)}
               />
             </div>
 
@@ -1153,6 +1155,9 @@ const StatusCard = ({
         itemId={deviceId}
         onResult={(removed) => handleRemove(removed)}
       />
+      {fichaOpen && position && (
+        <LsFichaCompleta device={device} position={position} onClose={() => setFichaOpen(false)} />
+      )}
     </>
   );
 };

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Divider,
@@ -123,7 +123,7 @@ const useStyles = makeStyles()((theme) => ({
     padding: theme.spacing(2),
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    maxHeight: '85%',
+    maxHeight: '52%',
     overflow: 'auto',
     [theme.breakpoints.up('sm')]: {
       left: 'auto',
@@ -132,21 +132,6 @@ const useStyles = makeStyles()((theme) => ({
       width: 360,
       borderRadius: 16,
     },
-  },
-  dragHandle: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '2px 0 8px',
-    margin: '-6px 0 0',
-    cursor: 'row-resize',
-    touchAction: 'none',
-  },
-  dragBar: {
-    width: 44,
-    height: 5,
-    borderRadius: 3,
-    background: '#c4ccd6',
   },
   sheetTitle: {
     fontWeight: 600,
@@ -186,8 +171,6 @@ const GeofencesPage = () => {
   const [notifyEnter, setNotifyEnter] = useState(true);
   const [notifyExit, setNotifyExit] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [sheetHeight, setSheetHeight] = useState(null);
-  const sheetRef = useRef(null);
 
   const startCreating = () => {
     setCenter(null);
@@ -195,7 +178,6 @@ const GeofencesPage = () => {
     setName('');
     setNotifyEnter(true);
     setNotifyExit(true);
-    setSheetHeight(null);
     setCreating(true);
   };
 
@@ -213,27 +195,6 @@ const GeofencesPage = () => {
     if (p) {
       map.easeTo({ center: [p.longitude, p.latitude], zoom: 15 });
     }
-  };
-
-  const onHandleDown = (e) => {
-    const startY = e.touches ? e.touches[0].clientY : e.clientY;
-    const startH = sheetRef.current ? sheetRef.current.offsetHeight : 260;
-    const move = (ev) => {
-      if (ev.cancelable) ev.preventDefault();
-      const y = ev.touches ? ev.touches[0].clientY : ev.clientY;
-      const h = Math.min(Math.max(startH + (startY - y), 130), window.innerHeight * 0.8);
-      setSheetHeight(h);
-    };
-    const up = () => {
-      window.removeEventListener('mousemove', move);
-      window.removeEventListener('mouseup', up);
-      window.removeEventListener('touchmove', move);
-      window.removeEventListener('touchend', up);
-    };
-    window.addEventListener('mousemove', move);
-    window.addEventListener('mouseup', up);
-    window.addEventListener('touchmove', move, { passive: false });
-    window.addEventListener('touchend', up);
   };
 
   const linkNotification = useCallback(
@@ -413,19 +374,7 @@ const GeofencesPage = () => {
           )}
 
           {creating && (
-            <Paper
-              elevation={4}
-              className={classes.sheet}
-              ref={sheetRef}
-              style={sheetHeight ? { height: sheetHeight } : undefined}
-            >
-              <div
-                className={classes.dragHandle}
-                onMouseDown={onHandleDown}
-                onTouchStart={onHandleDown}
-              >
-                <div className={classes.dragBar} />
-              </div>
+            <Paper elevation={4} className={classes.sheet}>
               <Typography className={classes.sheetTitle}>Nova cerca</Typography>
               <TextField
                 autoFocus

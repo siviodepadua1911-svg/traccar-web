@@ -132,6 +132,7 @@ const LsVehicleSheet = ({
   position,
   onClose,
   onMenu,
+  canEdit,
   disableActions,
   canBlock,
   blocked,
@@ -351,27 +352,29 @@ const LsVehicleSheet = ({
               <MoreVertIcon style={{ color: '#fff', fontSize: 18 }} />
             </div>
           )}
-          <label
-            style={{
-              position: 'absolute',
-              right: 9,
-              bottom: 8,
-              background: '#fff',
-              borderRadius: 16,
-              padding: '4px 9px',
-              fontSize: 10.5,
-              color: '#0d47a1',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              cursor: 'pointer',
-            }}
-          >
-            <CameraAltIcon style={{ fontSize: 13 }} />
-            {busy ? 'Enviando...' : img ? 'Trocar foto' : 'Adicionar foto'}
-            <input type="file" accept="image/*" hidden onChange={onFile} disabled={busy} />
-          </label>
+          {canEdit && (
+            <label
+              style={{
+                position: 'absolute',
+                right: 9,
+                bottom: 8,
+                background: '#fff',
+                borderRadius: 16,
+                padding: '4px 9px',
+                fontSize: 10.5,
+                color: '#0d47a1',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                cursor: 'pointer',
+              }}
+            >
+              <CameraAltIcon style={{ fontSize: 13 }} />
+              {busy ? 'Enviando...' : img ? 'Trocar foto' : 'Adicionar foto'}
+              <input type="file" accept="image/*" hidden onChange={onFile} disabled={busy} />
+            </label>
+          )}
           <div
             style={{
               position: 'absolute',

@@ -1067,6 +1067,7 @@ const StatusCard = ({
               position={position}
               onClose={onClose}
               onMenu={deviceReadonly ? undefined : (e) => setAnchorEl(e.currentTarget)}
+              canEdit={!deviceReadonly}
               disableActions={disableActions}
               canBlock={canBlock}
               blocked={blocked}

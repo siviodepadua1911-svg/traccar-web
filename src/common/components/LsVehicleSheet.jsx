@@ -1,15 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { useTheme } from '@mui/material';
+import { useTheme, IconButton } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import CloseIcon from '@mui/icons-material/Close';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import KeyIcon from '@mui/icons-material/Key';
 import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
+import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt';
 import MapIcon from '@mui/icons-material/Map';
 import StreetviewIcon from '@mui/icons-material/Streetview';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
@@ -102,6 +106,13 @@ const batInfo = (a) => {
   return { value: `${va.toFixed(1)}V`, charging, color };
 };
 
+const satInfo = (a) => {
+  if (a.sat == null) return { value: '—' };
+  const v = Number(a.sat);
+  const color = v >= 5 ? OK : v >= 3 ? WARN : BAD;
+  return { value: String(v), color };
+};
+
 const two = (n) => String(n).padStart(2, '0');
 const shortWhen = (ts) => {
   const d = new Date(ts);
@@ -113,7 +124,7 @@ const shortWhen = (ts) => {
 };
 
 const Tile = ({ c, icon, label, value, color }) => (
-  <div style={{ flex: 1, background: c.surfaceAlt, borderRadius: 9, padding: '8px 3px', textAlign: 'center' }}>
+  <div style={{ background: c.surfaceAlt, borderRadius: 10, padding: '8px 3px', textAlign: 'center' }}>
     <div style={{ color: color || c.accent, display: 'flex', justifyContent: 'center' }}>{icon}</div>
     <div style={{ fontSize: 9, color: c.textSecondary, marginTop: 1 }}>{label}</div>
     <div style={{ fontSize: 11.5, fontWeight: 700, color: c.text }}>{value}</div>
@@ -132,7 +143,12 @@ const LsVehicleSheet = ({
   position,
   onClose,
   onMenu,
+  onPrev,
+  onNext,
+  canNavigate,
+  navLabel,
   canEdit,
+  variant = 'sheet',
   disableActions,
   canBlock,
   blocked,
@@ -141,6 +157,7 @@ const LsVehicleSheet = ({
   const dispatch = useDispatch();
   const theme = useTheme();
   const c = lsCardColors(theme.palette.mode === 'dark');
+  const isPanel = variant === 'panel';
   const a = position.attributes || {};
   const lat = position.latitude;
   const lon = position.longitude;
@@ -182,11 +199,14 @@ const LsVehicleSheet = ({
   }, [blocked]);
 
   useEffect(() => {
+    if (isPanel) return undefined;
     if (sheetRef.current) sheetRef.current.style.height = `${peek}px`;
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    if (isPanel) return undefined;
     const onMove = (e) => {
       const d = dragRef.current;
       if (!d.dragging) return;
@@ -216,7 +236,7 @@ const LsVehicleSheet = ({
       window.removeEventListener('mouseup', onUp);
       window.removeEventListener('touchend', onUp);
     };
-  }, [peek, maxH]);
+  }, [peek, maxH, isPanel]);
 
   const startDrag = (e) => {
     const y = (e.touches ? e.touches[0] : e).clientY;
@@ -266,20 +286,30 @@ const LsVehicleSheet = ({
   const ign = ignInfo(a);
   const sig = sigInfo(a);
   const bat = batInfo(a);
+  const sat = satInfo(a);
   const sinceTxt = since && since.blocked === blocked && since.ts ? `desde ${shortWhen(since.ts)}` : 'estado atual';
   const blockDisabled = disableActions || !canBlock;
 
-  const sheetStyle = {
-    pointerEvents: 'auto',
-    width: 'calc(100% - 12px)',
-    maxWidth: 480,
-    background: c.surface,
-    borderRadius: '18px 18px 0 0',
-    boxShadow: '0 -4px 20px rgba(0,0,0,.28)',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-  };
+  const containerStyle = isPanel
+    ? {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        background: c.surface,
+        overflow: 'hidden',
+      }
+    : {
+        pointerEvents: 'auto',
+        width: 'calc(100% - 12px)',
+        maxWidth: 480,
+        background: c.surface,
+        borderRadius: '18px 18px 0 0',
+        boxShadow: '0 -4px 20px rgba(0,0,0,.28)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      };
   const secLab = {
     fontSize: 10,
     fontWeight: 700,
@@ -316,16 +346,73 @@ const LsVehicleSheet = ({
     justifyContent: 'center',
     cursor: 'pointer',
   };
+  const colStyle = { display: 'flex', flexDirection: 'column', gap: 8, width: 62, flex: 'none' };
 
   return (
-    <div ref={sheetRef} style={sheetStyle}>
-      <div
-        onMouseDown={startDrag}
-        onTouchStart={startDrag}
-        style={{ padding: '8px 0 4px', cursor: 'grab', touchAction: 'none', flex: 'none' }}
-      >
-        <div style={{ width: 42, height: 5, borderRadius: 3, background: c.border, margin: '0 auto' }} />
-      </div>
+    <div ref={isPanel ? undefined : sheetRef} style={containerStyle}>
+      {isPanel ? (
+        <div
+          className="draggable-header"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            padding: '6px 6px 6px 4px',
+            borderBottom: `1px solid ${c.border}`,
+            cursor: 'move',
+            flex: 'none',
+          }}
+        >
+          <IconButton
+            size="small"
+            onClick={onPrev}
+            disabled={!canNavigate}
+            style={{ color: canNavigate ? c.textSecondary : c.border }}
+          >
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div
+              style={{
+                fontWeight: 700,
+                color: c.text,
+                fontSize: 14,
+                lineHeight: 1.2,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {device.name}
+            </div>
+            {navLabel && <div style={{ fontSize: 11, color: c.textSecondary }}>{navLabel}</div>}
+          </div>
+          <IconButton
+            size="small"
+            onClick={onNext}
+            disabled={!canNavigate}
+            style={{ color: canNavigate ? c.textSecondary : c.border }}
+          >
+            <ChevronRightIcon fontSize="small" />
+          </IconButton>
+          {onMenu && (
+            <IconButton size="small" onClick={onMenu} style={{ color: c.textSecondary }}>
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+          )}
+          <IconButton size="small" onClick={onClose} style={{ color: c.textSecondary }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </div>
+      ) : (
+        <div
+          onMouseDown={startDrag}
+          onTouchStart={startDrag}
+          style={{ padding: '8px 0 4px', cursor: 'grab', touchAction: 'none', flex: 'none' }}
+        >
+          <div style={{ width: 42, height: 5, borderRadius: 3, background: c.border, margin: '0 auto' }} />
+        </div>
+      )}
 
       <div style={{ flex: 1, overflow: 'auto' }}>
         <div
@@ -344,10 +431,12 @@ const LsVehicleSheet = ({
           ) : (
             <DirectionsCarIcon style={{ fontSize: 46, color: c.textSecondary }} />
           )}
-          <div style={{ ...roundBtn, left: 9 }} onClick={onClose}>
-            <ArrowBackIcon style={{ color: '#fff', fontSize: 18 }} />
-          </div>
-          {onMenu && (
+          {!isPanel && (
+            <div style={{ ...roundBtn, left: 9 }} onClick={onClose}>
+              <ArrowBackIcon style={{ color: '#fff', fontSize: 18 }} />
+            </div>
+          )}
+          {!isPanel && onMenu && (
             <div style={{ ...roundBtn, right: 9 }} onClick={onMenu}>
               <MoreVertIcon style={{ color: '#fff', fontSize: 18 }} />
             </div>
@@ -386,14 +475,14 @@ const LsVehicleSheet = ({
               color: '#fff',
             }}
           >
-            <div style={{ fontSize: 13.5, fontWeight: 700 }}>{device.name}</div>
+            {!isPanel && <div style={{ fontSize: 13.5, fontWeight: 700 }}>{device.name}</div>}
             <div style={{ fontSize: 10.5, color: '#cfe0f5' }}>
               {`${stateLabel} · ${speed} km/h · ${formatTime(position.fixTime, 'minutes')}`}
             </div>
           </div>
         </div>
 
-        <div style={{ padding: '10px 13px 14px' }}>
+        <div style={{ padding: '10px 13px 14px', maxWidth: 460, margin: '0 auto', width: '100%' }}>
           {blocked ? (
             <div
               style={{
@@ -456,26 +545,36 @@ const LsVehicleSheet = ({
             </div>
           )}
 
-          <div style={{ maxWidth: 168, margin: '0 auto', width: '100%' }}>
-            <Speedo speed={speed} />
-          </div>
-
-          <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-            <Tile c={c} icon={<KeyIcon fontSize="small" />} label="Ignição" value={ign.value} color={ign.color} />
-            <Tile
-              c={c}
-              icon={<SignalCellularAltIcon fontSize="small" />}
-              label="Sinal"
-              value={sig.value}
-              color={sig.color}
-            />
-            <Tile
-              c={c}
-              icon={bat.charging ? <BatteryChargingFullIcon fontSize="small" /> : <BatteryFullIcon fontSize="small" />}
-              label="Bateria"
-              value={bat.value}
-              color={bat.color}
-            />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+            <div style={colStyle}>
+              <Tile c={c} icon={<KeyIcon fontSize="small" />} label="Ignição" value={ign.value} color={ign.color} />
+              <Tile
+                c={c}
+                icon={<SignalCellularAltIcon fontSize="small" />}
+                label="Sinal"
+                value={sig.value}
+                color={sig.color}
+              />
+            </div>
+            <div style={{ flex: 1, maxWidth: 158 }}>
+              <Speedo speed={speed} />
+            </div>
+            <div style={colStyle}>
+              <Tile
+                c={c}
+                icon={bat.charging ? <BatteryChargingFullIcon fontSize="small" /> : <BatteryFullIcon fontSize="small" />}
+                label="Bateria"
+                value={bat.value}
+                color={bat.color}
+              />
+              <Tile
+                c={c}
+                icon={<SatelliteAltIcon fontSize="small" />}
+                label="Satélites"
+                value={sat.value}
+                color={sat.color}
+              />
+            </div>
           </div>
 
           <div style={secLab}>Localização</div>
@@ -503,8 +602,7 @@ const LsVehicleSheet = ({
             </a>
           </div>
 
-          <div style={secLab}>GPS & Veículo</div>
-          {a.sat !== undefined && <Row c={c} l="Satélites" v={a.sat} />}
+          <div style={secLab}>Veículo</div>
           {a.totalDistance !== undefined && (
             <Row
               c={c}
@@ -517,29 +615,31 @@ const LsVehicleSheet = ({
       </div>
 
       <div style={{ flex: 'none', padding: '7px 10px 6px', borderTop: `1px solid ${c.border}`, background: c.surface }}>
-        <button
-          type="button"
-          disabled={blockDisabled}
-          onClick={() => setConfirmOpen(true)}
-          style={{
-            width: '100%',
-            border: 'none',
-            borderRadius: 24,
-            padding: 13,
-            fontWeight: 700,
-            fontSize: 14,
-            cursor: blockDisabled ? 'default' : 'pointer',
-            color: '#fff',
-            background: blockDisabled ? c.border : blocked ? OK : RED,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 7,
-          }}
-        >
-          {blocked ? <LockOpenIcon /> : <LockIcon />}
-          {blocked ? 'Desbloquear' : 'Bloquear'}
-        </button>
+        <div style={{ maxWidth: 460, margin: '0 auto' }}>
+          <button
+            type="button"
+            disabled={blockDisabled}
+            onClick={() => setConfirmOpen(true)}
+            style={{
+              width: '100%',
+              border: 'none',
+              borderRadius: 24,
+              padding: 13,
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: blockDisabled ? 'default' : 'pointer',
+              color: '#fff',
+              background: blockDisabled ? c.border : blocked ? OK : RED,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 7,
+            }}
+          >
+            {blocked ? <LockOpenIcon /> : <LockIcon />}
+            {blocked ? 'Desbloquear' : 'Bloquear'}
+          </button>
+        </div>
       </div>
 
       {confirmOpen && (

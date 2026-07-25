@@ -335,7 +335,7 @@ const ReplayPage = () => {
             </>
           )}
           <div style={{ display: loaded && !filterOpen ? 'none' : 'block' }}>
-            <ReportFilter onShow={onShow} deviceType="single" loading={loading} />
+            <ReportFilter onShow={onShow} deviceType="single" loading={loading} title="Trajeto" />
           </div>
         </Paper>
       </div>

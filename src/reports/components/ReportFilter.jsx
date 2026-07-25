@@ -9,6 +9,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import RouteIcon from '@mui/icons-material/Route';
 import { useSelector } from 'react-redux';
 import dayjs from 'dayjs';
 import { useTranslation } from '../../common/components/LocalizationProvider';
@@ -27,7 +28,7 @@ export const updateReportParams = (searchParams, setSearchParams, key, values) =
   setSearchParams(newParams, { replace: true });
 };
 
-const ReportFilter = ({ children, onShow, onExport, onSchedule, deviceType, loading, formats }) => {
+const ReportFilter = ({ children, onShow, onExport, onSchedule, deviceType, loading, formats, title }) => {
   const { classes } = useReportStyles();
   const t = useTranslation();
 
@@ -190,6 +191,38 @@ const ReportFilter = ({ children, onShow, onExport, onSchedule, deviceType, load
 
   return (
     <div className={classes.filter}>
+      {title && (
+        <div
+          style={{
+            flexBasis: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            background: '#0d2a5c',
+            color: '#fff',
+            borderRadius: 10,
+            padding: '10px 12px',
+          }}
+        >
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: 'rgba(255,255,255,.16)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <RouteIcon fontSize="small" />
+          </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.2 }}>{title}</div>
+            <div style={{ fontSize: 10.5, color: '#a9c4e8' }}>Escolha o veiculo e o periodo</div>
+          </div>
+        </div>
+      )}
       {deviceType !== 'none' && (
         <div className={classes.filterItem}>
           <SelectField
@@ -295,10 +328,17 @@ const ReportFilter = ({ children, onShow, onExport, onSchedule, deviceType, load
         {Object.keys(options).length === 1 ? (
           <Button
             fullWidth
-            variant="outlined"
-            color="secondary"
+            variant="contained"
+            disableElevation
             disabled={disabled}
             onClick={onClick}
+            sx={{
+              backgroundColor: '#0d2a5c',
+              borderRadius: 2,
+              py: 1.1,
+              fontWeight: 700,
+              '&:hover': { backgroundColor: '#0a2049' },
+            }}
           >
             <Typography variant="button" noWrap>
               {t(loading ? 'sharedLoading' : 'reportShow')}

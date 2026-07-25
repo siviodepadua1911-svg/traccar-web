@@ -1058,7 +1058,28 @@ const StatusCard = ({
               style={{ position: 'relative', pointerEvents: 'auto' }}
             >
               <Card elevation={3} className={classes.card}>
-                {cardBody}
+                {position ? (
+                  <LsVehicleSheet
+                    variant="panel"
+                    device={device}
+                    position={position}
+                    onClose={onClose}
+                    onMenu={deviceReadonly ? undefined : (e) => setAnchorEl(e.currentTarget)}
+                    onPrev={() => navigateDevice(-1)}
+                    onNext={() => navigateDevice(1)}
+                    canNavigate={canNavigate}
+                    navLabel={
+                      canNavigate ? `${navIndex + 1} de ${deviceIds.length}` : device.attributes?.placa || ''
+                    }
+                    canEdit={!deviceReadonly}
+                    disableActions={disableActions}
+                    canBlock={canBlock}
+                    blocked={blocked}
+                    sendCommand={sendCommand}
+                  />
+                ) : (
+                  cardBody
+                )}
               </Card>
             </Rnd>
           ) : position ? (

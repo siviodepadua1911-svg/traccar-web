@@ -100,7 +100,7 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
     zIndex: 1300,
     left: 0,
     right: 0,
-    bottom: `calc(${theme.spacing(1)} + ${theme.dimensions.bottomBarHeight}px)`,
+    bottom: `${theme.dimensions.bottomBarHeight}px`,
     display: 'flex',
     justifyContent: 'center',
   },

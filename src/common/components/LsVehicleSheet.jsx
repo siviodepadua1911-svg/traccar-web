@@ -513,7 +513,7 @@ const LsVehicleSheet = ({
         </div>
       </div>
 
-      <div style={{ flex: 'none', padding: '8px 12px', borderTop: `1px solid ${c.border}`, background: c.surface }}>
+      <div style={{ flex: 'none', padding: '7px 10px 6px', borderTop: `1px solid ${c.border}`, background: c.surface }}>
         <button
           type="button"
           disabled={blockDisabled}

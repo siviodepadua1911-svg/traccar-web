@@ -63,6 +63,9 @@ const useStyles = makeStyles()((theme) => ({
     backgroundColor: '#eaf2fd !important',
     boxShadow: 'inset 3px 0 0 #1C7ED6',
   },
+  blocked: {
+    boxShadow: 'inset 4px 0 0 #d32f2f',
+  },
 }));
 
 const I = { fontSize: 18 };
@@ -129,6 +132,7 @@ const DeviceRow = ({ devices, index, style }) => {
 
   const a = position ? position.attributes : {};
   const kmh = position ? Math.round((position.speed || 0) * 1.852) : 0;
+  const blocked = Boolean(a.blocked);
 
   return (
     <div style={style}>
@@ -137,7 +141,13 @@ const DeviceRow = ({ devices, index, style }) => {
         onClick={() => dispatch(devicesActions.selectId(item.id))}
         disabled={!admin && item.disabled}
         selected={selectedDeviceId === item.id}
-        className={selectedDeviceId === item.id ? classes.selected : null}
+        className={
+          selectedDeviceId === item.id
+            ? classes.selected
+            : blocked
+              ? classes.blocked
+              : null
+        }
       >
         <ListItemAvatar>
           <Avatar className={classes.avatar}>
@@ -175,15 +185,30 @@ const DeviceRow = ({ devices, index, style }) => {
                 <DirectionsRunIcon style={{ ...I, color: a.motion ? C.blue : C.off }} />
               </Tooltip>
             )}
-            {a.hasOwnProperty('blocked') && (
-              <Tooltip title={a.blocked ? 'Bloqueio: BLOQUEADO' : 'Bloqueio: Liberado'}>
-                {a.blocked ? (
-                  <LockIcon style={{ ...I, color: C.bad }} />
-                ) : (
+            {a.hasOwnProperty('blocked') &&
+              (a.blocked ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 3,
+                    background: C.bad,
+                    color: '#fff',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '2px 7px',
+                    borderRadius: 11,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <LockIcon style={{ fontSize: 13 }} />
+                  Bloqueado
+                </span>
+              ) : (
+                <Tooltip title="Bloqueio: Liberado">
                   <LockOpenIcon style={{ ...I, color: C.ok }} />
-                )}
-              </Tooltip>
-            )}
+                </Tooltip>
+              ))}
             {a.power != null && (
               <Tooltip title={`Bateria do veículo: ${Number(a.power).toFixed(1)}V`}>
                 <BoltIcon

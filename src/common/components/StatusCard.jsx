@@ -47,6 +47,7 @@ import RemoveDialog from './RemoveDialog';
 import LsDeviceEvents from './LsDeviceEvents';
 import LsSlideToConfirm from './LsSlideToConfirm';
 import LsFichaCompleta from './LsFichaCompleta';
+import LsVehicleSheet from './LsVehicleSheet';
 import PositionValue from './PositionValue';
 import { useDeviceReadonly, useRestriction } from '../util/permissions';
 import usePositionAttributes from '../attributes/usePositionAttributes';
@@ -1060,6 +1061,17 @@ const StatusCard = ({
                 {cardBody}
               </Card>
             </Rnd>
+          ) : position ? (
+            <LsVehicleSheet
+              device={device}
+              position={position}
+              onClose={onClose}
+              onMenu={deviceReadonly ? undefined : (e) => setAnchorEl(e.currentTarget)}
+              disableActions={disableActions}
+              canBlock={canBlock}
+              blocked={blocked}
+              sendCommand={sendCommand}
+            />
           ) : (
             <Card elevation={3} className={classes.mobileCard}>
               {cardBody}

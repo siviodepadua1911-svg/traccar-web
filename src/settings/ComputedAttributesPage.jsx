@@ -9,6 +9,7 @@ import CollectionFab from './components/CollectionFab';
 import CollectionActions from './components/CollectionActions';
 import TableShimmer from '../common/components/TableShimmer';
 import SearchHeader from './components/SearchHeader';
+import LsComputedInfo from './LsComputedInfo';
 import useSettingsStyles from './common/useSettingsStyles';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 
@@ -52,6 +53,7 @@ const ComputedAttributesPage = () => {
   return (
     <PageLayout menu={<SettingsMenu />} breadcrumbs={['settingsTitle', 'sharedComputedAttributes']}>
       <SearchHeader keyword={searchKeyword} setKeyword={setSearchKeyword} />
+      <LsComputedInfo />
       <Table className={classes.table}>
         <TableHead>
           <TableRow>

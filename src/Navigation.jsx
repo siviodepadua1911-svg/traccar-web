@@ -17,6 +17,7 @@ const PositionsReportPage = lazy(() => import('./reports/PositionsReportPage'));
 const ServerPage = lazy(() => import('./settings/ServerPage'));
 const UsersPage = lazy(() => import('./settings/UsersPage'));
 const DevicePage = lazy(() => import('./settings/DevicePage'));
+const LsDevicePage = lazy(() => import('./settings/LsDevicePage'));
 const UserPage = lazy(() => import('./settings/UserPage'));
 const NotificationsPage = lazy(() => import('./settings/NotificationsPage'));
 const NotificationPage = lazy(() => import('./settings/NotificationPage'));
@@ -159,7 +160,7 @@ const Navigation = () => {
             <Route path="device/:id/connections" element={<DeviceConnectionsPage />} />
             <Route path="device/:id/command" element={<CommandDevicePage />} />
             <Route path="device/:id" element={<DevicePage />} />
-            <Route path="device" element={<DevicePage />} />
+            <Route path="device" element={<LsDevicePage />} />
             <Route path="drivers" element={<DriversPage />} />
             <Route path="driver/:id" element={<DriverPage />} />
             <Route path="driver" element={<DriverPage />} />

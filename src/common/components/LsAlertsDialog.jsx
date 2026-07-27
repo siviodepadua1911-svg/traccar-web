@@ -63,6 +63,22 @@ const LS_TOGGLES = [
     soundValues: ['ignitionOff'],
   },
   {
+    key: 'lock',
+    label: 'Bloqueio',
+    types: ['alarm'],
+    alarms: 'lock',
+    soundKind: 'alarms',
+    soundValues: ['lock'],
+  },
+  {
+    key: 'unlock',
+    label: 'Desbloqueio',
+    types: ['alarm'],
+    alarms: 'unlock',
+    soundKind: 'alarms',
+    soundValues: ['unlock'],
+  },
+  {
     key: 'moving',
     label: 'Início de movimento',
     types: ['deviceMoving'],

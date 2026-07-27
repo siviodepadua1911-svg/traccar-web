@@ -22,6 +22,7 @@ import SelectField from '../common/components/SelectField';
 import deviceCategories from '../common/util/deviceCategories';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import LsSmsSetup from './LsSmsSetup';
+import { useManager } from '../common/util/permissions';
 
 const AZUL = '#0F1E45';
 const SERVER_ADDRESS = 'gps.lsautotruckrastreios.com.br';
@@ -92,6 +93,7 @@ const Rev = ({ label, value, last }) => (
 const LsDevicePage = () => {
   const navigate = useNavigate();
   const t = useTranslation();
+  const manager = useManager();
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
@@ -456,7 +458,7 @@ const LsDevicePage = () => {
                   {imgBusy ? 'Enviando...' : img ? 'Trocar foto' : 'Adicionar foto do veículo'}
                   <input type="file" accept="image/*" hidden onChange={onFile} disabled={imgBusy} />
                 </Button>
-                {matchedModel && (
+                {matchedModel && manager && (
                   <Box sx={{ mb: 2 }}>
                     <LsSmsSetup protocol={matchedModel.protocol} port={matchedModel.port} />
                   </Box>

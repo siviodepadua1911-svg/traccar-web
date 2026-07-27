@@ -46,6 +46,36 @@ const gt06Data = (domain, port) => ({
         { label: 'Padrão de fábrica', cmd: 'FACTORY#' },
       ],
     },
+    {
+      titulo: 'Protocolo completo (mais dados)',
+      itens: [
+        {
+          label: 'Ativar protocolo completo + hodômetro/horímetro + tensão',
+          cmd: 'SZCS#GT06SEL=1#GT06METER=1#GT06IEXVOL=2',
+        },
+      ],
+    },
+    {
+      titulo: 'Economia de dados e bateria',
+      itens: [
+        {
+          label: 'Combo economia (fica off no sistema, mas recebe SMS)',
+          cmd: 'SZCS#GT06SEL=1#GT06METER=1#GT06IEXVOL=2#SLEEPT=1#SLPDISCONNECT=1#GPS_DISSLP=0#MTK_DISSLP=0#ANGLEVALUE=05-045#BLIND_DEBUG=1#SOURCE_OFF_TYPE=1#BATT_VERIFY=1',
+        },
+        { label: 'Intervalo maior (menos dados)', cmd: 'TIMER,60,18000#' },
+        { label: 'Pulso com ignição off (economia)', cmd: 'HBT,900,900#' },
+        { label: 'Off-line após o tempo de defesa', cmd: 'SZCS#MTK_DISSLP=0' },
+        { label: 'Online obedecendo o TIMER', cmd: 'SZCS#MTK_DISSLP=1' },
+        { label: 'Desliga GPS em repouso', cmd: 'SZCS#GPS_DISSLP=0' },
+      ],
+    },
+    {
+      titulo: 'Moto',
+      itens: [
+        { label: 'Ignição virtual por acelerômetro', cmd: 'SZCS#ACCLINE=0' },
+        { label: 'Modo defesa (moto)', cmd: 'DEFENSE,10#' },
+      ],
+    },
   ],
 });
 

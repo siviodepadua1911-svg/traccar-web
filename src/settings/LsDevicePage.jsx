@@ -15,12 +15,16 @@ import CheckIcon from '@mui/icons-material/Check';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import PageLayout from '../common/components/PageLayout';
 import SettingsMenu from './components/SettingsMenu';
+import SelectField from '../common/components/SelectField';
+import deviceCategories from '../common/util/deviceCategories';
+import { useTranslation } from '../common/components/LocalizationProvider';
 
 const AZUL = '#0F1E45';
 const SERVER_ADDRESS = 'gps.lsautotruckrastreios.com.br';
-const STEPS = ['Veículo', 'Rastreador', 'Revisar'];
+const STEPS = ['Veículo', 'Rastreador', 'Detalhes', 'Revisar'];
 
 const modelCatalog = [
   { model: 'Concox GT06N', protocol: 'GT06', port: 5023 },
@@ -86,14 +90,27 @@ const Rev = ({ label, value, last }) => (
 
 const LsDevicePage = () => {
   const navigate = useNavigate();
+  const t = useTranslation();
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [placa, setPlaca] = useState('');
   const [model, setModel] = useState('');
   const [uniqueId, setUniqueId] = useState('');
+  const [category, setCategory] = useState('default');
+  const [groupId, setGroupId] = useState(0);
+  const [phone, setPhone] = useState('');
+  const [contact, setContact] = useState('');
+  const [expiration, setExpiration] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [created, setCreated] = useState(null);
+  const [img, setImg] = useState(null);
+  const [imgBusy, setImgBusy] = useState(false);
+
+  const categoryData = deviceCategories
+    .map((c) => ({ id: c, name: t(`category${c.replace(/^\w/, (ch) => ch.toUpperCase())}`) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const matchedModel = modelCatalog.find((m) => m.model === model);
   const idClean = uniqueId.trim();
@@ -115,10 +132,14 @@ const LsDevicePage = () => {
       const body = {
         name: name.trim(),
         uniqueId: idClean,
-        category: 'default',
+        category: category || 'default',
         attributes: placa.trim() ? { placa: placa.trim().toUpperCase() } : {},
       };
       if (model.trim()) body.model = model.trim();
+      if (groupId) body.groupId = groupId;
+      if (phone.trim()) body.phone = phone.trim();
+      if (contact.trim()) body.contact = contact.trim();
+      if (expiration) body.expirationTime = new Date(expiration).toISOString();
       const response = await fetch('/api/devices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -131,15 +152,38 @@ const LsDevicePage = () => {
         }
         throw new Error('Não foi possível salvar. Confira os dados e tente de novo.');
       }
-      setStep(4);
+      setCreated(await response.json());
+      setStep(5);
     } catch (e) {
       setError(e.message || 'Erro ao salvar.');
     }
     setSaving(false);
   };
 
+  const onFile = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !created) return;
+    setImgBusy(true);
+    try {
+      const resp = await fetch(`/api/devices/${created.id}/image`, { method: 'POST', body: file });
+      if (!resp.ok) throw new Error('img');
+      const filename = await resp.text();
+      const updated = { ...created, attributes: { ...created.attributes, deviceImage: filename } };
+      await fetch(`/api/devices/${created.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      setCreated(updated);
+      setImg(`/api/media/${created.uniqueId}/${filename}?t=${Date.now()}`);
+    } catch {
+      window.alert('Nao foi possivel enviar a foto.');
+    }
+    setImgBusy(false);
+  };
+
   const handleNext = () => {
-    if (step === 3) {
+    if (step === 4) {
       handleSave();
       return;
     }
@@ -151,7 +195,14 @@ const LsDevicePage = () => {
     setPlaca('');
     setModel('');
     setUniqueId('');
+    setCategory('default');
+    setGroupId(0);
+    setPhone('');
+    setContact('');
+    setExpiration('');
     setError(null);
+    setCreated(null);
+    setImg(null);
     setStep(1);
   };
 
@@ -288,6 +339,56 @@ const LsDevicePage = () => {
 
             {step === 3 && (
               <>
+                <Typography sx={{ fontWeight: 700, fontSize: 15, mb: 0.3 }}>Detalhes</Typography>
+                <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 1.5 }}>
+                  Opcional — pode preencher agora ou depois.
+                </Typography>
+                <Box sx={{ mb: 1.3 }}>
+                  <SelectField
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    data={categoryData}
+                    label="Categoria (ícone no mapa)"
+                  />
+                </Box>
+                <Box sx={{ mb: 1.3 }}>
+                  <SelectField
+                    value={groupId}
+                    onChange={(e) => setGroupId(Number(e.target.value))}
+                    endpoint="/api/groups"
+                    label="Grupo"
+                  />
+                </Box>
+                <TextField
+                  label="Telefone (chip)"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  fullWidth
+                  size="small"
+                  sx={{ mb: 1.3 }}
+                />
+                <TextField
+                  label="Contato (responsável)"
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  fullWidth
+                  size="small"
+                  sx={{ mb: 1.3 }}
+                />
+                <TextField
+                  label="Validade (vencimento)"
+                  type="date"
+                  value={expiration}
+                  onChange={(e) => setExpiration(e.target.value)}
+                  fullWidth
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                />
+              </>
+            )}
+
+            {step === 4 && (
+              <>
                 <Typography sx={{ fontWeight: 700, fontSize: 15, mb: 0.3 }}>Confira antes de salvar</Typography>
                 <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 1.5 }}>
                   Está tudo certo? É só criar.
@@ -297,6 +398,12 @@ const LsDevicePage = () => {
                   <Rev label="Placa" value={placa || '—'} />
                   <Rev label="Identificador" value={idClean || '—'} />
                   <Rev label="Modelo" value={model || '—'} />
+                  {category && category !== 'default' && (
+                    <Rev label="Categoria" value={categoryData.find((c) => c.id === category)?.name || category} />
+                  )}
+                  {phone.trim() && <Rev label="Telefone" value={phone.trim()} />}
+                  {contact.trim() && <Rev label="Contato" value={contact.trim()} />}
+                  {expiration && <Rev label="Validade" value={expiration.split('-').reverse().join('/')} />}
                   <Rev
                     label="Configuração"
                     value={matchedModel ? `${SERVER_ADDRESS}:${matchedModel.port}` : '—'}
@@ -311,14 +418,43 @@ const LsDevicePage = () => {
               </>
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <Box sx={{ textAlign: 'center', py: 1 }}>
                 <CheckCircleIcon sx={{ fontSize: 54, color: '#2e7d32' }} />
                 <Typography sx={{ fontWeight: 700, fontSize: 16, mt: 1 }}>Dispositivo cadastrado!</Typography>
-                <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.5, mb: 2 }}>
+                <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.5, mb: 1.5 }}>
                   {name}
                   {placa ? ` · ${placa}` : ''}
                 </Typography>
+                <Box
+                  sx={{
+                    height: 130,
+                    borderRadius: 2,
+                    border: '1px solid #eef1f6',
+                    background: '#f6f8fb',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    mb: 1,
+                  }}
+                >
+                  {img ? (
+                    <img src={img} alt={name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  ) : (
+                    <DirectionsCarIcon sx={{ fontSize: 46, color: '#c2cbd6' }} />
+                  )}
+                </Box>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<CameraAltIcon />}
+                  disabled={imgBusy}
+                  sx={{ mb: 2 }}
+                >
+                  {imgBusy ? 'Enviando...' : img ? 'Trocar foto' : 'Adicionar foto do veículo'}
+                  <input type="file" accept="image/*" hidden onChange={onFile} disabled={imgBusy} />
+                </Button>
                 {matchedModel && (
                   <Alert severity="info" sx={{ textAlign: 'left', mb: 2 }}>
                     Não esqueça: configure o rastreador para <strong>{SERVER_ADDRESS}</strong> porta{' '}
@@ -337,7 +473,7 @@ const LsDevicePage = () => {
             )}
           </Box>
 
-          {step < 4 && (
+          {step < 5 && (
             <Box
               sx={{
                 display: 'flex',
@@ -354,7 +490,7 @@ const LsDevicePage = () => {
                 Voltar
               </Button>
               <Button variant="contained" onClick={handleNext} disabled={saving || !canAdvance()}>
-                {saving ? <CircularProgress size={18} /> : step === 3 ? 'Criar dispositivo' : 'Continuar'}
+                {saving ? <CircularProgress size={18} /> : step === 4 ? 'Criar dispositivo' : 'Continuar'}
               </Button>
             </Box>
           )}

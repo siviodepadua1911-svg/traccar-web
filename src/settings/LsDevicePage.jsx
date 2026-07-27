@@ -21,6 +21,7 @@ import SettingsMenu from './components/SettingsMenu';
 import SelectField from '../common/components/SelectField';
 import deviceCategories from '../common/util/deviceCategories';
 import { useTranslation } from '../common/components/LocalizationProvider';
+import LsSmsSetup from './LsSmsSetup';
 
 const AZUL = '#0F1E45';
 const SERVER_ADDRESS = 'gps.lsautotruckrastreios.com.br';
@@ -456,10 +457,9 @@ const LsDevicePage = () => {
                   <input type="file" accept="image/*" hidden onChange={onFile} disabled={imgBusy} />
                 </Button>
                 {matchedModel && (
-                  <Alert severity="info" sx={{ textAlign: 'left', mb: 2 }}>
-                    Não esqueça: configure o rastreador para <strong>{SERVER_ADDRESS}</strong> porta{' '}
-                    <strong>{matchedModel.port}</strong> pra ele começar a enviar posição.
-                  </Alert>
+                  <Box sx={{ mb: 2 }}>
+                    <LsSmsSetup protocol={matchedModel.protocol} port={matchedModel.port} />
+                  </Box>
                 )}
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button fullWidth variant="outlined" onClick={reset}>

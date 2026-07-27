@@ -17,6 +17,7 @@ import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt';
 import MapIcon from '@mui/icons-material/Map';
 import StreetviewIcon from '@mui/icons-material/Streetview';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
+import ShareIcon from '@mui/icons-material/Share';
 import { devicesActions } from '../../store';
 import { formatTime } from '../util/formatter';
 import { lsCardColors } from '../theme/lsCardColors';
@@ -138,6 +139,14 @@ const Row = ({ c, l, v }) => (
   </div>
 );
 
+const SHARE_DURS = [
+  { label: '1 hora', h: 1 },
+  { label: '6 horas', h: 6 },
+  { label: '24 horas', h: 24 },
+  { label: '7 dias', h: 168 },
+  { label: '30 dias', h: 720 },
+];
+
 const LsVehicleSheet = ({
   device,
   position,
@@ -148,6 +157,7 @@ const LsVehicleSheet = ({
   canNavigate,
   navLabel,
   canEdit,
+  canShare,
   variant = 'sheet',
   disableActions,
   canBlock,
@@ -164,8 +174,9 @@ const LsVehicleSheet = ({
 
   const sheetRef = useRef(null);
   const dragRef = useRef({ dragging: false, startY: 0, startH: 0 });
-  const peek = Math.min(384, Math.round(window.innerHeight * 0.6));
-  const maxH = Math.round(window.innerHeight * 0.82);
+  const mini = 132;
+  const peek = Math.min(392, Math.round(window.innerHeight * 0.62));
+  const maxH = Math.round(window.innerHeight * 0.85);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const initialImg = device.attributes?.deviceImage
@@ -173,6 +184,11 @@ const LsVehicleSheet = ({
     : null;
   const [img, setImg] = useState(initialImg);
   const [busy, setBusy] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareHours, setShareHours] = useState(24);
+  const [shareLink, setShareLink] = useState('');
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const sinceKey = `lsBlkSince_${device.id}`;
   const readSince = () => {
@@ -207,12 +223,13 @@ const LsVehicleSheet = ({
 
   useEffect(() => {
     if (isPanel) return undefined;
+    const snaps = [mini, peek, maxH];
     const onMove = (e) => {
       const d = dragRef.current;
       if (!d.dragging) return;
       const y = (e.touches ? e.touches[0] : e).clientY;
       let h = d.startH + (d.startY - y);
-      h = Math.max(peek, Math.min(maxH, h));
+      h = Math.max(mini, Math.min(maxH, h));
       if (sheetRef.current) sheetRef.current.style.height = `${h}px`;
       if (e.cancelable) e.preventDefault();
     };
@@ -222,8 +239,12 @@ const LsVehicleSheet = ({
       d.dragging = false;
       if (sheetRef.current) {
         const h = sheetRef.current.offsetHeight;
+        let nearest = snaps[0];
+        snaps.forEach((sp) => {
+          if (Math.abs(sp - h) < Math.abs(nearest - h)) nearest = sp;
+        });
         sheetRef.current.style.transition = 'height .22s ease';
-        sheetRef.current.style.height = `${h > (peek + maxH) / 2 ? maxH : peek}px`;
+        sheetRef.current.style.height = `${nearest}px`;
       }
     };
     window.addEventListener('mousemove', onMove);
@@ -280,6 +301,47 @@ const LsVehicleSheet = ({
     sendCommand(blocked ? 'engineResume' : 'engineStop');
   };
 
+  const openShare = () => {
+    setShareLink('');
+    setShareHours(24);
+    setShareOpen(true);
+  };
+
+  const genShare = async () => {
+    setShareBusy(true);
+    setShareLink('');
+    try {
+      const iso = new Date(Date.now() + shareHours * 3600 * 1000).toISOString();
+      const resp = await fetch('/api/share/device', {
+        method: 'POST',
+        body: new URLSearchParams(`deviceId=${device.id}&expiration=${iso}`),
+      });
+      if (!resp.ok) throw new Error('share');
+      const token = await resp.text();
+      setShareLink(`${window.location.origin}?token=${token}`);
+    } catch {
+      window.alert('Nao foi possivel gerar o link de compartilhamento.');
+    }
+    setShareBusy(false);
+  };
+
+  const copyShare = () => {
+    if (navigator.clipboard && shareLink) {
+      navigator.clipboard.writeText(shareLink);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 1500);
+    }
+  };
+
+  const whatsShare = () => {
+    if (shareLink) {
+      window.open(
+        `https://wa.me/?text=${encodeURIComponent(`Acompanhe ${device.name} ao vivo: ${shareLink}`)}`,
+        '_blank',
+      );
+    }
+  };
+
   const speed = kmh(position.speed);
   const moving = Boolean(a.motion);
   const stateLabel = moving ? 'Em movimento' : 'Parado';
@@ -289,6 +351,7 @@ const LsVehicleSheet = ({
   const sat = satInfo(a);
   const sinceTxt = since && since.blocked === blocked && since.ts ? `desde ${shortWhen(since.ts)}` : 'estado atual';
   const blockDisabled = disableActions || !canBlock;
+  const summary = `${isPanel && navLabel ? `${navLabel} · ` : ''}${stateLabel} · ${speed} km/h · ${formatTime(position.fixTime, 'minutes')}`;
 
   const containerStyle = isPanel
     ? {
@@ -334,35 +397,33 @@ const LsVehicleSheet = ({
     alignItems: 'center',
     gap: 2,
   };
-  const roundBtn = {
-    position: 'absolute',
-    top: 8,
-    width: 30,
-    height: 30,
-    borderRadius: '50%',
-    background: 'rgba(0,0,0,.42)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-  };
   const colStyle = { display: 'flex', flexDirection: 'column', gap: 8, width: 62, flex: 'none' };
 
   return (
     <div ref={isPanel ? undefined : sheetRef} style={containerStyle}>
-      {isPanel ? (
+      {!isPanel && (
         <div
-          className="draggable-header"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            padding: '6px 6px 6px 4px',
-            borderBottom: `1px solid ${c.border}`,
-            cursor: 'move',
-            flex: 'none',
-          }}
+          onMouseDown={startDrag}
+          onTouchStart={startDrag}
+          style={{ padding: '7px 0 3px', cursor: 'grab', touchAction: 'none', flex: 'none' }}
         >
+          <div style={{ width: 42, height: 5, borderRadius: 3, background: c.border, margin: '0 auto' }} />
+        </div>
+      )}
+
+      <div
+        className={isPanel ? 'draggable-header' : undefined}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          padding: '4px 6px 6px',
+          borderBottom: `1px solid ${c.border}`,
+          flex: 'none',
+          cursor: isPanel ? 'move' : 'default',
+        }}
+      >
+        {isPanel ? (
           <IconButton
             size="small"
             onClick={onPrev}
@@ -371,22 +432,40 @@ const LsVehicleSheet = ({
           >
             <ChevronLeftIcon fontSize="small" />
           </IconButton>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div
-              style={{
-                fontWeight: 700,
-                color: c.text,
-                fontSize: 14,
-                lineHeight: 1.2,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {device.name}
-            </div>
-            {navLabel && <div style={{ fontSize: 11, color: c.textSecondary }}>{navLabel}</div>}
+        ) : (
+          <IconButton size="small" onClick={onClose} style={{ color: c.textSecondary }}>
+            <ArrowBackIcon fontSize="small" />
+          </IconButton>
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: 14,
+              lineHeight: 1.15,
+              color: c.text,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {device.name}
           </div>
+          <div
+            style={{
+              fontSize: 11,
+              color: blocked ? RED : c.textSecondary,
+              fontWeight: blocked ? 700 : 400,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {blocked ? 'BLOQUEADO · ' : ''}
+            {summary}
+          </div>
+        </div>
+        {isPanel && (
           <IconButton
             size="small"
             onClick={onNext}
@@ -395,30 +474,28 @@ const LsVehicleSheet = ({
           >
             <ChevronRightIcon fontSize="small" />
           </IconButton>
-          {onMenu && (
-            <IconButton size="small" onClick={onMenu} style={{ color: c.textSecondary }}>
-              <MoreVertIcon fontSize="small" />
-            </IconButton>
-          )}
+        )}
+        {canShare && (
+          <IconButton size="small" onClick={openShare} style={{ color: c.textSecondary }}>
+            <ShareIcon fontSize="small" />
+          </IconButton>
+        )}
+        {onMenu && (
+          <IconButton size="small" onClick={onMenu} style={{ color: c.textSecondary }}>
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+        )}
+        {isPanel && (
           <IconButton size="small" onClick={onClose} style={{ color: c.textSecondary }}>
             <CloseIcon fontSize="small" />
           </IconButton>
-        </div>
-      ) : (
-        <div
-          onMouseDown={startDrag}
-          onTouchStart={startDrag}
-          style={{ padding: '8px 0 4px', cursor: 'grab', touchAction: 'none', flex: 'none' }}
-        >
-          <div style={{ width: 42, height: 5, borderRadius: 3, background: c.border, margin: '0 auto' }} />
-        </div>
-      )}
+        )}
+      </div>
 
       <div style={{ flex: 1, overflow: 'auto' }}>
         <div
           style={{
-            position: 'relative',
-            height: 118,
+            height: 120,
             background: c.surfaceAlt,
             display: 'flex',
             alignItems: 'center',
@@ -431,56 +508,31 @@ const LsVehicleSheet = ({
           ) : (
             <DirectionsCarIcon style={{ fontSize: 46, color: c.textSecondary }} />
           )}
-          {!isPanel && (
-            <div style={{ ...roundBtn, left: 9 }} onClick={onClose}>
-              <ArrowBackIcon style={{ color: '#fff', fontSize: 18 }} />
-            </div>
-          )}
-          {!isPanel && onMenu && (
-            <div style={{ ...roundBtn, right: 9 }} onClick={onMenu}>
-              <MoreVertIcon style={{ color: '#fff', fontSize: 18 }} />
-            </div>
-          )}
-          {canEdit && (
+        </div>
+
+        {canEdit && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '7px 13px 0' }}>
             <label
               style={{
-                position: 'absolute',
-                right: 9,
-                bottom: 8,
-                background: '#fff',
-                borderRadius: 16,
-                padding: '4px 9px',
-                fontSize: 10.5,
-                color: '#0d47a1',
-                fontWeight: 600,
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: 4,
+                gap: 5,
+                background: c.surfaceAlt,
+                border: `1px solid ${c.border}`,
+                borderRadius: 16,
+                padding: '5px 11px',
+                fontSize: 11,
+                color: c.accent,
+                fontWeight: 600,
                 cursor: 'pointer',
               }}
             >
-              <CameraAltIcon style={{ fontSize: 13 }} />
+              <CameraAltIcon style={{ fontSize: 14 }} />
               {busy ? 'Enviando...' : img ? 'Trocar foto' : 'Adicionar foto'}
               <input type="file" accept="image/*" hidden onChange={onFile} disabled={busy} />
             </label>
-          )}
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(10,20,40,.55)',
-              padding: '5px 12px',
-              color: '#fff',
-            }}
-          >
-            {!isPanel && <div style={{ fontSize: 13.5, fontWeight: 700 }}>{device.name}</div>}
-            <div style={{ fontSize: 10.5, color: '#cfe0f5' }}>
-              {`${stateLabel} · ${speed} km/h · ${formatTime(position.fixTime, 'minutes')}`}
-            </div>
           </div>
-        </div>
+        )}
 
         <div style={{ padding: '10px 13px 14px', maxWidth: 460, margin: '0 auto', width: '100%' }}>
           {blocked ? (
@@ -717,6 +769,145 @@ const LsVehicleSheet = ({
                 {blocked ? 'Desbloquear' : 'Bloquear'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {shareOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(10,15,25,.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1700,
+            padding: 24,
+            pointerEvents: 'auto',
+          }}
+          onClick={() => setShareOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: c.surface, borderRadius: 18, padding: '20px 18px', width: '100%', maxWidth: 340 }}
+          >
+            <div style={{ fontSize: 15, fontWeight: 700, color: c.text, marginBottom: 2 }}>
+              Compartilhar veículo
+            </div>
+            <div style={{ fontSize: 12, color: c.textSecondary, marginBottom: 14 }}>
+              {`Link temporário para acompanhar ${device.name} ao vivo. Escolha por quanto tempo o link vale:`}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 14 }}>
+              {SHARE_DURS.map((d) => (
+                <div
+                  key={d.h}
+                  onClick={() => {
+                    setShareHours(d.h);
+                    setShareLink('');
+                  }}
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    padding: '7px 12px',
+                    borderRadius: 20,
+                    cursor: 'pointer',
+                    border: `1px solid ${shareHours === d.h ? c.accent : c.border}`,
+                    background: shareHours === d.h ? c.accent : 'transparent',
+                    color: shareHours === d.h ? '#fff' : c.textSecondary,
+                  }}
+                >
+                  {d.label}
+                </div>
+              ))}
+            </div>
+            {!shareLink ? (
+              <button
+                type="button"
+                onClick={genShare}
+                disabled={shareBusy}
+                style={{
+                  width: '100%',
+                  border: 'none',
+                  borderRadius: 12,
+                  padding: 12,
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  color: '#fff',
+                  background: '#0d2a5c',
+                  cursor: 'pointer',
+                }}
+              >
+                {shareBusy ? 'Gerando...' : 'Gerar link'}
+              </button>
+            ) : (
+              <>
+                <div
+                  style={{
+                    fontSize: 11.5,
+                    color: c.text,
+                    background: c.surfaceAlt,
+                    borderRadius: 9,
+                    padding: '9px 11px',
+                    wordBreak: 'break-all',
+                    marginBottom: 9,
+                  }}
+                >
+                  {shareLink}
+                </div>
+                <div style={{ display: 'flex', gap: 9 }}>
+                  <button
+                    type="button"
+                    onClick={copyShare}
+                    style={{
+                      flex: 1,
+                      background: c.surfaceAlt,
+                      border: `1px solid ${c.border}`,
+                      borderRadius: 12,
+                      padding: 11,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: c.text,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {shareCopied ? 'Copiado!' : 'Copiar'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={whatsShare}
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      borderRadius: 12,
+                      padding: 11,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: '#fff',
+                      background: '#25D366',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    WhatsApp
+                  </button>
+                </div>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => setShareOpen(false)}
+              style={{
+                width: '100%',
+                marginTop: 12,
+                background: 'none',
+                border: 'none',
+                color: c.textSecondary,
+                fontSize: 12.5,
+                cursor: 'pointer',
+              }}
+            >
+              Fechar
+            </button>
           </div>
         </div>
       )}

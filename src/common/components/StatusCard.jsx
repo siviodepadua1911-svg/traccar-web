@@ -1072,6 +1072,7 @@ const StatusCard = ({
                       canNavigate ? `${navIndex + 1} de ${deviceIds.length}` : device.attributes?.placa || ''
                     }
                     canEdit={!deviceReadonly}
+                    canShare={!shareDisabled && !user.temporary}
                     disableActions={disableActions}
                     canBlock={canBlock}
                     blocked={blocked}
@@ -1089,6 +1090,7 @@ const StatusCard = ({
               onClose={onClose}
               onMenu={deviceReadonly ? undefined : (e) => setAnchorEl(e.currentTarget)}
               canEdit={!deviceReadonly}
+              canShare={!shareDisabled && !user.temporary}
               disableActions={disableActions}
               canBlock={canBlock}
               blocked={blocked}

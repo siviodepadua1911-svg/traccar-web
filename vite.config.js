@@ -25,6 +25,9 @@ export default defineConfig(() => ({
       workbox: {
         navigateFallbackDenylist: [/^\/api/, /^\/equipamentos/],
         globPatterns: ['**/*.{js,css,html,woff,woff2,mp3}'],
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
       },
       manifest: {
         short_name: '${title}',

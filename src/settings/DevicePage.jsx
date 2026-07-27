@@ -13,6 +13,7 @@ import {
   Alert,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import FileInput from '../common/components/FileInput';
 import EditItemView from './components/EditItemView';
 import EditAttributesAccordion from './components/EditAttributesAccordion';
@@ -120,6 +121,38 @@ const DevicePage = () => {
     >
       {item && (
         <>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 11,
+              background: '#0d2a5c',
+              color: '#fff',
+              borderRadius: 12,
+              padding: '12px 15px',
+              marginBottom: 8,
+            }}
+          >
+            <div
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 9,
+                background: 'rgba(255,255,255,.16)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <DirectionsCarIcon fontSize="small" />
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>
+                {item.id ? 'Editar dispositivo' : 'Cadastrar dispositivo'}
+              </div>
+              <div style={{ fontSize: 10.5, color: '#a9c4e8' }}>Nome, IMEI, placa e modelo</div>
+            </div>
+          </div>
           <Accordion defaultExpanded>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="subtitle1">{t('sharedRequired')}</Typography>
@@ -129,6 +162,17 @@ const DevicePage = () => {
                 value={item.name || ''}
                 onChange={(event) => setItem({ ...item, name: event.target.value })}
                 label={t('sharedName')}
+              />
+              <TextField
+                value={item.attributes?.placa || ''}
+                onChange={(event) =>
+                  setItem({
+                    ...item,
+                    attributes: { ...item.attributes, placa: event.target.value.toUpperCase() },
+                  })
+                }
+                label="Placa"
+                helperText="Aparece junto do nome no card do veiculo"
               />
               <TextField
                 value={item.uniqueId || ''}

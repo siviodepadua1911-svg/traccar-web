@@ -144,7 +144,9 @@ const LsHelp = () => {
               <HelpIcon />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>Ajuda rápida</div>
-                <div style={{ fontSize: 11, color: '#a9c4e8' }}>Explicações simples de cada tela</div>
+                <div style={{ fontSize: 11, color: '#a9c4e8' }}>
+                  Explicações simples de cada tela
+                </div>
               </div>
               <CloseIcon style={{ cursor: 'pointer' }} onClick={() => setOpen(false)} />
             </div>

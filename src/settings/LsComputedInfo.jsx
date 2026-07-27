@@ -91,44 +91,47 @@ const LsComputedInfo = () => {
               color="#2e7d32"
               icon={<LocalGasStationIcon fontSize="small" />}
               name="Combustível (%)"
-              need={(
+              need={
                 <>
-                  Mostra o nível do tanque. <b style={{ color: '#c77700' }}>Precisa de sensor de combustível.</b>
+                  Mostra o nível do tanque.{' '}
+                  <b style={{ color: '#c77700' }}>Precisa de sensor de combustível.</b>
                 </>
-              )}
+              }
             />
             <Ex
               bg="#e3f2fd"
               color="#1565c0"
               icon={<MeetingRoomIcon fontSize="small" />}
               name="Porta / baú aberto"
-              need={(
+              need={
                 <>
                   Avisa quando abre. <b style={{ color: '#c77700' }}>Precisa de sensor na porta.</b>
                 </>
-              )}
+              }
             />
             <Ex
               bg="#fff3e0"
               color="#e65100"
               icon={<DeviceThermostatIcon fontSize="small" />}
               name="Temperatura"
-              need={(
+              need={
                 <>
-                  Para baú refrigerado. <b style={{ color: '#c77700' }}>Precisa de sensor de temperatura.</b>
+                  Para baú refrigerado.{' '}
+                  <b style={{ color: '#c77700' }}>Precisa de sensor de temperatura.</b>
                 </>
-              )}
+              }
             />
             <Ex
               bg="#ede7f6"
               color="#5e35b1"
               icon={<VpnKeyIcon fontSize="small" />}
               name="Ignição · Bloqueio · Velocidade"
-              need={(
+              need={
                 <>
-                  A <b style={{ color: '#2e7d32' }}>maioria dos rastreadores já envia</b> — dá pra usar em alertas.
+                  A <b style={{ color: '#2e7d32' }}>maioria dos rastreadores já envia</b> — dá pra
+                  usar em alertas.
                 </>
-              )}
+              }
             />
             <div
               style={{
@@ -144,9 +147,9 @@ const LsComputedInfo = () => {
             >
               <WarningAmberIcon style={{ color: '#b8860b', fontSize: 19, flex: 'none' }} />
               <div style={{ fontSize: 11.5, color: '#6b5310', lineHeight: 1.45 }}>
-                <b>Depende do hardware.</b> Só dá pra calcular o que o aparelho realmente envia. Sem o
-                sensor instalado (combustível, porta, temperatura), esse dado não existe. Rastreadores
-                com mais entradas/sensores permitem mais atributos.
+                <b>Depende do hardware.</b> Só dá pra calcular o que o aparelho realmente envia. Sem
+                o sensor instalado (combustível, porta, temperatura), esse dado não existe.
+                Rastreadores com mais entradas/sensores permitem mais atributos.
               </div>
             </div>
           </div>

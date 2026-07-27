@@ -120,7 +120,11 @@ const LsDevicePage = () => {
   const idIsNum = /^\d+$/.test(idClean);
   const idValid = idClean.length >= 6 && !/\s/.test(idClean);
   const idMsg =
-    idIsNum && idClean.length === 15 ? 'IMEI válido (15 dígitos)' : idValid ? 'Identificador válido' : null;
+    idIsNum && idClean.length === 15
+      ? 'IMEI válido (15 dígitos)'
+      : idValid
+        ? 'Identificador válido'
+        : null;
 
   const canAdvance = () => {
     if (step === 1) return name.trim().length > 0;
@@ -246,7 +250,11 @@ const LsDevicePage = () => {
                       py: 0.5,
                       borderRadius: 20,
                       bgcolor:
-                        state === 'done' ? '#2e7d32' : state === 'on' ? '#fff' : 'rgba(255,255,255,0.08)',
+                        state === 'done'
+                          ? '#2e7d32'
+                          : state === 'on'
+                            ? '#fff'
+                            : 'rgba(255,255,255,0.08)',
                       color: state === 'on' ? AZUL : state === 'done' ? '#fff' : '#b9c9e8',
                       fontWeight: state === 'on' ? 700 : 400,
                     }}
@@ -262,7 +270,9 @@ const LsDevicePage = () => {
           <Box sx={{ p: 2 }}>
             {step === 1 && (
               <>
-                <Typography sx={{ fontWeight: 700, fontSize: 15, mb: 0.3 }}>Qual é o veículo?</Typography>
+                <Typography sx={{ fontWeight: 700, fontSize: 15, mb: 0.3 }}>
+                  Qual é o veículo?
+                </Typography>
                 <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 1.5 }}>
                   Como ele vai aparecer no mapa e pro cliente.
                 </Typography>
@@ -288,7 +298,9 @@ const LsDevicePage = () => {
 
             {step === 2 && (
               <>
-                <Typography sx={{ fontWeight: 700, fontSize: 15, mb: 0.3 }}>Qual o rastreador?</Typography>
+                <Typography sx={{ fontWeight: 700, fontSize: 15, mb: 0.3 }}>
+                  Qual o rastreador?
+                </Typography>
                 <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 1.5 }}>
                   Escolha o modelo — a configuração aparece pronta.
                 </Typography>
@@ -299,14 +311,20 @@ const LsDevicePage = () => {
                   inputValue={model}
                   onInputChange={(_, v) => setModel(v)}
                   renderInput={(params) => (
-                    <TextField {...params} label="Modelo" size="small" placeholder="Busque o modelo homologado" />
+                    <TextField
+                      {...params}
+                      label="Modelo"
+                      size="small"
+                      placeholder="Busque o modelo homologado"
+                    />
                   )}
                   sx={{ mb: 1.3 }}
                 />
                 {matchedModel && (
                   <Alert severity="info" sx={{ mb: 1.5 }}>
                     Configure o rastreador para <strong>{SERVER_ADDRESS}</strong> porta{' '}
-                    <strong>{matchedModel.port}</strong> (protocolo {matchedModel.protocol}, modo TCP)
+                    <strong>{matchedModel.port}</strong> (protocolo {matchedModel.protocol}, modo
+                    TCP)
                   </Alert>
                 )}
                 <TextField
@@ -392,7 +410,9 @@ const LsDevicePage = () => {
 
             {step === 4 && (
               <>
-                <Typography sx={{ fontWeight: 700, fontSize: 15, mb: 0.3 }}>Confira antes de salvar</Typography>
+                <Typography sx={{ fontWeight: 700, fontSize: 15, mb: 0.3 }}>
+                  Confira antes de salvar
+                </Typography>
                 <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 1.5 }}>
                   Está tudo certo? É só criar.
                 </Typography>
@@ -402,11 +422,16 @@ const LsDevicePage = () => {
                   <Rev label="Identificador" value={idClean || '—'} />
                   <Rev label="Modelo" value={model || '—'} />
                   {category && category !== 'default' && (
-                    <Rev label="Categoria" value={categoryData.find((c) => c.id === category)?.name || category} />
+                    <Rev
+                      label="Categoria"
+                      value={categoryData.find((c) => c.id === category)?.name || category}
+                    />
                   )}
                   {phone.trim() && <Rev label="Telefone" value={phone.trim()} />}
                   {contact.trim() && <Rev label="Contato" value={contact.trim()} />}
-                  {expiration && <Rev label="Validade" value={expiration.split('-').reverse().join('/')} />}
+                  {expiration && (
+                    <Rev label="Validade" value={expiration.split('-').reverse().join('/')} />
+                  )}
                   <Rev
                     label="Configuração"
                     value={matchedModel ? `${SERVER_ADDRESS}:${matchedModel.port}` : '—'}
@@ -424,7 +449,9 @@ const LsDevicePage = () => {
             {step === 5 && (
               <Box sx={{ textAlign: 'center', py: 1 }}>
                 <CheckCircleIcon sx={{ fontSize: 54, color: '#2e7d32' }} />
-                <Typography sx={{ fontWeight: 700, fontSize: 16, mt: 1 }}>Dispositivo cadastrado!</Typography>
+                <Typography sx={{ fontWeight: 700, fontSize: 16, mt: 1 }}>
+                  Dispositivo cadastrado!
+                </Typography>
                 <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.5, mb: 1.5 }}>
                   {name}
                   {placa ? ` · ${placa}` : ''}
@@ -443,7 +470,11 @@ const LsDevicePage = () => {
                   }}
                 >
                   {img ? (
-                    <img src={img} alt={name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    <img
+                      src={img}
+                      alt={name}
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
                   ) : (
                     <DirectionsCarIcon sx={{ fontSize: 46, color: '#c2cbd6' }} />
                   )}
@@ -467,7 +498,11 @@ const LsDevicePage = () => {
                   <Button fullWidth variant="outlined" onClick={reset}>
                     Cadastrar outro
                   </Button>
-                  <Button fullWidth variant="contained" onClick={() => navigate('/settings/devices')}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={() => navigate('/settings/devices')}
+                  >
                     Concluir
                   </Button>
                 </Box>
@@ -492,7 +527,13 @@ const LsDevicePage = () => {
                 Voltar
               </Button>
               <Button variant="contained" onClick={handleNext} disabled={saving || !canAdvance()}>
-                {saving ? <CircularProgress size={18} /> : step === 4 ? 'Criar dispositivo' : 'Continuar'}
+                {saving ? (
+                  <CircularProgress size={18} />
+                ) : step === 4 ? (
+                  'Criar dispositivo'
+                ) : (
+                  'Continuar'
+                )}
               </Button>
             </Box>
           )}

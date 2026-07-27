@@ -146,7 +146,9 @@ const LsSmsSetup = ({ protocol, port, domain = 'gps.lsautotruckrastreios.com.br'
   const data = gt06Data(domain, port);
 
   return (
-    <Box sx={{ border: '1px solid #eef1f6', borderRadius: 2, overflow: 'hidden', textAlign: 'left' }}>
+    <Box
+      sx={{ border: '1px solid #eef1f6', borderRadius: 2, overflow: 'hidden', textAlign: 'left' }}
+    >
       <Box sx={{ background: '#0d2a5c', color: '#fff', px: 1.5, py: 1 }}>
         <Typography sx={{ fontSize: 13, fontWeight: 700 }}>Subir o equipamento (SMS)</Typography>
         <Typography sx={{ fontSize: 10.5, color: '#a9c4e8' }}>

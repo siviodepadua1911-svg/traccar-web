@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Box, Button, Menu, MenuItem, Typography, Avatar } from '@mui/material';
 import MapIcon from '@mui/icons-material/Map';
-import RouteIcon from '@mui/icons-material/Route';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import DescriptionIcon from '@mui/icons-material/Description';
 import DrawIcon from '@mui/icons-material/Draw';
@@ -27,7 +26,6 @@ const LsTopBar = () => {
 
   const user = useSelector((state) => state.session.user);
   const lsMenu = user.attributes ? user.attributes.lsMenu : '';
-  const selectedDeviceId = useSelector((state) => state.devices.selectedId);
   const supportLink = useSelector((state) => state.session.server.attributes.support);
   const readonly = useRestriction('readonly');
   const disableReports = useRestriction('disableReports');
@@ -69,19 +67,11 @@ const LsTopBar = () => {
       active: location.pathname === '/',
     },
     !disableReports && {
-      k: 'replay',
-      label: 'Trajeto',
-      icon: <RouteIcon />,
-      onClick: () =>
-        go(selectedDeviceId != null ? `/replay?deviceId=${selectedDeviceId}` : '/replay'),
-      active: location.pathname === '/replay',
-    },
-    !disableReports && {
       k: 'rel',
       label: 'Relatórios',
       icon: <DescriptionIcon />,
       onClick: (e) => open(e, 'rel'),
-      active: at('/reports'),
+      active: at('/reports') || location.pathname === '/replay',
       menu: true,
     },
     !readonly && {
@@ -137,7 +127,6 @@ const LsTopBar = () => {
         !lsMenu ||
         it.k === 'map' ||
         it.k === 'dash' ||
-        it.k === 'replay' ||
         String(lsMenu).split(',').includes(it.k),
     );
 

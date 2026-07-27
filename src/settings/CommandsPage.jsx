@@ -10,7 +10,8 @@ import CollectionFab from './components/CollectionFab';
 import CollectionActions from './components/CollectionActions';
 import TableShimmer from '../common/components/TableShimmer';
 import SearchHeader from './components/SearchHeader';
-import { useRestriction } from '../common/util/permissions';
+import { useRestriction, useManager } from '../common/util/permissions';
+import LsSmsSetup from './LsSmsSetup';
 import useSettingsStyles from './common/useSettingsStyles';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 
@@ -23,6 +24,7 @@ const CommandsPage = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [hasMore, setHasMore] = useState(true);
   const limitCommands = useRestriction('limitCommands');
+  const manager = useManager();
 
   const loadItems = useCallback(
     async (offset, signal) => {
@@ -52,6 +54,11 @@ const CommandsPage = () => {
   return (
     <PageLayout menu={<SettingsMenu />} breadcrumbs={['settingsTitle', 'sharedSavedCommands']}>
       <SearchHeader keyword={searchKeyword} setKeyword={setSearchKeyword} />
+      {manager && (
+        <div style={{ padding: '10px 16px 0', maxWidth: 560 }}>
+          <LsSmsSetup protocol="GT06" port={5023} />
+        </div>
+      )}
       <Table className={classes.table}>
         <TableHead>
           <TableRow>

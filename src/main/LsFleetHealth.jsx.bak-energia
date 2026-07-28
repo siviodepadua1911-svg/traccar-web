@@ -5,7 +5,6 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
 import BoltIcon from '@mui/icons-material/Bolt';
-import PowerOffIcon from '@mui/icons-material/PowerOff';
 import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -16,7 +15,6 @@ dayjs.extend(relativeTime);
 const RED = '#E24B4A';
 const ORANGE = '#EF9F27';
 const PURPLE = '#8A5CD6';
-const CRIMSON = '#C0392B';
 
 const useStyles = makeStyles()((theme) => ({
   root: {
@@ -114,7 +112,6 @@ const LsFleetHealth = ({ onOpen }) => {
     const offline = [];
     const battery = [];
     const gps = [];
-    const power = [];
     list.forEach((d) => {
       const on = d.status === 'online';
       if (on) online += 1;
@@ -144,15 +141,11 @@ const LsFleetHealth = ({ onOpen }) => {
         if (at.sat != null) bits.push(`${at.sat} sat`);
         gps.push({ d, info: bits.join(' · ') || 'sinal fraco' });
       }
-      if (at.charge === false) {
-        power.push({ d, info: 'Energia externa desconectada' });
-      }
     });
-    return { total: list.length, online, offline, battery, gps, power };
+    return { total: list.length, online, offline, battery, gps };
   }, [devices, positions]);
 
-  const problemas =
-    health.offline.length + health.battery.length + health.gps.length + health.power.length;
+  const problemas = health.offline.length + health.battery.length + health.gps.length;
 
   const renderRow = (d, icon, color, info) => (
     <div key={d.id} className={classes.row} onClick={() => onOpen && onOpen(d.id)}>
@@ -213,12 +206,6 @@ const LsFleetHealth = ({ onOpen }) => {
           </div>
           <div className={classes.lab}>Sinal/GPS</div>
         </div>
-        <div className={classes.card} style={{ borderTopColor: CRIMSON }}>
-          <div className={classes.num} style={{ color: CRIMSON }}>
-            {health.power.length}
-          </div>
-          <div className={classes.lab}>Sem energia</div>
-        </div>
       </div>
 
       <div className={classes.body}>
@@ -253,14 +240,6 @@ const LsFleetHealth = ({ onOpen }) => {
             <div className={classes.sec}>Sinal / GPS ruim</div>
             {health.gps.map(({ d, info }) =>
               renderRow(d, <SatelliteAltIcon fontSize="small" />, PURPLE, info),
-            )}
-          </>
-        )}
-        {health.power.length > 0 && (
-          <>
-            <div className={classes.sec}>Sem energia (possível corte)</div>
-            {health.power.map(({ d, info }) =>
-              renderRow(d, <PowerOffIcon fontSize="small" />, CRIMSON, info),
             )}
           </>
         )}

@@ -204,7 +204,7 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
 
   const load = useCatchCallback(async () => {
     const response = await fetchOrThrow(
-      deviceReadonly ? '/api/notifications' : `/api/notifications?deviceId=${deviceId}`,
+      deviceReadonly || !deviceId ? '/api/notifications' : `/api/notifications?deviceId=${deviceId}`,
     );
     const list = await response.json();
     setLinked(list);
@@ -315,7 +315,7 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(
-                deviceReadonly
+                deviceReadonly || !deviceId
                   ? { userId: user.id, notificationId: notification.id }
                   : { deviceId, notificationId: notification.id },
               ),
@@ -325,7 +325,7 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
               method: 'DELETE',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(
-                deviceReadonly
+                deviceReadonly || !deviceId
                   ? { userId: user.id, notificationId: current.id }
                   : { deviceId, notificationId: current.id },
               ),
@@ -358,9 +358,11 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
   return (
     <Dialog open onClose={() => !saving && onClose()} fullWidth maxWidth="xs" fullScreen={fullScreen}>
       <DialogTitle>
-        {`Meus alertas — ${deviceName}`}
+        {deviceName ? `Meus alertas — ${deviceName}` : 'Meus alertas'}
         <Typography variant="body2" color="textSecondary" component="div">
-          Escolha o que este veículo avisa você
+          {deviceName
+            ? 'Escolha o que este veículo avisa você'
+            : 'Escolha os alertas dos seus veículos'}
         </Typography>
       </DialogTitle>
       <DialogContent dividers>

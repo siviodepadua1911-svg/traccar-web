@@ -1,0 +1,18 @@
+{
+  "name": "ls-autotruck-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App LS Autotruck Rastreios (Capacitor) - embrulha a plataforma web com notificacoes nativas e som por alerta.",
+  "scripts": {
+    "add:android": "cap add android",
+    "sync": "cap sync"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/push-notifications": "^6.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  }
+}

@@ -141,6 +141,43 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
   const [telegram, setTelegram] = useState(
     String((user.attributes && user.attributes.telegramChatId) || ''),
   );
+  const [tgWaiting, setTgWaiting] = useState(false);
+
+  const connectTelegram = () => {
+    const tok = `${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
+      .replace(/[^a-z0-9]/gi, '')
+      .slice(0, 40);
+    const updated = { ...user, attributes: { ...user.attributes, telegramLinkToken: tok } };
+    fetch(`/api/users/${user.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated),
+    }).catch(() => {});
+    window.open(`https://t.me/Alert_Ls_auto_truck_bot?start=${tok}`, '_blank');
+    setTgWaiting(true);
+    let tries = 0;
+    const iv = setInterval(async () => {
+      tries += 1;
+      try {
+        const r = await fetch('/api/session');
+        if (r.ok) {
+          const u = await r.json();
+          const cid = u.attributes && u.attributes.telegramChatId;
+          if (cid) {
+            setTelegram(String(cid));
+            setTgWaiting(false);
+            clearInterval(iv);
+          }
+        }
+      } catch {
+        // ignore
+      }
+      if (tries >= 40) {
+        setTgWaiting(false);
+        clearInterval(iv);
+      }
+    }, 3000);
+  };
   const [sounds, setSounds] = useState(() => {
     const initial = {};
     LS_TOGGLES.forEach((toggle) => {
@@ -214,6 +251,7 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
       } else {
         delete attributes.telegramChatId;
       }
+      delete attributes.telegramLinkToken;
       attributes.soundAlarms = buildSound('alarms');
       attributes.soundEvents = buildSound('events');
       const soundMap = {};
@@ -415,14 +453,49 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
             <Typography variant="body2" style={{ fontWeight: 600, marginBottom: 6 }}>
               Conectar meu Telegram
             </Typography>
-            <TextField
-              value={telegram}
-              onChange={(e) => setTelegram(e.target.value)}
-              placeholder="Chat ID (número)"
-              fullWidth
-              size="small"
-              helperText="Mande /start para @Alert_Ls_auto_truck_bot e pegue seu Id no @userinfobot"
-            />
+            {telegram ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ color: '#2e7d32', fontWeight: 600, fontSize: 14 }}>
+                  ✓ Telegram conectado
+                </span>
+                <Button size="small" color="inherit" onClick={() => setTelegram('')}>
+                  Desconectar
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <Button
+                  variant="contained"
+                  onClick={connectTelegram}
+                  sx={{ backgroundColor: '#229ED9', '&:hover': { backgroundColor: '#1c88ba' } }}
+                >
+                  Conectar Telegram
+                </Button>
+                {tgWaiting && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      marginTop: 8,
+                      fontSize: 13,
+                      color: '#607d8b',
+                    }}
+                  >
+                    <CircularProgress size={16} />
+                    Aguardando... abra o Telegram e aperte &quot;Iniciar&quot;.
+                  </div>
+                )}
+                <Typography
+                  variant="caption"
+                  color="textSecondary"
+                  component="div"
+                  style={{ marginTop: 6 }}
+                >
+                  Um toque: abre o bot da LS no Telegram, aperte Iniciar e pronto — sem digitar nada.
+                </Typography>
+              </div>
+            )}
           </>
         )}
       </DialogContent>

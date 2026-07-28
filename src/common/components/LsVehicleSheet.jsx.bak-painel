@@ -18,11 +18,6 @@ import MapIcon from '@mui/icons-material/Map';
 import StreetviewIcon from '@mui/icons-material/Streetview';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import ShareIcon from '@mui/icons-material/Share';
-import PowerIcon from '@mui/icons-material/Power';
-import PowerOffIcon from '@mui/icons-material/PowerOff';
-import BoltIcon from '@mui/icons-material/Bolt';
-import BatteryStdIcon from '@mui/icons-material/BatteryStd';
-import NavigationIcon from '@mui/icons-material/Navigation';
 import { devicesActions } from '../../store';
 import { formatTime } from '../util/formatter';
 import { lsCardColors } from '../theme/lsCardColors';
@@ -117,27 +112,6 @@ const satInfo = (a) => {
   const v = Number(a.sat);
   const color = v >= 5 ? OK : v >= 3 ? WARN : BAD;
   return { value: String(v), color };
-};
-
-const chargeInfo = (a) => {
-  if (!('charge' in a)) return { value: '—', color: '#8a8f98', on: false };
-  return a.charge
-    ? { value: 'Conectada', color: OK, on: true }
-    : { value: 'Sem energia', color: BAD, on: false };
-};
-
-const batIntInfo = (a) => {
-  if (a.batteryLevel == null) return { value: '—', color: '#8a8f98' };
-  const v = Number(a.batteryLevel);
-  const color = v >= 60 ? OK : v >= 25 ? WARN : BAD;
-  return { value: `${Math.round(v)}%`, color };
-};
-
-const dirInfo = (course) => {
-  if (course == null) return { value: '—', deg: 0 };
-  const deg = ((Number(course) % 360) + 360) % 360;
-  const names = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'];
-  return { value: names[Math.round(deg / 45) % 8], deg };
 };
 
 const two = (n) => String(n).padStart(2, '0');
@@ -375,9 +349,6 @@ const LsVehicleSheet = ({
   const sig = sigInfo(a);
   const bat = batInfo(a);
   const sat = satInfo(a);
-  const pwr = chargeInfo(a);
-  const batint = batIntInfo(a);
-  const dir = dirInfo(position.course);
   const sinceTxt = since && since.blocked === blocked && since.ts ? `desde ${shortWhen(since.ts)}` : 'estado atual';
   const blockDisabled = disableActions || !canBlock;
   const summary = `${isPanel && navLabel ? `${navLabel} · ` : ''}${stateLabel} · ${speed} km/h · ${formatTime(position.fixTime, 'minutes')}`;
@@ -652,8 +623,8 @@ const LsVehicleSheet = ({
             <div style={colStyle}>
               <Tile
                 c={c}
-                icon={<BoltIcon fontSize="small" />}
-                label="Tensão"
+                icon={bat.charging ? <BatteryChargingFullIcon fontSize="small" /> : <BatteryFullIcon fontSize="small" />}
+                label="Bateria"
                 value={bat.value}
                 color={bat.color}
               />
@@ -665,37 +636,6 @@ const LsVehicleSheet = ({
                 color={sat.color}
               />
             </div>
-          </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-              gap: 7,
-              marginTop: 7,
-            }}
-          >
-            <Tile
-              c={c}
-              icon={pwr.on ? <PowerIcon fontSize="small" /> : <PowerOffIcon fontSize="small" />}
-              label="Energia"
-              value={pwr.value}
-              color={pwr.color}
-            />
-            <Tile
-              c={c}
-              icon={<BatteryStdIcon fontSize="small" />}
-              label="Bateria"
-              value={batint.value}
-              color={batint.color}
-            />
-            <Tile
-              c={c}
-              icon={<NavigationIcon fontSize="small" style={{ transform: `rotate(${dir.deg}deg)` }} />}
-              label="Direção"
-              value={dir.value}
-              color={c.accent}
-            />
           </div>
 
           <div style={secLab}>Localização</div>

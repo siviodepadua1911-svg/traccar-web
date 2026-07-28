@@ -17,6 +17,7 @@ import MapDefaultCamera from '../map/main/MapDefaultCamera';
 import { devicesActions } from '../store';
 import { formatTime } from '../common/util/formatter';
 import usePersistedState from '../common/util/usePersistedState';
+import LsFleetHealth from './LsFleetHealth';
 
 const EVENT_INFO = {
   deviceOverspeed: ['Excesso de velocidade', '#c62828'],
@@ -321,6 +322,8 @@ const DashboardPage = () => {
           </div>
         ))}
       </div>
+
+      <LsFleetHealth onOpen={openDevice} />
 
       <div className={classes.grid}>
         <div>

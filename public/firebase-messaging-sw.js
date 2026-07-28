@@ -18,5 +18,7 @@ messaging.onBackgroundMessage((payload) => {
     body: payload.notification?.body || payload.data?.body,
     icon: '/pwa-192x192.png',
     badge: '/pwa-64x64.png',
+    vibrate: [300, 120, 300, 120, 300],
+    requireInteraction: true,
   });
 });

@@ -89,6 +89,7 @@ const FirebaseNotifications = () => {
           registration.showNotification(title, {
             body: payload.notification?.body || payload.data?.body,
             icon: '/pwa-192x192.png',
+            silent: true,
           });
         }
       });

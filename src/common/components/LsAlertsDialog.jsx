@@ -15,6 +15,8 @@ import {
   Divider,
   CircularProgress,
   IconButton,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
@@ -123,6 +125,8 @@ const soundSource = (user, kind) => {
 const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.session.user);
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const deviceReadonly = useDeviceReadonly();
 
   const [loaded, setLoaded] = useState(false);
@@ -314,7 +318,7 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
   }, [states, sounds, alertSounds, speed, telegram, linked, user, device, deviceId, onClose]);
 
   return (
-    <Dialog open onClose={() => !saving && onClose()} fullWidth maxWidth="xs">
+    <Dialog open onClose={() => !saving && onClose()} fullWidth maxWidth="xs" fullScreen={fullScreen}>
       <DialogTitle>
         {`Meus alertas — ${deviceName}`}
         <Typography variant="body2" color="textSecondary" component="div">

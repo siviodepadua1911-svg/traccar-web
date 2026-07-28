@@ -101,7 +101,7 @@ const SocketController = () => {
       if (!features.disableEvents) {
         dispatch(eventsActions.add(events));
       }
-      let soundsMap = {};
+      let soundsMap;
       try {
         soundsMap = JSON.parse(lsAlertSounds || '{}');
       } catch {
@@ -148,7 +148,7 @@ const SocketController = () => {
     (deviceId, blocked) => {
       const name = (devices[deviceId] && devices[deviceId].name) || 'Veiculo';
       const label = blocked ? 'BLOQUEADO' : 'DESBLOQUEADO';
-      let soundsMap = {};
+      let soundsMap;
       try {
         soundsMap = JSON.parse(lsAlertSounds || '{}');
       } catch {

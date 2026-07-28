@@ -11,8 +11,6 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import KeyIcon from '@mui/icons-material/Key';
 import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
-import BatteryFullIcon from '@mui/icons-material/BatteryFull';
-import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
 import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt';
 import MapIcon from '@mui/icons-material/Map';
 import StreetviewIcon from '@mui/icons-material/Streetview';
@@ -54,8 +52,18 @@ const Speedo = ({ speed }) => {
     <svg viewBox="0 0 220 190" style={{ display: 'block', width: '100%' }}>
       <circle cx="110" cy="110" r="100" fill="#23272e" stroke="#3d4451" strokeWidth="2" />
       <path d="M 33.8 154 A 88 88 0 0 1 166.6 42.6" fill="none" stroke="#2e7d32" strokeWidth="6" />
-      <path d="M 166.6 42.6 A 88 88 0 0 1 196.7 125.3" fill="none" stroke="#ed6c02" strokeWidth="6" />
-      <path d="M 196.7 125.3 A 88 88 0 0 1 186.2 154" fill="none" stroke="#d32f2f" strokeWidth="6" />
+      <path
+        d="M 166.6 42.6 A 88 88 0 0 1 196.7 125.3"
+        fill="none"
+        stroke="#ed6c02"
+        strokeWidth="6"
+      />
+      <path
+        d="M 196.7 125.3 A 88 88 0 0 1 186.2 154"
+        fill="none"
+        stroke="#d32f2f"
+        strokeWidth="6"
+      />
       {spTicks.map((tk) => (
         <g key={tk.v}>
           <line x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2} stroke="#e8eaed" strokeWidth="3" />
@@ -77,7 +85,15 @@ const Speedo = ({ speed }) => {
           transition: 'transform 0.8s ease',
         }}
       >
-        <line x1="110" y1="124" x2="110" y2="42" stroke="#e53935" strokeWidth="4" strokeLinecap="round" />
+        <line
+          x1="110"
+          y1="124"
+          x2="110"
+          y2="42"
+          stroke="#e53935"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
       </g>
       <circle cx="110" cy="110" r="9" fill="#3d4451" />
       <circle cx="110" cy="110" r="3.5" fill="#e53935" />
@@ -151,15 +167,21 @@ const shortWhen = (ts) => {
 };
 
 const Tile = ({ c, icon, label, value, color }) => (
-  <div style={{ background: c.surfaceAlt, borderRadius: 10, padding: '8px 3px', textAlign: 'center' }}>
-    <div style={{ color: color || c.accent, display: 'flex', justifyContent: 'center' }}>{icon}</div>
+  <div
+    style={{ background: c.surfaceAlt, borderRadius: 10, padding: '8px 3px', textAlign: 'center' }}
+  >
+    <div style={{ color: color || c.accent, display: 'flex', justifyContent: 'center' }}>
+      {icon}
+    </div>
     <div style={{ fontSize: 9, color: c.textSecondary, marginTop: 1 }}>{label}</div>
     <div style={{ fontSize: 11.5, fontWeight: 700, color: c.text }}>{value}</div>
   </div>
 );
 
 const Row = ({ c, l, v }) => (
-  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '4px 0' }}>
+  <div
+    style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '4px 0' }}
+  >
     <span style={{ color: c.textSecondary }}>{l}</span>
     <span style={{ color: c.text, fontWeight: 600 }}>{v}</span>
   </div>
@@ -237,14 +259,12 @@ const LsVehicleSheet = ({
       localStorage.setItem(sinceKey, JSON.stringify(rec));
       setSince(rec);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blocked]);
 
   useEffect(() => {
     if (isPanel) return undefined;
     if (sheetRef.current) sheetRef.current.style.height = `${peek}px`;
     return undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -313,7 +333,9 @@ const LsVehicleSheet = ({
         dispatch(devicesActions.update([updated]));
         setImg(`/api/media/${device.uniqueId}/${filename}?t=${Date.now()}`);
       } else {
-        window.alert('Foto enviada, mas nao foi possivel salvar (permissao). Fale com a LS Autotruck.');
+        window.alert(
+          'Foto enviada, mas nao foi possivel salvar (permissao). Fale com a LS Autotruck.',
+        );
       }
     } catch {
       window.alert('Nao foi possivel enviar a foto.');
@@ -378,7 +400,10 @@ const LsVehicleSheet = ({
   const pwr = chargeInfo(a);
   const batint = batIntInfo(a);
   const dir = dirInfo(position.course);
-  const sinceTxt = since && since.blocked === blocked && since.ts ? `desde ${shortWhen(since.ts)}` : 'estado atual';
+  const sinceTxt =
+    since && since.blocked === blocked && since.ts
+      ? `desde ${shortWhen(since.ts)}`
+      : 'estado atual';
   const blockDisabled = disableActions || !canBlock;
   const summary = `${isPanel && navLabel ? `${navLabel} · ` : ''}${stateLabel} · ${speed} km/h · ${formatTime(position.fixTime, 'minutes')}`;
 
@@ -436,7 +461,15 @@ const LsVehicleSheet = ({
           onTouchStart={startDrag}
           style={{ padding: '11px 0 9px', cursor: 'grab', touchAction: 'none', flex: 'none' }}
         >
-          <div style={{ width: 50, height: 6, borderRadius: 3, background: c.border, margin: '0 auto' }} />
+          <div
+            style={{
+              width: 50,
+              height: 6,
+              borderRadius: 3,
+              background: c.border,
+              margin: '0 auto',
+            }}
+          />
         </div>
       )}
 
@@ -542,7 +575,11 @@ const LsVehicleSheet = ({
           }}
         >
           {img ? (
-            <img src={img} alt={device.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img
+              src={img}
+              alt={device.name}
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
           ) : (
             <DirectionsCarIcon style={{ fontSize: 46, color: c.textSecondary }} />
           )}
@@ -599,7 +636,9 @@ const LsVehicleSheet = ({
                 <LockIcon style={{ color: '#fff' }} />
               </div>
               <div style={{ color: '#fff' }}>
-                <div style={{ fontSize: 13.5, fontWeight: 800, letterSpacing: '.02em' }}>VEÍCULO BLOQUEADO</div>
+                <div style={{ fontSize: 13.5, fontWeight: 800, letterSpacing: '.02em' }}>
+                  VEÍCULO BLOQUEADO
+                </div>
                 <div style={{ fontSize: 10.5, opacity: 0.9 }}>{sinceTxt}</div>
               </div>
             </div>
@@ -630,14 +669,22 @@ const LsVehicleSheet = ({
               </div>
               <div>
                 <div style={{ fontSize: 13.5, fontWeight: 700, color: c.text }}>Desbloqueado</div>
-                <div style={{ fontSize: 10.5, color: c.textSecondary }}>{`funcionando normal · ${sinceTxt}`}</div>
+                <div
+                  style={{ fontSize: 10.5, color: c.textSecondary }}
+                >{`funcionando normal · ${sinceTxt}`}</div>
               </div>
             </div>
           )}
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
             <div style={colStyle}>
-              <Tile c={c} icon={<KeyIcon fontSize="small" />} label="Ignição" value={ign.value} color={ign.color} />
+              <Tile
+                c={c}
+                icon={<KeyIcon fontSize="small" />}
+                label="Ignição"
+                value={ign.value}
+                color={ign.color}
+              />
               <Tile
                 c={c}
                 icon={<SignalCellularAltIcon fontSize="small" />}
@@ -691,7 +738,9 @@ const LsVehicleSheet = ({
             />
             <Tile
               c={c}
-              icon={<NavigationIcon fontSize="small" style={{ transform: `rotate(${dir.deg}deg)` }} />}
+              icon={
+                <NavigationIcon fontSize="small" style={{ transform: `rotate(${dir.deg}deg)` }} />
+              }
               label="Direção"
               value={dir.value}
               color={c.accent}
@@ -735,7 +784,14 @@ const LsVehicleSheet = ({
         </div>
       </div>
 
-      <div style={{ flex: 'none', padding: '7px 10px 6px', borderTop: `1px solid ${c.border}`, background: c.surface }}>
+      <div
+        style={{
+          flex: 'none',
+          padding: '7px 10px 6px',
+          borderTop: `1px solid ${c.border}`,
+          background: c.surface,
+        }}
+      >
         <div style={{ maxWidth: 460, margin: '0 auto' }}>
           <button
             type="button"
@@ -780,7 +836,14 @@ const LsVehicleSheet = ({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ background: c.surface, borderRadius: 18, padding: '20px 18px', width: '100%', maxWidth: 320, textAlign: 'center' }}
+            style={{
+              background: c.surface,
+              borderRadius: 18,
+              padding: '20px 18px',
+              width: '100%',
+              maxWidth: 320,
+              textAlign: 'center',
+            }}
           >
             <div
               style={{
@@ -794,13 +857,19 @@ const LsVehicleSheet = ({
                 margin: '0 auto 12px',
               }}
             >
-              {blocked ? <LockOpenIcon style={{ color: OK }} /> : <LockIcon style={{ color: RED }} />}
+              {blocked ? (
+                <LockOpenIcon style={{ color: OK }} />
+              ) : (
+                <LockIcon style={{ color: RED }} />
+              )}
             </div>
             <div style={{ fontSize: 14.5, fontWeight: 600, color: c.text }}>
               {blocked ? 'Desbloquear o motor do veículo?' : 'Bloquear o motor do veículo?'}
             </div>
             <div style={{ fontSize: 12, color: c.textSecondary, marginTop: 4 }}>
-              {blocked ? 'O veículo voltará a ligar normalmente.' : 'O motor será impedido de ligar.'}
+              {blocked
+                ? 'O veículo voltará a ligar normalmente.'
+                : 'O motor será impedido de ligar.'}
             </div>
             <div style={{ display: 'flex', gap: 9, marginTop: 16 }}>
               <button
@@ -859,7 +928,13 @@ const LsVehicleSheet = ({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ background: c.surface, borderRadius: 18, padding: '20px 18px', width: '100%', maxWidth: 340 }}
+            style={{
+              background: c.surface,
+              borderRadius: 18,
+              padding: '20px 18px',
+              width: '100%',
+              maxWidth: 340,
+            }}
           >
             <div style={{ fontSize: 15, fontWeight: 700, color: c.text, marginBottom: 2 }}>
               Compartilhar veículo

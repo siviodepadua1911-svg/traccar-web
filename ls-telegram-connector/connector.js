@@ -1,8 +1,10 @@
-// LS Autotruck - Conector do Telegram
-// Escuta o bot e, quando o cliente aperta "Iniciar" com um token valido,
-// liga o Telegram dele na plataforma automaticamente. Token unico e temporario.
+// LS Autotruck - Conector do Telegram + Vigia de bloqueio/desbloqueio
+// 1) Conecta o bot ao cliente automaticamente (/start com token seguro).
+// 2) Observa a mudanca do estado 'blocked' e dispara o alerta (evento na
+//    plataforma + mensagem no Telegram), porque o rastreador nao manda
+//    o alarme lock/unlock por conta propria.
 const fs = require('fs');
-const { Client } = require('pg');
+const { Pool } = require('pg');
 
 const xml = fs.readFileSync('/opt/traccar/conf/traccar.xml', 'utf8');
 const token = (xml.match(/notificator\.telegram\.key'>\s*([^<\s]+)/) || [])[1];
@@ -13,12 +15,13 @@ if (!token || !dbPassword) {
 }
 const API = `https://api.telegram.org/bot${token}`;
 
-const db = new Client({
+const db = new Pool({
   host: '127.0.0.1',
   port: 5432,
   user: 'traccar',
   database: 'traccar',
   password: dbPassword,
+  max: 4,
 });
 
 async function tg(method, body) {
@@ -30,6 +33,7 @@ async function tg(method, body) {
   return r.json();
 }
 
+// ---------- 1) Conectar Telegram ----------
 async function handleStart(chatId, name, payload) {
   if (payload && /^[A-Za-z0-9_-]{6,}$/.test(payload)) {
     const res = await db.query(
@@ -62,7 +66,7 @@ async function handleStart(chatId, name, payload) {
 }
 
 let offset = 0;
-async function loop() {
+async function pollUpdates() {
   try {
     const r = await fetch(`${API}/getUpdates?timeout=30&offset=${offset}`);
     const j = await r.json();
@@ -80,21 +84,81 @@ async function loop() {
       }
     }
   } catch (e) {
-    console.error('loop erro:', e.message);
+    console.error('poll erro:', e.message);
     await new Promise((res) => setTimeout(res, 3000));
   }
-  setImmediate(loop);
+  setImmediate(pollUpdates);
+}
+
+// ---------- 2) Vigia de bloqueio/desbloqueio ----------
+async function onBlockChange(deviceId, positionId, deviceName, blocked) {
+  const alarm = blocked ? 'lock' : 'unlock';
+  const emoji = blocked ? '🔒' : '🔓';
+  const label = blocked ? 'BLOQUEADO' : 'DESBLOQUEADO';
+  // 2a) evento na plataforma (aparece na lista de alertas/eventos)
+  try {
+    await db.query(
+      "INSERT INTO tc_events (type, eventtime, deviceid, positionid, attributes) VALUES ('alarm', now(), $1, $2, $3)",
+      [deviceId, positionId, JSON.stringify({ alarm })],
+    );
+  } catch (e) {
+    console.error('evento erro:', e.message);
+  }
+  // 2b) Telegram para quem quer esse alerta e ve o veiculo
+  try {
+    const users = await db.query(
+      "SELECT DISTINCT u.attributes::jsonb->>'telegramChatId' AS chat FROM tc_users u JOIN tc_user_notification un ON un.userid = u.id JOIN tc_notifications n ON n.id = un.notificationid WHERE n.type = 'alarm' AND (n.attributes::jsonb->>'alarms') = $1 AND u.attributes::jsonb->>'telegramChatId' IS NOT NULL AND (u.administrator = true OR EXISTS (SELECT 1 FROM tc_user_device ud WHERE ud.userid = u.id AND ud.deviceid = $2))",
+      [alarm, deviceId],
+    );
+    for (const row of users.rows) {
+      if (row.chat) {
+        // eslint-disable-next-line no-await-in-loop
+        await tg('sendMessage', { chat_id: row.chat, text: `${emoji} ${deviceName}: veiculo ${label}` });
+      }
+    }
+  } catch (e) {
+    console.error('tg alerta erro:', e.message);
+  }
+  console.log('bloqueio mudou device=%s -> %s', deviceId, label);
+}
+
+async function watchBlocks() {
+  try {
+    const r = await db.query(
+      "SELECT d.id AS deviceid, d.positionid, d.name, (p.attributes::jsonb->>'blocked') AS blocked FROM tc_devices d JOIN tc_positions p ON p.id = d.positionid WHERE p.attributes LIKE '%blocked%'",
+    );
+    for (const row of r.rows) {
+      const cur = row.blocked === 'true';
+      // eslint-disable-next-line no-await-in-loop
+      const prev = await db.query('SELECT blocked FROM ls_block_state WHERE deviceid = $1', [row.deviceid]);
+      if (prev.rowCount === 0) {
+        // eslint-disable-next-line no-await-in-loop
+        await db.query('INSERT INTO ls_block_state (deviceid, blocked) VALUES ($1, $2)', [row.deviceid, cur]);
+      } else if (prev.rows[0].blocked !== cur) {
+        // eslint-disable-next-line no-await-in-loop
+        await db.query('UPDATE ls_block_state SET blocked = $2, updated = now() WHERE deviceid = $1', [row.deviceid, cur]);
+        // eslint-disable-next-line no-await-in-loop
+        await onBlockChange(row.deviceid, row.positionid, row.name, cur);
+      }
+    }
+  } catch (e) {
+    console.error('vigia erro:', e.message);
+  }
+  setTimeout(watchBlocks, 20000);
 }
 
 (async () => {
-  await db.connect();
+  await db.query(
+    'CREATE TABLE IF NOT EXISTS ls_block_state (deviceid integer PRIMARY KEY, blocked boolean, updated timestamp DEFAULT now())',
+  );
   try {
     await tg('deleteWebhook', {});
   } catch {
     // ignore
   }
-  console.log('LS Telegram connector no ar');
-  loop();
+  console.log('LS connector no ar (telegram + vigia de bloqueio)');
+  pollUpdates();
+  watchBlocks();
 })().catch((e) => {
   console.error('fatal:', e.message);
   process.exit(1);

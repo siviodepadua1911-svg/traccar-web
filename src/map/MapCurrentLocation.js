@@ -10,9 +10,16 @@ const MapCurrentLocation = () => {
     const control = new maplibregl.GeolocateControl({
       positionOptions: {
         enableHighAccuracy: true,
-        timeout: 5000,
+        timeout: 10000,
+        maximumAge: 0,
       },
       trackUserLocation: false,
+      showUserLocation: true,
+    });
+    control.on('error', () => {
+      window.alert(
+        'Nao consegui pegar sua localizacao. Permita o acesso a localizacao no navegador/celular e tente de novo.',
+      );
     });
     map.addControl(control, theme.direction === 'rtl' ? 'top-left' : 'top-right');
     return () => map.removeControl(control);

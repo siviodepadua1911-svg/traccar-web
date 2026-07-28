@@ -25,3 +25,8 @@ body {
     overflow: visible !important;
   }
 }
+/* LS: controles do mapa maiores (touch) */
+.maplibregl-ctrl button,
+.maplibregl-ctrl-group button { width: 40px !important; height: 40px !important; }
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon { background-size: 62% 62% !important; }
+.maplibregl-ctrl button svg { font-size: 24px !important; }

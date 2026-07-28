@@ -75,9 +75,6 @@ const LsHelp = () => {
   const [openKey, setOpenKey] = useState(null);
 
   const path = location.pathname;
-  if (path.startsWith('/settings')) {
-    return null;
-  }
   const current = GUIDES.find(
     (g) => g.match && (g.match === '/' ? path === '/' : path.startsWith(g.match)),
   );

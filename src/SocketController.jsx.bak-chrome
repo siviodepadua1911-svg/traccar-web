@@ -138,56 +138,6 @@ const SocketController = () => {
   const deliverRef = useRef(deliver);
   deliverRef.current = deliver;
 
-  // --- Vigia de bloqueio no navegador ---
-  // O rastreador nao manda o alarme lock/unlock e o evento inserido pelo
-  // conector nao vem pelo websocket. Mas a POSICAO chega em tempo real e
-  // traz o atributo 'blocked'. Detectamos a virada aqui: aviso + som.
-  const blockStateRef = useRef(new Map());
-
-  const alertBlock = useCallback(
-    (deviceId, blocked) => {
-      const name = (devices[deviceId] && devices[deviceId].name) || 'Veiculo';
-      const label = blocked ? 'BLOQUEADO' : 'DESBLOQUEADO';
-      let soundsMap = {};
-      try {
-        soundsMap = JSON.parse(lsAlertSounds || '{}');
-      } catch {
-        soundsMap = {};
-      }
-      const preset = soundsMap[blocked ? 'lock' : 'unlock'] || (blocked ? 'sireneForte' : 'rising');
-      if (preset && preset !== 'none') {
-        playPreset(preset);
-      }
-      setNotifications((prev) => [
-        ...prev.slice(-2),
-        {
-          id: `block-${deviceId}-${Date.now()}`,
-          message: `${name}: veiculo ${label}`,
-          show: true,
-        },
-      ]);
-    },
-    [devices, lsAlertSounds],
-  );
-  const alertBlockRef = useRef(alertBlock);
-  alertBlockRef.current = alertBlock;
-
-  const checkBlockChanges = useCallback((positions) => {
-    positions.forEach((p) => {
-      if (!p || !p.attributes || p.attributes.blocked === undefined) {
-        return;
-      }
-      const cur = Boolean(p.attributes.blocked);
-      const prev = blockStateRef.current.get(p.deviceId);
-      blockStateRef.current.set(p.deviceId, cur);
-      if (prev !== undefined && prev !== cur) {
-        alertBlockRef.current(p.deviceId, cur);
-      }
-    });
-  }, []);
-  const checkBlockChangesRef = useRef(checkBlockChanges);
-  checkBlockChangesRef.current = checkBlockChanges;
-
   const pendingResultsRef = useRef(new Map());
 
   const handleEvents = useCallback((events) => {
@@ -266,7 +216,6 @@ const SocketController = () => {
       }
       if (data.positions) {
         dispatch(sessionActions.updatePositions(data.positions));
-        checkBlockChangesRef.current(data.positions);
       }
       if (data.events) {
         handleEventsRef.current(data.events);

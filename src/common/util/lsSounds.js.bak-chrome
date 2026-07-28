@@ -8,26 +8,6 @@ const getCtx = () => {
   return ctx;
 };
 
-let unlocked = false;
-const unlockAudio = () => {
-  if (unlocked) {
-    return;
-  }
-  const ac = getCtx();
-  if (ac && ac.state === 'suspended') {
-    ac.resume().catch(() => {});
-  }
-  unlocked = true;
-  window.removeEventListener('pointerdown', unlockAudio);
-  window.removeEventListener('touchstart', unlockAudio);
-  window.removeEventListener('keydown', unlockAudio);
-};
-if (typeof window !== 'undefined') {
-  window.addEventListener('pointerdown', unlockAudio, { passive: true });
-  window.addEventListener('touchstart', unlockAudio, { passive: true });
-  window.addEventListener('keydown', unlockAudio);
-}
-
 const playSeq = (steps) => {
   try {
     const ac = getCtx();

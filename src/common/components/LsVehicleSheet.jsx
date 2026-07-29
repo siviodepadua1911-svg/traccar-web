@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { useTheme, IconButton } from '@mui/material';
+import { useTheme, IconButton, Menu, MenuItem, Checkbox } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloseIcon from '@mui/icons-material/Close';
+import SettingsIcon from '@mui/icons-material/Settings';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
@@ -238,6 +239,30 @@ const LsVehicleSheet = ({
   const [shareLink, setShareLink] = useState('');
   const [shareBusy, setShareBusy] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [sectionsAnchor, setSectionsAnchor] = useState(null);
+  const [sections, setSections] = useState(() => {
+    try {
+      return {
+        foto: true,
+        local: true,
+        veiculo: true,
+        ...JSON.parse(localStorage.getItem('lsPanelSections') || '{}'),
+      };
+    } catch {
+      return { foto: true, local: true, veiculo: true };
+    }
+  });
+  const toggleSection = (key) => {
+    setSections((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try {
+        localStorage.setItem('lsPanelSections', JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   const sinceKey = `lsBlkSince_${device.id}`;
   const readSince = () => {
@@ -552,6 +577,13 @@ const LsVehicleSheet = ({
             <ShareIcon fontSize="small" />
           </IconButton>
         )}
+        <IconButton
+          size="small"
+          onClick={(e) => setSectionsAnchor(e.currentTarget)}
+          style={{ color: c.textSecondary }}
+        >
+          <SettingsIcon fontSize="small" />
+        </IconButton>
         {onMenu && (
           <IconButton size="small" onClick={onMenu} style={{ color: c.textSecondary }}>
             <MoreVertIcon fontSize="small" />
@@ -564,27 +596,45 @@ const LsVehicleSheet = ({
         )}
       </div>
 
+      <Menu
+        anchorEl={sectionsAnchor}
+        open={Boolean(sectionsAnchor)}
+        onClose={() => setSectionsAnchor(null)}
+      >
+        {[
+          ['foto', 'Foto'],
+          ['local', 'Localização'],
+          ['veiculo', 'Dados do veículo'],
+        ].map(([key, label]) => (
+          <MenuItem key={key} dense onClick={() => toggleSection(key)}>
+            <Checkbox size="small" checked={!!sections[key]} style={{ padding: '0 8px 0 0' }} />
+            {label}
+          </MenuItem>
+        ))}
+      </Menu>
       <div style={{ flex: 1, overflow: 'auto' }}>
-        <div
-          style={{
-            height: 120,
-            background: c.surfaceAlt,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-          }}
-        >
-          {img ? (
-            <img
-              src={img}
-              alt={device.name}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-            />
-          ) : (
-            <DirectionsCarIcon style={{ fontSize: 46, color: c.textSecondary }} />
-          )}
-        </div>
+        {sections.foto && (
+          <div
+            style={{
+              height: 120,
+              background: c.surfaceAlt,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+            }}
+          >
+            {img ? (
+              <img
+                src={img}
+                alt={device.name}
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
+            ) : (
+              <DirectionsCarIcon style={{ fontSize: 46, color: c.textSecondary }} />
+            )}
+          </div>
+        )}
 
         {canEdit && (
           <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '7px 13px 0' }}>
@@ -748,42 +798,50 @@ const LsVehicleSheet = ({
             />
           </div>
 
-          <div style={secLab}>Localização</div>
-          <LsAddress
-            position={position}
-            color={c.text}
-            style={{ fontSize: 12.5, marginBottom: 8 }}
-          />
-          <div style={{ display: 'flex', gap: 7 }}>
-            <a
-              style={mapBtnStyle}
-              href={`https://www.google.com/maps/search/?api=1&query=${lat},${lon}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <MapIcon style={{ fontSize: 17 }} />
-              Google Maps
-            </a>
-            <a
-              style={mapBtnStyle}
-              href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <StreetviewIcon style={{ fontSize: 17 }} />
-              Street View
-            </a>
-          </div>
-
-          <div style={secLab}>Veículo</div>
-          {a.totalDistance !== undefined && (
-            <Row
-              c={c}
-              l="Hodômetro"
-              v={`${(a.totalDistance / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} km`}
-            />
+          {sections.local && (
+            <>
+              <div style={secLab}>Localização</div>
+              <LsAddress
+                position={position}
+                color={c.text}
+                style={{ fontSize: 12.5, marginBottom: 8 }}
+              />
+              <div style={{ display: 'flex', gap: 7 }}>
+                <a
+                  style={mapBtnStyle}
+                  href={`https://www.google.com/maps/search/?api=1&query=${lat},${lon}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <MapIcon style={{ fontSize: 17 }} />
+                  Google Maps
+                </a>
+                <a
+                  style={mapBtnStyle}
+                  href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <StreetviewIcon style={{ fontSize: 17 }} />
+                  Street View
+                </a>
+              </div>
+            </>
           )}
-          <Row c={c} l="Hora GPS" v={formatTime(position.fixTime, 'seconds')} />
+
+          {sections.veiculo && (
+            <>
+              <div style={secLab}>Veículo</div>
+              {a.totalDistance !== undefined && (
+                <Row
+                  c={c}
+                  l="Hodômetro"
+                  v={`${(a.totalDistance / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} km`}
+                />
+              )}
+              <Row c={c} l="Hora GPS" v={formatTime(position.fixTime, 'seconds')} />
+            </>
+          )}
         </div>
       </div>
 

@@ -109,7 +109,16 @@ async function sendFcm(deviceToken, title, body, userId) {
       body: JSON.stringify({
         message: {
           token: deviceToken,
+          notification: { title, body },
           data: { title, body },
+          android: {
+            priority: 'high',
+            notification: {
+              channel_id: 'ls_bloqueio',
+              sound: 'sirene',
+              notification_priority: 'PRIORITY_MAX',
+            },
+          },
           webpush: { headers: { Urgency: 'high' } },
         },
       }),

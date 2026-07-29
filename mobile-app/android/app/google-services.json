@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "331994840306",
+    "firebase_url": "https://ls-autotruck-default-rtdb.firebaseio.com",
+    "project_id": "ls-autotruck",
+    "storage_bucket": "ls-autotruck.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:331994840306:android:17659dbf12c5aa4318a46b",
+        "android_client_info": {
+          "package_name": "br.com.lsautotruckrastreios.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "331994840306-rajp4k27jl1rpggk5p8tukrgcrqmn8l0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC23xfTAP885JCt4MWPgqElBw0gSw2gjTw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "331994840306-rajp4k27jl1rpggk5p8tukrgcrqmn8l0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

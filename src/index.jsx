@@ -9,6 +9,7 @@ import Navigation from './Navigation';
 import preloadImages from './map/core/preloadImages';
 import NativeInterface from './common/components/NativeInterface';
 import FirebaseNotifications from './common/components/FirebaseNotifications';
+import LsNativePush from './common/components/LsNativePush';
 import ServerProvider from './ServerProvider';
 import ErrorBoundary from './ErrorBoundary';
 import AppThemeProvider from './AppThemeProvider';
@@ -30,6 +31,7 @@ root.render(
               <ErrorHandler />
               <NativeInterface />
               <FirebaseNotifications />
+              <LsNativePush />
             </ServerProvider>
           </AppThemeProvider>
         </StyledEngineProvider>

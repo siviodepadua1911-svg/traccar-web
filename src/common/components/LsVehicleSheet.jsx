@@ -24,6 +24,7 @@ import NavigationIcon from '@mui/icons-material/Navigation';
 import { devicesActions } from '../../store';
 import { formatTime } from '../util/formatter';
 import { lsCardColors } from '../theme/lsCardColors';
+import LsAddress from './LsAddress';
 
 const OK = '#2e7d32';
 const WARN = '#ed6c02';
@@ -748,9 +749,11 @@ const LsVehicleSheet = ({
           </div>
 
           <div style={secLab}>Localização</div>
-          <div style={{ fontSize: 12.5, color: c.text, marginBottom: 8 }}>
-            {position.address || 'Toque abaixo para ver o local no mapa'}
-          </div>
+          <LsAddress
+            position={position}
+            color={c.text}
+            style={{ fontSize: 12.5, marginBottom: 8 }}
+          />
           <div style={{ display: 'flex', gap: 7 }}>
             <a
               style={mapBtnStyle}

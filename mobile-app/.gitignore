@@ -1,0 +1,5 @@
+
+# chave de assinatura (NUNCA versionar) + projeto android gerado
+android/app/*.jks
+android/key.properties
+android/app/build/

@@ -419,6 +419,18 @@ const LsVehicleSheet = ({
   const speed = kmh(position.speed);
   const moving = Boolean(a.motion);
   const stateLabel = moving ? 'Em movimento' : 'Parado';
+  const fmtDur = (ms) => {
+    const m = Math.max(0, Math.floor(ms / 60000));
+    if (m < 60) return `${m} min`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return m % 60 ? `${h}h ${m % 60}min` : `${h}h`;
+    const d = Math.floor(h / 24);
+    return `${d}d ${h % 24}h`;
+  };
+  const stoppedText =
+    !moving && device.motionTime
+      ? `Parado há ${fmtDur(Date.now() - new Date(device.motionTime).getTime())}`
+      : stateLabel;
   const ign = ignInfo(a);
   const sig = sigInfo(a);
   const bat = batInfo(a);
@@ -431,7 +443,7 @@ const LsVehicleSheet = ({
       ? `desde ${shortWhen(since.ts)}`
       : 'estado atual';
   const blockDisabled = disableActions || !canBlock;
-  const summary = `${isPanel && navLabel ? `${navLabel} · ` : ''}${stateLabel} · ${speed} km/h · ${formatTime(position.fixTime, 'minutes')}`;
+  const summary = `${isPanel && navLabel ? `${navLabel} · ` : ''}${moving ? `${stateLabel} · ${speed} km/h` : stoppedText}`;
 
   const containerStyle = isPanel
     ? {
@@ -561,6 +573,16 @@ const LsVehicleSheet = ({
             {blocked ? 'BLOQUEADO · ' : ''}
             {summary}
           </div>
+          <LsAddress
+            position={position}
+            color={c.textSecondary}
+            style={{
+              fontSize: 11,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          />
         </div>
         {isPanel && (
           <IconButton

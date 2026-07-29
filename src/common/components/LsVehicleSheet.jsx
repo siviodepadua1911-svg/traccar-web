@@ -25,6 +25,7 @@ import NavigationIcon from '@mui/icons-material/Navigation';
 import { devicesActions } from '../../store';
 import { formatTime } from '../util/formatter';
 import { lsCardColors } from '../theme/lsCardColors';
+import { friendlyCommandResult } from '../util/lsCommandResult';
 import LsAddress from './LsAddress';
 
 const OK = '#2e7d32';
@@ -246,10 +247,11 @@ const LsVehicleSheet = ({
         foto: true,
         local: true,
         veiculo: true,
+        resposta: true,
         ...JSON.parse(localStorage.getItem('lsPanelSections') || '{}'),
       };
     } catch {
-      return { foto: true, local: true, veiculo: true };
+      return { foto: true, local: true, veiculo: true, resposta: true };
     }
   });
   const toggleSection = (key) => {
@@ -627,6 +629,7 @@ const LsVehicleSheet = ({
           ['foto', 'Foto'],
           ['local', 'Localização'],
           ['veiculo', 'Dados do veículo'],
+          ...(canEdit ? [['resposta', 'Última resposta']] : []),
         ].map(([key, label]) => (
           <MenuItem key={key} dense onClick={() => toggleSection(key)}>
             <Checkbox size="small" checked={!!sections[key]} style={{ padding: '0 8px 0 0' }} />
@@ -862,6 +865,26 @@ const LsVehicleSheet = ({
                 />
               )}
               <Row c={c} l="Hora GPS" v={formatTime(position.fixTime, 'seconds')} />
+            </>
+          )}
+
+          {canEdit && sections.resposta && a.result && (
+            <>
+              <div style={secLab}>Última resposta</div>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: c.text,
+                  marginBottom: 2,
+                  wordBreak: 'break-word',
+                }}
+              >
+                {friendlyCommandResult(a.result)}
+              </div>
+              <div style={{ fontSize: 11, color: c.textSecondary, wordBreak: 'break-word' }}>
+                {String(a.result)}
+              </div>
             </>
           )}
         </div>

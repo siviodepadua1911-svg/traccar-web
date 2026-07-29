@@ -79,6 +79,13 @@ const LsNativePush = () => {
       }
     };
 
+    // ouvir o token ANTES de registrar (senao o evento pode se perder)
+    Push.addListener('registration', (token) => {
+      saveToken(token && token.value);
+    });
+    Push.addListener('registrationError', () => {
+      // ignore
+    });
     (async () => {
       try {
         for (const ch of CHANNELS) {
@@ -89,9 +96,6 @@ const LsNativePush = () => {
         if (perm && perm.receive === 'granted') {
           await Push.register();
         }
-        Push.addListener('registration', (token) => {
-          saveToken(token && token.value);
-        });
       } catch {
         // ignore
       }

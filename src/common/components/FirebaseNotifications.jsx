@@ -24,6 +24,7 @@ const FirebaseNotifications = () => {
     async ({ signal }) => {
       if (
         nativeEnvironment ||
+        (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
         !user ||
         user.readonly ||
         !('Notification' in window) ||

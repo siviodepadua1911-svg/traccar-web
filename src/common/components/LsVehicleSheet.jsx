@@ -301,6 +301,29 @@ const LsVehicleSheet = ({
       return { foto: true, local: true, veiculo: true, resposta: true, params: true };
     }
   });
+  const [capturedResult, setCapturedResult] = useState(null);
+  useEffect(() => {
+    if (!canEdit || !sections.resposta || !device?.id) {
+      return undefined;
+    }
+    let cancelled = false;
+    const load = () => {
+      fetch(`/ls_cmdresult/${device.id}.json?t=${Date.now()}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => {
+          if (!cancelled && j && j.result) {
+            setCapturedResult(j);
+          }
+        })
+        .catch(() => {});
+    };
+    load();
+    const iv = setInterval(load, 8000);
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
+    };
+  }, [canEdit, sections.resposta, device?.id]);
   const toggleSection = (key) => {
     setSections((prev) => {
       const next = { ...prev, [key]: !prev[key] };
@@ -920,7 +943,7 @@ const LsVehicleSheet = ({
             </>
           )}
 
-          {canEdit && sections.resposta && a.result && (
+          {canEdit && sections.resposta && (capturedResult?.result || a.result) && (
             <>
               <div style={secLab}>Última resposta</div>
               <div
@@ -932,10 +955,11 @@ const LsVehicleSheet = ({
                   wordBreak: 'break-word',
                 }}
               >
-                {friendlyCommandResult(a.result)}
+                {friendlyCommandResult(capturedResult?.result || a.result)}
               </div>
               <div style={{ fontSize: 11, color: c.textSecondary, wordBreak: 'break-word' }}>
-                {String(a.result)}
+                {String(capturedResult?.result || a.result)}
+                {capturedResult?.time ? ` · ${capturedResult.time}` : ''}
               </div>
             </>
           )}

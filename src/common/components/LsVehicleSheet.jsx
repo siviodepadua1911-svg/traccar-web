@@ -280,6 +280,15 @@ const LsVehicleSheet = ({
     ? `/api/media/${device.uniqueId}/${device.attributes.deviceImage}`
     : null;
   const [img, setImg] = useState(initialImg);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  useEffect(() => {
+    setImg(
+      device.attributes?.deviceImage
+        ? `/api/media/${device.uniqueId}/${device.attributes.deviceImage}`
+        : null,
+    );
+    setImgLoaded(false);
+  }, [device.id, device.uniqueId, device.attributes?.deviceImage]);
   const [busy, setBusy] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareHours, setShareHours] = useState(24);
@@ -726,9 +735,19 @@ const LsVehicleSheet = ({
           >
             {img ? (
               <img
+                key={img}
                 src={img}
                 alt={device.name}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                loading="eager"
+                onLoad={() => setImgLoaded(true)}
+                onError={() => setImgLoaded(false)}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  opacity: imgLoaded ? 1 : 0,
+                  transition: 'opacity 0.25s ease',
+                }}
               />
             ) : (
               <DirectionsCarIcon style={{ fontSize: 46, color: c.textSecondary }} />
@@ -968,7 +987,7 @@ const LsVehicleSheet = ({
             <>
               <div style={secLab}>Parâmetros recebidos</div>
               {Object.keys(a)
-                .filter((k) => k !== 'result')
+                .filter((k) => !['result', 'airPressure'].includes(k))
                 .sort()
                 .map((k) => (
                   <Row key={k} c={c} l={LS_PARAM_LABELS[k] || k} v={lsFormatParam(k, a[k])} />

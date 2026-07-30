@@ -190,6 +190,52 @@ const Row = ({ c, l, v }) => (
   </div>
 );
 
+const LS_PARAM_LABELS = {
+  ignition: 'Ignição',
+  motion: 'Movimento',
+  charge: 'Energia externa',
+  blocked: 'Bloqueado',
+  rssi: 'Sinal (RSSI)',
+  sat: 'Satélites',
+  power: 'Tensão externa',
+  battery: 'Bateria (tensão)',
+  batteryLevel: 'Bateria (%)',
+  odometer: 'Hodômetro',
+  totalDistance: 'Distância total',
+  distance: 'Distância',
+  hours: 'Horímetro',
+  hdop: 'HDOP (precisão)',
+  course: 'Direção (curso)',
+  driverUniqueId: 'ID motorista',
+  alarm: 'Alarme',
+  event: 'Evento',
+  index: 'Índice',
+  fuel: 'Combustível',
+  temp: 'Temperatura',
+  humidity: 'Umidade',
+};
+
+const lsFormatParam = (k, v) => {
+  if (typeof v === 'boolean') {
+    if (k === 'ignition') return v ? 'Ligada' : 'Desligada';
+    if (k === 'charge') return v ? 'Conectada' : 'Sem energia';
+    return v ? 'Sim' : 'Não';
+  }
+  if (typeof v === 'number') {
+    if (k === 'power' || k === 'battery') return `${v.toFixed(2)} V`;
+    if (k === 'batteryLevel') return `${v}%`;
+    if (k === 'totalDistance') {
+      return `${(v / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} km`;
+    }
+    if (k === 'odometer' || k === 'distance') {
+      return `${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} m`;
+    }
+    if (k === 'hours') return `${(v / 3600000).toFixed(1)} h`;
+    return String(v);
+  }
+  return String(v);
+};
+
 const SHARE_DURS = [
   { label: '1 hora', h: 1 },
   { label: '6 horas', h: 6 },
@@ -248,10 +294,11 @@ const LsVehicleSheet = ({
         local: true,
         veiculo: true,
         resposta: true,
+        params: true,
         ...JSON.parse(localStorage.getItem('lsPanelSections') || '{}'),
       };
     } catch {
-      return { foto: true, local: true, veiculo: true, resposta: true };
+      return { foto: true, local: true, veiculo: true, resposta: true, params: true };
     }
   });
   const toggleSection = (key) => {
@@ -629,7 +676,12 @@ const LsVehicleSheet = ({
           ['foto', 'Foto'],
           ['local', 'Localização'],
           ['veiculo', 'Dados do veículo'],
-          ...(canEdit ? [['resposta', 'Última resposta']] : []),
+          ...(canEdit
+            ? [
+                ['resposta', 'Última resposta'],
+                ['params', 'Parâmetros recebidos'],
+              ]
+            : []),
         ].map(([key, label]) => (
           <MenuItem key={key} dense onClick={() => toggleSection(key)}>
             <Checkbox size="small" checked={!!sections[key]} style={{ padding: '0 8px 0 0' }} />
@@ -885,6 +937,18 @@ const LsVehicleSheet = ({
               <div style={{ fontSize: 11, color: c.textSecondary, wordBreak: 'break-word' }}>
                 {String(a.result)}
               </div>
+            </>
+          )}
+
+          {canEdit && sections.params && Object.keys(a).length > 0 && (
+            <>
+              <div style={secLab}>Parâmetros recebidos</div>
+              {Object.keys(a)
+                .filter((k) => k !== 'result')
+                .sort()
+                .map((k) => (
+                  <Row key={k} c={c} l={LS_PARAM_LABELS[k] || k} v={lsFormatParam(k, a[k])} />
+                ))}
             </>
           )}
         </div>

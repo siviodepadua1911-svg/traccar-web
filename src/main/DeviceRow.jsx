@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 import {
@@ -88,6 +89,29 @@ const DeviceRow = ({ devices, index, style }) => {
 
   const item = devices[index];
   const position = useSelector((state) => state.session.positions[item.id]);
+  const [capPower, setCapPower] = useState(null);
+  useEffect(() => {
+    if (!item?.id) {
+      return undefined;
+    }
+    let cancelled = false;
+    const load = () => {
+      fetch(`/ls_power/${item.id}.json?t=${Date.now()}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => {
+          if (!cancelled && j && typeof j.power === 'number') {
+            setCapPower(j.power);
+          }
+        })
+        .catch(() => {});
+    };
+    load();
+    const iv = setInterval(load, 60000);
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
+    };
+  }, [item?.id]);
 
   const devicePrimary = useAttributePreference('devicePrimary', 'name');
   const deviceSecondary = useAttributePreference('deviceSecondary', '');
@@ -131,6 +155,7 @@ const DeviceRow = ({ devices, index, style }) => {
   };
 
   const a = position ? position.attributes : {};
+  const powerValue = a.power != null ? Number(a.power) : capPower;
   const kmh = position ? Math.round((position.speed || 0) * 1.852) : 0;
   const blocked = Boolean(a.blocked);
 
@@ -142,11 +167,7 @@ const DeviceRow = ({ devices, index, style }) => {
         disabled={!admin && item.disabled}
         selected={selectedDeviceId === item.id}
         className={
-          selectedDeviceId === item.id
-            ? classes.selected
-            : blocked
-              ? classes.blocked
-              : null
+          selectedDeviceId === item.id ? classes.selected : blocked ? classes.blocked : null
         }
       >
         <ListItemAvatar>
@@ -209,13 +230,12 @@ const DeviceRow = ({ devices, index, style }) => {
                   <LockOpenIcon style={{ ...I, color: C.ok }} />
                 </Tooltip>
               ))}
-            {a.power != null && (
-              <Tooltip title={`Bateria do veículo: ${Number(a.power).toFixed(1)}V`}>
+            {powerValue != null && (
+              <Tooltip title={`Bateria do veículo: ${powerValue.toFixed(1)}V`}>
                 <BoltIcon
                   style={{
                     ...I,
-                    color:
-                      Number(a.power) >= 12.5 ? C.ok : Number(a.power) >= 11.5 ? C.warn : C.bad,
+                    color: powerValue >= 12.5 ? C.ok : powerValue >= 11.5 ? C.warn : C.bad,
                   }}
                 />
               </Tooltip>

@@ -311,6 +311,29 @@ const LsVehicleSheet = ({
     }
   });
   const [capturedResult, setCapturedResult] = useState(null);
+  const [capturedPower, setCapturedPower] = useState(null);
+  useEffect(() => {
+    if (!device?.id) {
+      return undefined;
+    }
+    let cancelled = false;
+    const loadPower = () => {
+      fetch(`/ls_power/${device.id}.json?t=${Date.now()}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => {
+          if (!cancelled && j && typeof j.power === 'number') {
+            setCapturedPower(j.power);
+          }
+        })
+        .catch(() => {});
+    };
+    loadPower();
+    const ivp = setInterval(loadPower, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(ivp);
+    };
+  }, [device?.id]);
   useEffect(() => {
     if (!canEdit || !sections.resposta || !device?.id) {
       return undefined;
@@ -514,7 +537,9 @@ const LsVehicleSheet = ({
       : stateLabel;
   const ign = ignInfo(a);
   const sig = sigInfo(a);
-  const bat = batInfo(a);
+  const bat = batInfo(
+    'power' in a ? a : capturedPower != null ? { ...a, power: capturedPower } : a,
+  );
   const sat = satInfo(a);
   const pwr = chargeInfo(a);
   const batint = batIntInfo(a);

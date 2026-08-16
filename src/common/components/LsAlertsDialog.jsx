@@ -10,7 +10,6 @@ import {
   Select,
   MenuItem,
   Slider,
-  TextField,
   Typography,
   Divider,
   CircularProgress,
@@ -144,9 +143,10 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
   const [tgWaiting, setTgWaiting] = useState(false);
 
   const connectTelegram = () => {
-    const tok = `${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
-      .replace(/[^a-z0-9]/gi, '')
-      .slice(0, 40);
+    const tok =
+      `${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
+        .replace(/[^a-z0-9]/gi, '')
+        .slice(0, 40);
     const updated = { ...user, attributes: { ...user.attributes, telegramLinkToken: tok } };
     fetch(`/api/users/${user.id}`, {
       method: 'PUT',
@@ -204,7 +204,9 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
 
   const load = useCatchCallback(async () => {
     const response = await fetchOrThrow(
-      deviceReadonly || !deviceId ? '/api/notifications' : `/api/notifications?deviceId=${deviceId}`,
+      deviceReadonly || !deviceId
+        ? '/api/notifications'
+        : `/api/notifications?deviceId=${deviceId}`,
     );
     const list = await response.json();
     setLinked(list);
@@ -320,16 +322,19 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
                   : { deviceId, notificationId: notification.id },
               ),
             });
-          } else if (!want && current) {
-            await fetchOrThrow('/api/permissions', {
-              method: 'DELETE',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(
-                deviceReadonly || !deviceId
-                  ? { userId: user.id, notificationId: current.id }
-                  : { deviceId, notificationId: current.id },
-              ),
-            });
+          } else if (!want) {
+            const toRemove = linked.filter((n) => n.type === type && matchesToggle(n, toggle));
+            for (const n of toRemove) {
+              await fetchOrThrow('/api/permissions', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(
+                  deviceReadonly || !deviceId
+                    ? { userId: user.id, notificationId: n.id }
+                    : { deviceId, notificationId: n.id },
+                ),
+              });
+            }
           }
         }
       }
@@ -356,7 +361,13 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
   }, [states, sounds, alertSounds, speed, telegram, linked, user, device, deviceId, onClose]);
 
   return (
-    <Dialog open onClose={() => !saving && onClose()} fullWidth maxWidth="xs" fullScreen={fullScreen}>
+    <Dialog
+      open
+      onClose={() => !saving && onClose()}
+      fullWidth
+      maxWidth="xs"
+      fullScreen={fullScreen}
+    >
       <DialogTitle>
         {deviceName ? `Meus alertas — ${deviceName}` : 'Meus alertas'}
         <Typography variant="body2" color="textSecondary" component="div">
@@ -494,7 +505,8 @@ const LsAlertsDialog = ({ deviceId, deviceName, device, onClose }) => {
                   component="div"
                   style={{ marginTop: 6 }}
                 >
-                  Um toque: abre o bot da LS no Telegram, aperte Iniciar e pronto — sem digitar nada.
+                  Um toque: abre o bot da LS no Telegram, aperte Iniciar e pronto — sem digitar
+                  nada.
                 </Typography>
               </div>
             )}

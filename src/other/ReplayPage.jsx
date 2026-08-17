@@ -37,7 +37,7 @@ import MapScale from '../map/MapScale';
 import BackIcon from '../common/components/BackIcon';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 import snapPositions from '../common/util/lsSnapToRoads';
-import { collapseStops, simplifyPositions } from '../common/util/lsRouteCleanup';
+import { collapseStops } from '../common/util/lsRouteCleanup';
 import MapOverlay from '../map/overlay/MapOverlay';
 
 const useStyles = makeStyles()((theme) => ({
@@ -226,7 +226,7 @@ const ReplayPage = () => {
   // So mexe na EXIBICAO do trajeto - os dados crus continuam intactos em `positions`.
   const stopCollapsedPositions = useMemo(() => collapseStops(positions), [positions]);
   const lineDisplayPositions = useMemo(
-    () => (smooth && smoothed ? smoothed : simplifyPositions(stopCollapsedPositions)),
+    () => (smooth && smoothed ? smoothed : stopCollapsedPositions),
     [smooth, smoothed, stopCollapsedPositions],
   );
 

@@ -167,7 +167,7 @@ export default () => {
           maxZoom: 20,
           attribution: '© Google',
         }),
-        available: true,
+        available: false,
         attribute: 'googleKey',
       },
       {
@@ -292,7 +292,7 @@ export default () => {
           ],
           maxZoom: 19,
         }),
-        available: true,
+        available: false,
       },
       {
         id: 'autoNavi',
@@ -374,7 +374,7 @@ export default () => {
             : styleCustom({
                 tiles: [customMapUrl],
               }),
-        available: Boolean(customMapUrl),
+        available: false,
       },
     ],
     [

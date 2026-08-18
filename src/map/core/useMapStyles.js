@@ -96,6 +96,51 @@ export default () => {
         available: true,
       },
       {
+        id: 'esriSatellite',
+        title: 'Satélite (Esri)',
+        style: styleCustom({
+          tiles: [
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          ],
+          maxZoom: 19,
+          attribution:
+            '© <a target="_top" rel="noopener" href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics',
+        }),
+        available: true,
+      },
+      {
+        id: 'esriHybrid',
+        title: 'Híbrido (Esri)',
+        style: {
+          version: 8,
+          glyphs: 'https://cdn.traccar.com/map/fonts/{fontstack}/{range}.pbf',
+          sources: {
+            esriImg: {
+              type: 'raster',
+              tiles: [
+                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+              ],
+              tileSize: 256,
+              maxzoom: 19,
+              attribution: '© Esri, Maxar, Earthstar Geographics',
+            },
+            esriRef: {
+              type: 'raster',
+              tiles: [
+                'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+              ],
+              tileSize: 256,
+              maxzoom: 19,
+            },
+          },
+          layers: [
+            { id: 'esriImg', type: 'raster', source: 'esriImg' },
+            { id: 'esriRef', type: 'raster', source: 'esriRef' },
+          ],
+        },
+        available: true,
+      },
+      {
         id: 'googleRoad',
         title: t('mapGoogleRoad'),
         style: styleCustom({

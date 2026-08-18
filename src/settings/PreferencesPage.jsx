@@ -157,9 +157,11 @@ const PreferencesPage = () => {
                     label={t('mapActive')}
                     value={
                       attributes.activeMapStyles?.split(',') || [
-                        'locationIqStreets',
-                        'locationIqDark',
+                        'osm',
                         'openFreeMap',
+                        'esriSatellite',
+                        'esriHybrid',
+                        'googleHybrid',
                       ]
                     }
                     onChange={(e, child) => {

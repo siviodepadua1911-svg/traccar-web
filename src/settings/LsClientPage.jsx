@@ -407,7 +407,7 @@ const LsClientPage = () => {
       }
       if (!id && !attributes.activeMapStyles) {
         attributes.activeMapStyles =
-          'osm,openFreeMap,carto,openTopoMap,googleSatellite,googleHybrid,googleRoad';
+          'osm,openFreeMap,carto,openTopoMap,esriSatellite,esriHybrid,googleHybrid,googleRoad';
       }
       attributes.soundEvents = buildSoundList('events');
       attributes.soundAlarms = buildSoundList('alarms');

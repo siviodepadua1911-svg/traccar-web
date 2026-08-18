@@ -62,7 +62,7 @@ const MapView = ({ children }) => {
   const mapStyles = useMapStyles();
   const activeMapStyles = useAttributePreference(
     'activeMapStyles',
-    'locationIqStreets,locationIqDark,openFreeMap',
+    'osm,openFreeMap,carto,openTopoMap,esriSatellite,esriHybrid,googleHybrid,googleRoad',
   );
   const [selectedStyleId, setSelectedStyleId] = usePersistedState(
     'selectedMapStyle',

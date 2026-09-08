@@ -9,6 +9,10 @@ export const STOPPED_SPEED_KNOTS = 1;
 // pra nao poluir o mapa com paradas de poucos segundos.
 export const MIN_STOP_DURATION_MS = 60 * 1000;
 
+// Parada com pelo menos isso conta como ESTACIONAMENTO (marcador P azul).
+// Abaixo disso (mas acima de MIN_STOP_DURATION_MS) e uma PARADA curta (marcador STOP laranja).
+export const PARK_DURATION_MS = 5 * 60 * 1000;
+
 // Douglas-Peucker: quanto maior, mais pontos redundantes a linha perde (e mais leve fica).
 export const SIMPLIFY_TOLERANCE_METERS = 12;
 

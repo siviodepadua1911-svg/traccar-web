@@ -96,7 +96,7 @@ const LsHelp = () => {
         style={{
           position: 'fixed',
           left: 14,
-          bottom: 74,
+          bottom: 118,
           width: 48,
           height: 48,
           borderRadius: '50%',

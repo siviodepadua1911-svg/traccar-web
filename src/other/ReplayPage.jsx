@@ -289,28 +289,9 @@ const ReplayPage = () => {
               {t('reportReplay')}
             </Typography>
             {loaded && (
-              <>
-                <Tooltip title="Suavizar trajeto (colar nas ruas)">
-                  <span>
-                    <IconButton
-                      onClick={() => (smooth ? setSmooth(false) : applySnap())}
-                      disabled={smoothLoading}
-                    >
-                      {smoothLoading ? (
-                        <CircularProgress size={20} />
-                      ) : (
-                        <AutoFixHighIcon color={smooth ? 'primary' : 'inherit'} />
-                      )}
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <IconButton onClick={handleDownload}>
-                  <DownloadIcon />
-                </IconButton>
-                <IconButton edge="end" onClick={() => setFilterOpen((open) => !open)}>
-                  <TuneIcon />
-                </IconButton>
-              </>
+              <IconButton edge="end" onClick={() => setFilterOpen((open) => !open)}>
+                <TuneIcon />
+              </IconButton>
             )}
           </Toolbar>
         </Paper>

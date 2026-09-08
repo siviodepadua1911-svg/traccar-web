@@ -23,7 +23,7 @@ import MapRoutePath from '../map/MapRoutePath';
 import MapRoutePoints from '../map/MapRoutePoints';
 import MapStopMarkers from '../map/MapStopMarkers';
 import MapPositions from '../map/MapPositions';
-import { formatTime } from '../common/util/formatter';
+import { formatTime, formatDistance, formatDurationShort } from '../common/util/formatter';
 import ReportFilter from '../reports/components/ReportFilter';
 import ReportInfoCard from '../reports/components/ReportInfoCard';
 import REPORT_INFO from '../reports/common/reportInfo';
@@ -37,7 +37,8 @@ import MapScale from '../map/MapScale';
 import BackIcon from '../common/components/BackIcon';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 import snapPositions from '../common/util/lsSnapToRoads';
-import { collapseStops } from '../common/util/lsRouteCleanup';
+import { collapseStops, MIN_STOP_DURATION_MS } from '../common/util/lsRouteCleanup';
+import { useAttributePreference } from '../common/util/preferences';
 import MapOverlay from '../map/overlay/MapOverlay';
 
 const useStyles = makeStyles()((theme) => ({
@@ -225,6 +226,26 @@ const ReplayPage = () => {
 
   // So mexe na EXIBICAO do trajeto - os dados crus continuam intactos em `positions`.
   const stopCollapsedPositions = useMemo(() => collapseStops(positions), [positions]);
+  const distanceUnit = useAttributePreference('distanceUnit');
+  const tripSummary = useMemo(() => {
+    if (!positions.length) {
+      return { distance: 0, durationMs: 0, stops: 0 };
+    }
+    const first = positions[0].attributes?.totalDistance;
+    const last = positions[positions.length - 1].attributes?.totalDistance;
+    let distance;
+    if (first != null && last != null && last >= first) {
+      distance = last - first;
+    } else {
+      distance = positions.reduce((sum, p) => sum + (p.attributes?.distance || 0), 0);
+    }
+    const durationMs = new Date(positions[positions.length - 1].fixTime).getTime()
+      - new Date(positions[0].fixTime).getTime();
+    const stops = stopCollapsedPositions.filter(
+      (p) => p.lsStopped && p.lsStopDurationMs >= MIN_STOP_DURATION_MS,
+    ).length;
+    return { distance, durationMs, stops };
+  }, [positions, stopCollapsedPositions]);
   const lineDisplayPositions = useMemo(
     () => (smooth && smoothed ? smoothed : stopCollapsedPositions),
     [smooth, smoothed, stopCollapsedPositions],
@@ -299,6 +320,9 @@ const ReplayPage = () => {
             <>
               <Typography variant="subtitle1" align="center">
                 {deviceName}
+              </Typography>
+              <Typography variant="caption" align="center" sx={{ display: 'block', mb: 0.5, opacity: 0.85 }}>
+                {formatDistance(tripSummary.distance, distanceUnit, t) + ' · ' + formatDurationShort(tripSummary.durationMs) + ' · ' + tripSummary.stops + (tripSummary.stops === 1 ? ' parada' : ' paradas')}
               </Typography>
               <Slider
                 className={classes.slider}

@@ -75,6 +75,7 @@ const LsHelp = () => {
   const [openKey, setOpenKey] = useState(null);
 
   const path = location.pathname;
+  const helpBottom = path.startsWith('/replay') ? 176 : 118;
   if (path.startsWith('/settings')) {
     return null;
   }
@@ -96,7 +97,7 @@ const LsHelp = () => {
         style={{
           position: 'fixed',
           left: 14,
-          bottom: 118,
+          bottom: helpBottom,
           width: 48,
           height: 48,
           borderRadius: '50%',

@@ -13,10 +13,17 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- LS: azul da plataforma atras das barras do sistema (Android 15/16 edge-to-edge) -->
+        <item name="android:windowBackground">@color/ls_navy</item>
+        <item name="android:statusBarColor">@color/ls_navy</item>
+        <item name="android:navigationBarColor">@color/ls_navy</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <!-- LS: abertura do Android 12+ com fundo azul LS -->
+        <item name="windowSplashScreenBackground">@color/ls_navy</item>
     </style>
 </resources>

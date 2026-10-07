@@ -27,13 +27,13 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - name: Instalar dependencias
         run: npm install
 
-      - name: Gerar projeto Android
-        run: npx cap add android
+      - name: Sincronizar projeto Android (Capacitor 7)
+        run: npx cap sync android
 
       - name: Copiar sons de alerta (res/raw)
         run: |

@@ -59,6 +59,7 @@ const PERFIS = [
 const STEPS = ['Dados', 'Equipamento', 'Acesso', 'Alertas', 'Pronto'];
 const MENU_OPTS = [
   { k: 'rel', label: 'Relatórios' },
+  { k: 'msg', label: 'Mensagens' },
   { k: 'geo', label: 'Cercas eletrônicas' },
   { k: 'not', label: 'Alertas' },
   { k: 'drv', label: 'Motoristas' },
@@ -98,6 +99,7 @@ const LsClientPage = () => {
   const [driverCode, setDriverCode] = useState('');
   const [menuItems, setMenuItems] = useState({
     rel: true,
+    msg: false,
     geo: true,
     not: true,
     drv: false,

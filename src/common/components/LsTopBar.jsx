@@ -6,6 +6,7 @@ import MapIcon from '@mui/icons-material/Map';
 import RouteIcon from '@mui/icons-material/Route';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import DescriptionIcon from '@mui/icons-material/Description';
+import MessageIcon from '@mui/icons-material/Message';
 import DrawIcon from '@mui/icons-material/Draw';
 import PersonIcon from '@mui/icons-material/Person';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -16,6 +17,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { sessionActions } from '../../store';
 import { useRestriction, useAdministrator, useManager } from '../util/permissions';
 import useFeatures from '../util/useFeatures';
+import { useMessagesDisabled } from '../../messages/messagesAccess';
 import { nativePostMessage } from './NativeInterface';
 
 const AZUL = '#0F1E45';
@@ -34,6 +36,7 @@ const LsTopBar = () => {
   const admin = useAdministrator();
   const manager = useManager();
   const features = useFeatures();
+  const disableMessages = useMessagesDisabled();
 
   const [menu, setMenu] = useState({ el: null, key: null });
   const open = (event, key) => setMenu({ el: event.currentTarget, key });
@@ -83,6 +86,14 @@ const LsTopBar = () => {
       onClick: (e) => open(e, 'rel'),
       active: at('/reports'),
       menu: true,
+    },
+    !disableMessages && {
+      k: 'msg',
+      label: 'Mensagens',
+      icon: <MessageIcon />,
+      onClick: () =>
+        go(selectedDeviceId != null ? `/messages?deviceId=${selectedDeviceId}` : '/messages'),
+      active: at('/messages'),
     },
     !readonly && {
       k: 'geo',
@@ -190,6 +201,15 @@ const LsTopBar = () => {
             whiteSpace: 'nowrap',
             backgroundColor: it.active ? 'rgba(255,255,255,0.14)' : 'transparent',
             '&:hover': { backgroundColor: 'rgba(255,255,255,0.09)' },
+            // Com a aba Mensagens o menu ganhou um item: em telas com menos de
+            // 1800px os botoes ficam um pouco mais juntos, para o menu ocupar
+            // menos largura do que ocupava antes da aba.
+            '@media (max-width: 1799.95px)': {
+              fontSize: 13,
+              px: 0.5,
+              '& .MuiButton-startIcon': { marginRight: '4px' },
+              '& .MuiButton-endIcon': { marginLeft: '2px' },
+            },
           }}
         >
           {it.label}

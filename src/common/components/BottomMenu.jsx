@@ -7,11 +7,13 @@ import MapIcon from '@mui/icons-material/Map';
 import RouteIcon from '@mui/icons-material/Route';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import DescriptionIcon from '@mui/icons-material/Description';
+import MessageIcon from '@mui/icons-material/Message';
 import FenceIcon from '@mui/icons-material/Fence';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useRestriction } from '../util/permissions';
 import { lsCardColors } from '../theme/lsCardColors';
 import LsAlertsDialog from './LsAlertsDialog';
+import { useMessagesDisabled } from '../../messages/messagesAccess';
 
 const useStyles = makeStyles()(() => ({
   scroll: {
@@ -55,6 +57,7 @@ const BottomMenu = () => {
 
   const readonly = useRestriction('readonly');
   const disableReports = useRestriction('disableReports');
+  const disableMessages = useMessagesDisabled();
   const devices = useSelector((state) => state.devices.items);
   const user = useSelector((state) => state.session.user);
   const server = useSelector((state) => state.session.server);
@@ -79,6 +82,7 @@ const BottomMenu = () => {
     const p = location.pathname;
     if (p.startsWith('/settings/notification')) return 'alerts';
     if (p.startsWith('/reports')) return 'reports';
+    if (p.startsWith('/messages')) return 'messages';
     if (p.startsWith('/geofence')) return 'cerca';
     if (p.startsWith('/replay')) return 'replay';
     if (p.startsWith('/settings')) return 'menu';
@@ -86,14 +90,15 @@ const BottomMenu = () => {
     return null;
   })();
 
-  const replayTarget = () => {
+  const deviceTarget = (path) => {
     let id = selectedDeviceId;
     if (id == null) {
       const ids = Object.keys(devices);
       if (ids.length === 1) id = ids[0];
     }
-    return id != null ? `/replay?deviceId=${id}` : '/replay';
+    return id != null ? `${path}?deviceId=${id}` : path;
   };
+  const replayTarget = () => deviceTarget('/replay');
 
   const openAlertas = () => setAlertsOpen(true);
 
@@ -135,6 +140,14 @@ const BottomMenu = () => {
       label: readonly ? 'Conta' : 'Menu',
       icon: <MenuIcon />,
       go: () => navigate('/settings/preferences?menu=true'),
+    },
+    // Por ultimo de proposito: os itens que ja existiam continuam no mesmo lugar
+    // e o "Menu" nao sai da tela em celulares estreitos.
+    !disableMessages && {
+      key: 'messages',
+      label: 'Mensagens',
+      icon: <MessageIcon />,
+      go: () => navigate(deviceTarget('/messages')),
     },
   ].filter(Boolean);
 

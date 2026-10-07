@@ -67,6 +67,7 @@ const StreamPage = lazy(() => import('./other/StreamPage'));
 const AuditPage = lazy(() => import('./reports/AuditPage'));
 const LsClientsPage = lazy(() => import('./settings/LsClientsPage'));
 const LsClientPage = lazy(() => import('./settings/LsClientPage'));
+const MessagesPage = lazy(() => import('./messages/MessagesPage'));
 
 const Navigation = () => {
   const dispatch = useDispatch();
@@ -139,6 +140,7 @@ const Navigation = () => {
           <Route path="network/:positionId" element={<NetworkPage />} />
           <Route path="event/:id" element={<EventPage />} />
           <Route path="replay" element={<ReplayPage />} />
+          <Route path="messages" element={<MessagesPage />} />
           <Route path="geofences" element={<GeofencesPage />} />
           <Route path="emulator" element={<EmulatorPage />} />
           <Route path="stream" element={<StreamPage />} />

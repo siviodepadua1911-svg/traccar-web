@@ -58,6 +58,8 @@ import fetchOrThrow from '../util/fetchOrThrow';
 import { translateResult } from '../util/lsCommandResult';
 import { formatTime, formatAddress, formatDurationShort } from '../util/formatter';
 import { lsCardColors } from '../theme/lsCardColors';
+import { useMessagesTranslation } from '../../messages/messagesStrings';
+import { useMessagesDisabled } from '../../messages/messagesAccess';
 
 const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   card: {
@@ -506,9 +508,11 @@ const StatusCard = ({
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const t = useTranslation();
+  const mt = useMessagesTranslation();
 
   const readonly = useRestriction('readonly');
   const deviceReadonly = useDeviceReadonly();
+  const disableMessages = useMessagesDisabled();
 
   const shareDisabled = useSelector((state) => state.session.server.attributes.disableShare);
   const user = useSelector((state) => state.session.user);
@@ -1161,6 +1165,11 @@ const StatusCard = ({
                 .replace('{longitude}', position.longitude)}
             >
               {navigationAppTitle}
+            </MenuItem>
+          )}
+          {!disableMessages && !disableActions && (
+            <MenuItem onClick={() => navigate(`/messages?deviceId=${deviceId}`)}>
+              {mt('messagesTitle')}
             </MenuItem>
           )}
           <MenuItem

@@ -76,7 +76,7 @@ const LsHelp = () => {
 
   const path = location.pathname;
   const helpBottom = path.startsWith('/replay') ? 176 : 118;
-  if (path.startsWith('/settings')) {
+  if (path.startsWith('/settings') || path.startsWith('/messages')) {
     return null;
   }
   const current = GUIDES.find(

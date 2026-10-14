@@ -1,0 +1,42 @@
+name: Build App iOS (LS)
+
+# Compila o app do iPhone na nuvem (Mac do GitHub) - nao precisa de Mac.
+# Por enquanto compila para o simulador, sem assinatura, so para conferir o projeto.
+# Quando a conta Apple estiver ativa, este workflow ganha assinatura + envio ao TestFlight.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ls-custom]
+    paths:
+      - 'mobile-app/**'
+      - '.github/workflows/build-ios.yml'
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: mobile-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Sincronizar projeto iOS (Capacitor 7, Swift Package Manager)
+        run: npx cap sync ios
+
+      - name: Versao do Xcode
+        run: xcodebuild -version
+
+      - name: Compilar para o simulador (sem assinatura)
+        run: |
+          set -o pipefail
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build 2>&1 | tail -n 80

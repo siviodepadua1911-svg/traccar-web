@@ -88,9 +88,17 @@ const LsNativePush = () => {
     });
     (async () => {
       try {
-        for (const ch of CHANNELS) {
-          // eslint-disable-next-line no-await-in-loop
-          await Push.createChannel(ch);
+        // canais (sons por tipo de alerta) so existem no Android; no iPhone o
+        // createChannel nao e suportado e travaria o registro do push
+        const platform = typeof cap.getPlatform === 'function' ? cap.getPlatform() : '';
+        if (platform === 'android') {
+          for (const ch of CHANNELS) {
+            try {
+              await Push.createChannel(ch);
+            } catch {
+              // ignore
+            }
+          }
         }
         const perm = await Push.requestPermissions();
         if (perm && perm.receive === 'granted') {

@@ -1,7 +1,7 @@
 name: Build App iOS (LS)
 
 # Gera o app do iPhone na nuvem (Mac do GitHub), assina e ENVIA para o App Store Connect (TestFlight).
-# Rodar manualmente: Actions -> "Build App iOS (LS)" -> Run workflow.
+# Roda sozinho quando este arquivo ou mobile-app/ios muda (ramo ls-custom), ou manualmente em Actions.
 # Segredos necessarios (Settings -> Secrets and variables -> Actions):
 #   APPLE_TEAM_ID  - Team ID da Apple (D47WB5VZUX)
 #   ASC_KEY_ID     - ID da chave da API do App Store Connect
@@ -15,6 +15,11 @@ on:
         description: 'Enviar para o App Store Connect (TestFlight)?'
         type: boolean
         default: true
+  push:
+    branches: [ls-custom]
+    paths:
+      - '.github/workflows/build-ios.yml'
+      - 'mobile-app/ios/**'
 
 jobs:
   ios:
@@ -83,7 +88,7 @@ jobs:
           ENVIAR: ${{ inputs.enviar }}
         run: |
           DEST=export
-          if [ "$ENVIAR" = "true" ]; then DEST=upload; fi
+          if [ "$ENVIAR" != "false" ]; then DEST=upload; fi
           cat > $RUNNER_TEMP/ExportOptions.plist <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -104,7 +109,7 @@ jobs:
           echo "Pronto. Se enviou, o app aparece no App Store Connect -> TestFlight em ~15 minutos."
 
       - name: Guardar o .ipa (quando nao envia)
-        if: ${{ !inputs.enviar }}
+        if: ${{ inputs.enviar == false }}
         uses: actions/upload-artifact@v4
         with:
           name: LS-Autotruck-iPhone

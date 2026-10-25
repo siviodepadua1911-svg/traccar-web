@@ -58,8 +58,14 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
         run: |
           mkdir -p ~/private_keys
-          printf '%s\n' "$ASC_KEY_P8" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
-          echo "KEY_PATH=$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8" >> $GITHUB_ENV
+          F=~/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          # Arruma a chave colada de qualquer jeito (sem as linhas BEGIN/END, tudo numa linha,
+          # quebras de linha do Windows, espacos): pega so as letras da chave e remonta o arquivo.
+          CORPO=$(printf '%s' "$ASC_KEY_P8" | tr -d '\r' | sed -e 's/-----BEGIN PRIVATE KEY-----//' -e 's/-----END PRIVATE KEY-----//' | tr -d ' \n\t')
+          { echo "-----BEGIN PRIVATE KEY-----"; printf '%s' "$CORPO" | fold -w 64; echo; echo "-----END PRIVATE KEY-----"; } > "$F"
+          echo "Chave: ${#CORPO} caracteres (o normal e perto de 200), $(wc -l < "$F") linhas no arquivo"
+          if openssl pkey -in "$F" -noout 2>/dev/null; then echo "Chave valida"; else echo "A CHAVE NAO E VALIDA: confira o segredo ASC_KEY_P8"; exit 1; fi
+          echo "KEY_PATH=$F" >> $GITHUB_ENV
 
       - name: Versao do Xcode
         run: xcodebuild -version

@@ -2,7 +2,7 @@ name: Build App iOS (LS)
 
 # Gera o app do iPhone na nuvem (Mac do GitHub), assina e ENVIA para o App Store Connect (TestFlight).
 # Roda sozinho quando este arquivo ou mobile-app/ios muda (ramo ls-custom), ou manualmente em Actions.
-# Commit com [ipa] na mensagem: NAO envia para a Apple; gera o .ipa de teste (ad hoc) para baixar em Artifacts.
+# Commit com [ipa] na mensagem: NAO envia para a Apple; gera o .ipa de teste (ad hoc) para baixar em Artifacts (ex.: BrowserStack).
 # Segredos necessarios (Settings -> Secrets and variables -> Actions):
 #   APPLE_TEAM_ID  - Team ID da Apple (D47WB5VZUX)
 #   ASC_KEY_ID     - ID da chave da API do App Store Connect

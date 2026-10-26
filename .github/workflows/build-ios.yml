@@ -2,6 +2,7 @@ name: Build App iOS (LS)
 
 # Gera o app do iPhone na nuvem (Mac do GitHub), assina e ENVIA para o App Store Connect (TestFlight).
 # Roda sozinho quando este arquivo ou mobile-app/ios muda (ramo ls-custom), ou manualmente em Actions.
+# Commit com [ipa] na mensagem: NAO envia para a Apple; gera o .ipa de teste (ad hoc) para baixar em Artifacts.
 # Segredos necessarios (Settings -> Secrets and variables -> Actions):
 #   APPLE_TEAM_ID  - Team ID da Apple (D47WB5VZUX)
 #   ASC_KEY_ID     - ID da chave da API do App Store Connect
@@ -91,15 +92,15 @@ jobs:
           TEAM: ${{ secrets.APPLE_TEAM_ID }}
           KID: ${{ secrets.ASC_KEY_ID }}
           ISS: ${{ secrets.ASC_ISSUER_ID }}
-          ENVIAR: ${{ inputs.enviar }}
+          ENVIAR: ${{ contains(github.event.head_commit.message, '[ipa]') && 'false' || inputs.enviar }}
         run: |
-          DEST=export
-          if [ "$ENVIAR" != "false" ]; then DEST=upload; fi
+          DEST=export; METODO=release-testing
+          if [ "$ENVIAR" != "false" ]; then DEST=upload; METODO=app-store-connect; fi
           cat > $RUNNER_TEMP/ExportOptions.plist <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0"><dict>
-            <key>method</key><string>app-store-connect</string>
+            <key>method</key><string>$METODO</string>
             <key>destination</key><string>$DEST</string>
             <key>teamID</key><string>$TEAM</string>
             <key>signingStyle</key><string>automatic</string>
@@ -115,7 +116,7 @@ jobs:
           echo "Pronto. Se enviou, o app aparece no App Store Connect -> TestFlight em ~15 minutos."
 
       - name: Guardar o .ipa (quando nao envia)
-        if: ${{ inputs.enviar == false }}
+        if: ${{ inputs.enviar == false || contains(github.event.head_commit.message, '[ipa]') }}
         uses: actions/upload-artifact@v4
         with:
           name: LS-Autotruck-iPhone
